@@ -19,7 +19,9 @@ public final class Parser {
         if (match(IDENTIFIER)) {
             final Token identifier = previous();
             final String name = identifier.input();
-            if (match(EQUAL)) {
+            if (name.equals("return")) {
+                statement = new Statement.Return(nextExpression());
+            } else if (match(EQUAL)) {
                 // Assign
                 final Expression expression = nextExpression();
                 statement = new Statement.Assign(name, expression);
@@ -64,6 +66,7 @@ public final class Parser {
     }
 
     Expression nextExpression() {
+        if (check(SEMICOLON)) return null;
         final Expression expression;
         if (check(LEFT_PAREN)) {
             expression = nextFunction();
@@ -81,7 +84,19 @@ public final class Parser {
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
-            expression = new Expression.Variable(identifier.input());
+            if (match(LEFT_PAREN)) {
+                // Call
+                final List<Expression> arguments = new ArrayList<>();
+                if (!check(RIGHT_PAREN)) {
+                    do {
+                        arguments.add(nextExpression());
+                    } while (match(COMMA));
+                }
+                consume(RIGHT_PAREN, "Expected ')' after arguments.");
+                expression = new Expression.Call(identifier.input(), arguments);
+            } else {
+                expression = new Expression.Variable(identifier.input());
+            }
         } else {
             throw error(peek(), "Expect expression.");
         }
@@ -90,9 +105,27 @@ public final class Parser {
 
     Expression.Function nextFunction() {
         consume(LEFT_PAREN, "Expect '('.");
+        final List<String> parameters = new ArrayList<>();
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= 255) {
+                    throw error(peek(), "Cannot have more than 255 parameters.");
+                }
+                final Token identifier = consume(IDENTIFIER, "Expect parameter name.");
+                consume(COLON, "Expect ':' after parameter name.");
+                consume(IDENTIFIER, "Expect parameter type.");
+                parameters.add(identifier.input());
+            } while (match(COMMA));
+        }
         consume(RIGHT_PAREN, "Expect ')'.");
+        Type returnType = Type.VOID;
+        if (match(IDENTIFIER)) {
+            // Return type
+            final Token identifier = previous();
+            returnType = Type.of(identifier.input());
+        }
         final List<Statement> body = readBlock();
-        return new Expression.Function(List.of(), body);
+        return new Expression.Function(parameters, returnType, body);
     }
 
     List<Statement> readBlock() {
@@ -143,7 +176,7 @@ public final class Parser {
     }
 
     private RuntimeException error(Token peek, String message) {
-        return new RuntimeException(message + ": got token " + peek);
+        return new RuntimeException(message + ": got token " + peek + " previous: " + previous());
     }
 
     public List<Statement> parse() {

@@ -21,46 +21,81 @@ public final class Interpreter {
         }
     }
 
-    public void interpret(String function) {
+    public Expression interpret(String function) {
+        return interpret(function, List.of());
+    }
+
+    public Expression interpret(String function, List<Expression> parameters) {
         final Expression call = walker.find(function);
         if (!(call instanceof Expression.Function functionDeclaration)) {
             throw new RuntimeException("Function not found: " + call);
         }
-        for (Statement statement : functionDeclaration.body()) {
-            execute(statement);
+
+        walker.enterBlock();
+        for (int i = 0; i < parameters.size(); i++) {
+            final String token = functionDeclaration.parameters().get(i);
+            final Expression expression = parameters.get(i);
+            walker.register(token, expression);
         }
+
+        Expression result = null;
+        for (Statement statement : functionDeclaration.body()) {
+            result = execute(statement);
+        }
+
+        walker.exitBlock();
+        return result;
     }
 
-    private void execute(Statement statement) {
+    private Expression execute(Statement statement) {
         if (statement instanceof Statement.Declare declare) {
-            walker.register(declare.name(), declare.initializer());
+            final Expression initializer = declare.initializer();
+            final Expression evaluated = evaluate(initializer);
+            walker.register(declare.name(), evaluated);
         } else if (statement instanceof Statement.Assign assign) {
             walker.register(assign.name(), assign.expression());
         } else if (statement instanceof Statement.Call call) {
-            final String name = call.name();
-            if (name.equals("print")) {
-                for (Expression argument : call.arguments()) {
-                    final String value = evaluate(argument).toString();
-                    System.out.print(value);
-                }
-                System.out.println();
-            } else {
-                interpret(name);
+            evaluate(new Expression.Call(call.name(), call.arguments()));
+        } else if (statement instanceof Statement.Return returnStatement) {
+            final Expression expression = returnStatement.expression();
+            if (expression != null) {
+                return evaluate(expression);
             }
         }
+        return null;
     }
 
-    private Object evaluate(Expression argument) {
+    private Expression evaluate(Expression argument) {
         if (argument instanceof Expression.Constant constant) {
-            return constant.value();
+            return constant;
         } else if (argument instanceof Expression.Variable variable) {
             final Expression variableExpression = walker.find(variable.name());
             if (variableExpression == null) {
                 throw new RuntimeException("Variable not found: " + variable.name());
             }
-            return evaluate(variableExpression);
+            return variableExpression;
+        } else if (argument instanceof Expression.Call call) {
+            final String name = call.name();
+            if (name.equals("print")) {
+                for (Expression param : call.arguments()) {
+                    final String serialize = serialize(evaluate(param));
+                    System.out.print(serialize);
+                }
+                System.out.println();
+            } else {
+                return interpret(name, call.arguments());
+            }
+            return null;
         } else {
             throw new RuntimeException("Unknown expression: " + argument);
+        }
+    }
+
+    private String serialize(Expression expression) {
+        if (expression instanceof Expression.Constant constant) {
+            return constant.value().toString();
+        } else {
+            throw new RuntimeException("Unknown expression: " + expression);
         }
     }
 

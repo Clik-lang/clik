@@ -13,8 +13,7 @@ public final class Scanner {
     }
 
     void skipWhitespace() {
-        while (Character.isWhitespace(advance())) ;
-        index--;
+        while (Character.isWhitespace(peek())) advance();
     }
 
     Token nextToken() {
@@ -43,16 +42,15 @@ public final class Scanner {
         else if (c == '=') type = Token.Type.EQUAL;
         else if (c == ':') type = Token.Type.COLON;
         else if (c == '~') type = Token.Type.TIDE;
-        else if (c == '\"'){
+        else if (c == '\"') {
             type = Token.Type.LITERAL;
             value = nextString();
-        }else if (Character.isLetterOrDigit(c)) {
-            // Potential identifier
-            var start = index - 1;
-            while (Character.isLetterOrDigit(peek())) advance();
-            var text = input.substring(start, index);
+        } else if (Character.isDigit(c)) {
+            type = Token.Type.LITERAL;
+            value = nextNumber();
+        } else if (Character.isLetter(c)) {
             type = Token.Type.IDENTIFIER;
-            value = text;
+            value = nextIdentifier();
         } else if (c == '\n') {
             line++;
             return nextToken();
@@ -62,6 +60,23 @@ public final class Scanner {
 
         final String text = input.substring(startIndex, index);
         return new Token(type, line, text, value);
+    }
+
+    private String nextIdentifier() {
+        var start = index - 1;
+        while (Character.isLetterOrDigit(peek())) advance();
+        return input.substring(start, index);
+    }
+
+    private Number nextNumber() {
+        var start = index - 1;
+        while (Character.isDigit(peek())) advance();
+        if (peek() == '.') {
+            advance();
+            while (Character.isDigit(peek())) advance();
+        }
+        var text = input.substring(start, index);
+        return Double.parseDouble(text);
     }
 
     private String nextString() {
