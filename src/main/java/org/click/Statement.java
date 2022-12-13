@@ -12,7 +12,7 @@ public sealed interface Statement {
     record Assign(String name, Expression expression) implements Statement {
     }
 
-    record Call(String name, List<Expression> arguments) implements Statement {
+    record Call(String name, Parameter.Passed arguments) implements Statement {
     }
 
     record Branch(Expression condition,

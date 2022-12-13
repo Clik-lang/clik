@@ -146,12 +146,9 @@ public final class Interpreter {
                 if (!(walker.find(structValue.name()) instanceof Expression.Struct structDeclaration)) {
                     throw new RuntimeException("Struct not found: " + structValue.name());
                 }
-                final var params = structDeclaration.parameters().stream().map(Parameter::name).toList();
-                int index = params.indexOf(field.name());
-                if (index == -1) {
-                    throw new RuntimeException("Field not found: " + field.name());
-                }
-                return structValue.fields().get(index);
+                final Parameter param = structDeclaration.parameters().stream()
+                        .filter(p -> p.name().equals(field.name())).findFirst().orElseThrow();
+                return structValue.fields().find(structDeclaration.parameters(), param);
             } else if (expression instanceof Expression.Enum enumDecl) {
                 final Expression value = enumDecl.entries().get(field.name());
                 if (value == null) {
@@ -163,19 +160,21 @@ public final class Interpreter {
             }
         } else if (argument instanceof Expression.Call call) {
             final String name = call.name();
-            final List<Expression> params = call.arguments().stream().map(this::evaluate).toList();
+
             if (name.equals("print")) {
+                final List<Expression> params = call.arguments().expressions().stream().map(this::evaluate).toList();
                 for (Expression param : params) {
                     final String serialize = serialize(param);
                     System.out.print(serialize);
                 }
                 System.out.println();
             } else {
-                return interpret(name, call.arguments());
+                return interpret(name, call.arguments().expressions());
             }
             return null;
         } else if (argument instanceof Expression.StructValue init) {
-            return new Expression.StructValue(init.name(), init.fields().stream().map(this::evaluate).toList());
+            final List<Expression> evaluated = init.fields().expressions().stream().map(this::evaluate).toList();
+            return new Expression.StructValue(init.name(), new Parameter.Passed.Positional(evaluated));
         } else if (argument instanceof Expression.Range init) {
             return new Expression.Range(evaluate(init.start()), evaluate(init.end()), evaluate(init.step()));
         } else if (argument instanceof Expression.Binary binary) {
@@ -241,12 +240,18 @@ public final class Interpreter {
         if (expression instanceof Expression.Constant constant) {
             return constant.value().toString();
         } else if (expression instanceof Expression.StructValue init) {
+            var struct = walker.find(init.name());
+            if (!(struct instanceof Expression.Struct structDeclaration)) {
+                throw new RuntimeException("Struct not found: " + init.name());
+            }
+            var parameters = structDeclaration.parameters();
             final StringBuilder builder = new StringBuilder();
             builder.append(init.name()).append("{");
-            for (int i = 0; i < init.fields().size(); i++) {
-                final Expression field = init.fields().get(i);
+            for (int i = 0; i < parameters.size(); i++) {
+                var param = parameters.get(i);
+                final Expression field = init.fields().find(parameters, param);
                 builder.append(serialize(field));
-                if (i < init.fields().size() - 1) {
+                if (i < parameters.size() - 1) {
                     builder.append(", ");
                 }
             }

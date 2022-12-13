@@ -54,7 +54,7 @@ public final class Parser {
                     } while (match(COMMA));
                 }
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
-                statement = new Statement.Call(name, arguments);
+                statement = new Statement.Call(name, new Parameter.Passed.Positional(arguments));
             } else {
                 // Implicit return
                 index--;
@@ -149,7 +149,7 @@ public final class Parser {
                     } while (match(COMMA));
                 }
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
-                return new Expression.Call(identifier.input(), arguments);
+                return new Expression.Call(identifier.input(), new Parameter.Passed.Positional(arguments));
             } else if (match(LEFT_BRACE)) {
                 // Struct
                 final List<Expression> fields = new ArrayList<>();
@@ -159,7 +159,7 @@ public final class Parser {
                     } while (match(COMMA));
                 }
                 consume(RIGHT_BRACE, "Expected '}' after fields.");
-                return new Expression.StructValue(identifier.input(), fields);
+                return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(fields));
             } else if (match(DOT)) {
                 // Field
                 final Expression expression = new Expression.Variable(identifier.input());

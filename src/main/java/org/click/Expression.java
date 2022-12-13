@@ -24,10 +24,10 @@ public sealed interface Expression {
     record Field(Expression object, String name) implements Expression {
     }
 
-    record Call(String name, List<Expression> arguments) implements Expression {
+    record Call(String name, Parameter.Passed arguments) implements Expression {
     }
 
-    record StructValue(String name, List<Expression> fields) implements Expression {
+    record StructValue(String name, Parameter.Passed fields) implements Expression {
     }
 
     record Range(Expression start, Expression end, Expression step) implements Expression {
