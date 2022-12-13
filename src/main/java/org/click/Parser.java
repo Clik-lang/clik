@@ -33,16 +33,19 @@ public final class Parser {
                     explicitType = Type.of(type.input());
                 }
 
+                Statement.DeclarationType declarationType;
                 if (match(COLON)) {
-                    // Constant
+                    declarationType = Statement.DeclarationType.CONSTANT;
                 } else if (match(EQUAL)) {
-                    // Variable
+                    declarationType = Statement.DeclarationType.VARIABLE;
                 } else if (match(TIDE)) {
-                    // Shared
+                    declarationType = Statement.DeclarationType.SHARED;
+                } else {
+                    throw error(peek(), "Expected declaration type");
                 }
 
                 final Expression initializer = nextExpression();
-                statement = new Statement.Declare(name, initializer, explicitType);
+                statement = new Statement.Declare(name, declarationType, initializer, explicitType);
             } else if (match(LEFT_PAREN)) {
                 // Call
                 final List<Expression> arguments = new ArrayList<>();

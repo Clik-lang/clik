@@ -5,7 +5,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public sealed interface Statement {
-    record Declare(String name, Expression initializer, @Nullable Type explicitType) implements Statement {
+    record Declare(String name, DeclarationType type, Expression initializer,
+                   @Nullable Type explicitType) implements Statement {
     }
 
     record Assign(String name, Expression expression) implements Statement {
@@ -27,5 +28,9 @@ public sealed interface Statement {
     }
 
     record Return(@Nullable Expression expression) implements Statement {
+    }
+
+    enum DeclarationType {
+        CONSTANT, VARIABLE, SHARED
     }
 }
