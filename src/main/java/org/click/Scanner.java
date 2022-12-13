@@ -54,7 +54,21 @@ public final class Scanner {
         else if (c == '=') type = Token.Type.EQUAL;
         else if (c == ':') type = Token.Type.COLON;
         else if (c == '~') type = Token.Type.TIDE;
-        else if (c == '\"') {
+        else if (c == '|') {
+            if (peek() == '|') {
+                advance();
+                type = Token.Type.OR;
+            } else {
+                throw new RuntimeException("Unexpected character: " + c);
+            }
+        } else if (c == '&') {
+            if (peek() == '&') {
+                advance();
+                type = Token.Type.AND;
+            } else {
+                throw new RuntimeException("Unexpected character: " + c);
+            }
+        } else if (c == '\"') {
             type = Token.Type.LITERAL;
             value = nextString();
         } else if (Character.isDigit(c)) {
