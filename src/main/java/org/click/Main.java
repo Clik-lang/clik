@@ -5,6 +5,7 @@ import org.click.interpreter.Interpreter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -20,7 +21,7 @@ public class Main {
         for (var statement : statements) System.out.println(statement);
 
         var interpreter = new Interpreter(statements);
-        interpreter.interpret("main");
+        interpreter.interpret("main", List.of());
         interpreter.stop();
     }
 }

@@ -21,10 +21,6 @@ public final class Interpreter {
         }
     }
 
-    public Expression interpret(String function) {
-        return interpret(function, List.of());
-    }
-
     public Expression interpret(String function, List<Expression> parameters) {
         final Expression call = walker.find(function);
         if (!(call instanceof Expression.Function functionDeclaration)) {
