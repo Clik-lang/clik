@@ -18,6 +18,6 @@ public sealed interface Expression {
     record Call(String name, List<Expression> arguments) implements Expression {
     }
 
-    record StructAlloc(String name, List<Expression> fields) implements Expression {
+    record StructInit(String name, List<Expression> fields) implements Expression {
     }
 }

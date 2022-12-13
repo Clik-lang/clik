@@ -107,7 +107,7 @@ public final class Parser {
                     } while (match(COMMA));
                 }
                 consume(RIGHT_BRACE, "Expected '}' after fields.");
-                expression = new Expression.StructAlloc(identifier.input(), fields);
+                expression = new Expression.StructInit(identifier.input(), fields);
             } else {
                 expression = new Expression.Variable(identifier.input());
             }

@@ -94,8 +94,8 @@ public final class Interpreter {
                 return interpret(name, call.arguments());
             }
             return null;
-        } else if (argument instanceof Expression.StructAlloc structAlloc) {
-            return new Expression.StructAlloc(structAlloc.name(), structAlloc.fields().stream().map(this::evaluate).toList());
+        } else if (argument instanceof Expression.StructInit init) {
+            return new Expression.StructInit(init.name(), init.fields().stream().map(this::evaluate).toList());
         } else {
             throw new RuntimeException("Unknown expression: " + argument);
         }
@@ -104,13 +104,13 @@ public final class Interpreter {
     private String serialize(Expression expression) {
         if (expression instanceof Expression.Constant constant) {
             return constant.value().toString();
-        } else if (expression instanceof Expression.StructAlloc structAlloc) {
+        } else if (expression instanceof Expression.StructInit init) {
             final StringBuilder builder = new StringBuilder();
-            builder.append(structAlloc.name()).append("{");
-            for (int i = 0; i < structAlloc.fields().size(); i++) {
-                final Expression field = structAlloc.fields().get(i);
+            builder.append(init.name()).append("{");
+            for (int i = 0; i < init.fields().size(); i++) {
+                final Expression field = init.fields().get(i);
                 builder.append(serialize(field));
-                if (i < structAlloc.fields().size() - 1) {
+                if (i < init.fields().size() - 1) {
                     builder.append(", ");
                 }
             }
