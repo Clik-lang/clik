@@ -21,7 +21,7 @@ public record Token(Type type, int line, String input,
         IDENTIFIER, LITERAL,
 
         // Keywords
-        IF, ELSE, FOR, STRUCT, ENUM, UNION,
+        IF, ELSE, TRUE, FALSE, FOR, STRUCT, ENUM, UNION,
 
         // End of file
         EOF,

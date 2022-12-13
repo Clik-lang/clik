@@ -62,7 +62,11 @@ public final class Scanner {
             value = nextNumber();
         } else if (Character.isLetter(c)) {
             value = nextIdentifier();
-            if (value.equals("for")) {
+            if (value.equals("true")) {
+                type = Token.Type.TRUE;
+            } else if (value.equals("false")) {
+                type = Token.Type.FALSE;
+            } else if (value.equals("for")) {
                 type = Token.Type.FOR;
             } else if (value.equals("struct")) {
                 type = Token.Type.STRUCT;

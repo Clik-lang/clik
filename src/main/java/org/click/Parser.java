@@ -109,6 +109,10 @@ public final class Parser {
             } else {
                 throw error(literal, "Unexpected literal type: " + value);
             }
+        } else if (match(TRUE)) {
+            expression = new Expression.Constant(true);
+        } else if (match(FALSE)) {
+            expression = new Expression.Constant(false);
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
