@@ -115,6 +115,22 @@ public final class Interpreter {
                         }
                     }
                     walker.exitBlock();
+                } else if (iterable instanceof Expression.ArrayValue arrayValue) {
+                    walker.enterBlock();
+                    final List<Expression> values = arrayValue.parameters().expressions();
+                    if (declarations.size() == 1) {
+                        final String name = declarations.get(0);
+                        walker.register(name, new Expression.Constant(0));
+                    } else if (declarations.size() > 1) {
+                        throw new RuntimeException("Too many declarations for array iteration");
+                    }
+                    for (Expression value : values) {
+                        if (!declarations.isEmpty()) walker.update(declarations.get(0), value);
+                        for (Statement body : loop.body()) {
+                            execute(function, body);
+                        }
+                    }
+                    walker.exitBlock();
                 } else {
                     throw new RuntimeException("Expected iterable, got: " + iterable);
                 }
