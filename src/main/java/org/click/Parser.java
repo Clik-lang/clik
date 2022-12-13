@@ -182,6 +182,11 @@ public final class Parser {
 
     Statement.Loop readLoop() {
         consume(FOR, "Expect 'for'.");
+        // Infinite loop
+        if (check(LEFT_BRACE) || check(ARROW)) {
+            return new Statement.Loop(List.of(), null, readBlock());
+        }
+        // Conditional loop
         if (check(IDENTIFIER) && checkNext(COLON)) {
             final Token identifier = consume(IDENTIFIER, "Expect identifier.");
             consume(COLON, "Expect ':'.");

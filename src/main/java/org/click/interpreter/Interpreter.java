@@ -58,25 +58,34 @@ public final class Interpreter {
         } else if (statement instanceof Statement.Call call) {
             evaluate(new Expression.Call(call.name(), call.arguments()));
         } else if (statement instanceof Statement.Loop loop) {
-            final Expression iterable = evaluate(loop.iterable());
-            if(iterable instanceof Expression.Range range){
-                final int start = (int) ((Expression.Constant)range.start()).value();
-                final int end = (int) ((Expression.Constant)range.end()).value();
-                final int step = (int) ((Expression.Constant)range.step()).value();
-                walker.enterBlock();
-                for (int i = 0; i < loop.declarations().size(); i++) {
-                    final String declaration = loop.declarations().get(i);
-                    walker.register(declaration, new Expression.Constant(0));
-                }
-                for (int i = start; i < end; i += step) {
-                    walker.update(loop.declarations().get(0), new Expression.Constant(i));
+            if (loop.iterable() == null) {
+                // Infinite loop
+                while (true) {
                     for (Statement body : loop.body()) {
                         execute(body);
                     }
                 }
-                walker.exitBlock();
-            }else{
-                throw new RuntimeException("Expected iterable, got: " + iterable);
+            } else {
+                final Expression iterable = evaluate(loop.iterable());
+                if (iterable instanceof Expression.Range range) {
+                    final int start = (int) ((Expression.Constant) range.start()).value();
+                    final int end = (int) ((Expression.Constant) range.end()).value();
+                    final int step = (int) ((Expression.Constant) range.step()).value();
+                    walker.enterBlock();
+                    for (int i = 0; i < loop.declarations().size(); i++) {
+                        final String declaration = loop.declarations().get(i);
+                        walker.register(declaration, new Expression.Constant(0));
+                    }
+                    for (int i = start; i < end; i += step) {
+                        walker.update(loop.declarations().get(0), new Expression.Constant(i));
+                        for (Statement body : loop.body()) {
+                            execute(body);
+                        }
+                    }
+                    walker.exitBlock();
+                } else {
+                    throw new RuntimeException("Expected iterable, got: " + iterable);
+                }
             }
         } else if (statement instanceof Statement.Block block) {
             this.walker.enterBlock();
