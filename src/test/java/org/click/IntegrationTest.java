@@ -138,6 +138,17 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void array() {
+        assertProgram(ONE,
+                """
+                        main :: () i32 {
+                          array :: []i32 {1, 2, 3, 4, 5};
+                          return array[0];
+                        }
+                        """);
+    }
+
+    @Test
     public void struct() {
         assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
                 """

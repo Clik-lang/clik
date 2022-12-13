@@ -32,6 +32,8 @@ public final class Scanner {
         else if (c == ')') type = Token.Type.RIGHT_PAREN;
         else if (c == '{') type = Token.Type.LEFT_BRACE;
         else if (c == '}') type = Token.Type.RIGHT_BRACE;
+        else if (c == '[') type = Token.Type.LEFT_BRACKET;
+        else if (c == ']') type = Token.Type.RIGHT_BRACKET;
         else if (c == ',') type = Token.Type.COMMA;
         else if (c == '.') {
             if (peek() == '.') {

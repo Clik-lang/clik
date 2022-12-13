@@ -169,6 +169,20 @@ public final class Interpreter {
             } else {
                 throw new RuntimeException("Expected struct, got: " + expression);
             }
+        } else if (argument instanceof Expression.ArrayAccess arrayAccess) {
+            final Expression array = evaluate(arrayAccess.array(), null);
+            final Expression index = evaluate(arrayAccess.index(), null);
+            if (!(array instanceof Expression.ArrayValue arrayValue)) {
+                throw new RuntimeException("Expected array, got: " + array);
+            }
+            if (!(index instanceof Expression.Constant constant) || !(constant.value() instanceof Integer integer)) {
+                throw new RuntimeException("Expected constant, got: " + index);
+            }
+            final List<Expression> content = arrayValue.parameters().expressions();
+            if (integer < 0 || integer >= content.size()) {
+                throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
+            }
+            return content.get(integer);
         } else if (argument instanceof Expression.Call call) {
             final String name = call.name();
 
@@ -183,18 +197,24 @@ public final class Interpreter {
                 return interpret(name, call.arguments().expressions());
             }
             return null;
-        } else if (argument instanceof Expression.StructValue init) {
-            final Expression.Struct struct = (Expression.Struct) walker.find(init.name());
-            var parameters = struct.parameters();
+        } else if (argument instanceof Expression.StructValue structValue) {
+            final Expression.Struct struct = (Expression.Struct) walker.find(structValue.name());
+            final List<Parameter> parameters = struct.parameters();
             List<Expression> evaluated = new ArrayList<>();
             for (var param : struct.parameters()) {
-                final Expression value = init.fields().find(parameters, param);
+                final Expression value = structValue.fields().find(parameters, param);
                 if (value == null) {
                     throw new RuntimeException("Missing field: " + param.name());
                 }
                 evaluated.add(evaluate(value, param.type()));
             }
-            return new Expression.StructValue(init.name(), new Parameter.Passed.Positional(evaluated));
+            return new Expression.StructValue(structValue.name(), new Parameter.Passed.Positional(evaluated));
+        } else if (argument instanceof Expression.ArrayValue arrayValue) {
+            if (!(arrayValue.parameters() instanceof Parameter.Passed.Positional positional))
+                throw new RuntimeException("Expected positional parameters");
+            final List<Expression> evaluated = positional.expressions().stream()
+                    .map(expression -> evaluate(expression, arrayValue.type())).toList();
+            return new Expression.ArrayValue(arrayValue.type(), new Parameter.Passed.Positional(evaluated));
         } else if (argument instanceof Expression.InitializationBlock initializationBlock) {
             // Retrieve explicit type from context
             if (explicitType == null)
@@ -271,23 +291,37 @@ public final class Interpreter {
     private String serialize(Expression expression) {
         if (expression instanceof Expression.Constant constant) {
             return constant.value().toString();
-        } else if (expression instanceof Expression.StructValue init) {
-            var struct = walker.find(init.name());
+        } else if (expression instanceof Expression.StructValue structValue) {
+            var struct = walker.find(structValue.name());
             if (!(struct instanceof Expression.Struct structDeclaration)) {
-                throw new RuntimeException("Struct not found: " + init.name());
+                throw new RuntimeException("Struct not found: " + structValue.name());
             }
             var parameters = structDeclaration.parameters();
             final StringBuilder builder = new StringBuilder();
-            builder.append(init.name()).append("{");
+            builder.append(structValue.name()).append("{");
             for (int i = 0; i < parameters.size(); i++) {
                 var param = parameters.get(i);
-                final Expression field = init.fields().find(parameters, param);
+                final Expression field = structValue.fields().find(parameters, param);
                 builder.append(serialize(field));
                 if (i < parameters.size() - 1) {
                     builder.append(", ");
                 }
             }
             builder.append("}");
+            return builder.toString();
+        } else if (expression instanceof Expression.ArrayValue arrayValue) {
+            final StringBuilder builder = new StringBuilder();
+            builder.append("[");
+            if (arrayValue.parameters() instanceof Parameter.Passed.Positional positional) {
+                for (int i = 0; i < positional.expressions().size(); i++) {
+                    final Expression value = positional.expressions().get(i);
+                    builder.append(serialize(value));
+                    if (i < positional.expressions().size() - 1) {
+                        builder.append(", ");
+                    }
+                }
+            }
+            builder.append("]");
             return builder.toString();
         } else {
             throw new RuntimeException("Unknown expression: " + expression);

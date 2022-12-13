@@ -172,9 +172,21 @@ public final class Parser {
                 final Expression expression = new Expression.Variable(identifier.input());
                 final Token field = consume(IDENTIFIER, "Expected field name.");
                 return new Expression.Field(expression, field.input());
+            } else if (match(LEFT_BRACKET)) {
+                // Array
+                final Expression index = nextExpression();
+                consume(RIGHT_BRACKET, "Expected ']' after index.");
+                return new Expression.ArrayAccess(new Expression.Variable(identifier.input()), index);
             } else {
                 return new Expression.Variable(identifier.input());
             }
+        } else if (check(LEFT_BRACKET)) {
+            // Array
+            consume(LEFT_BRACKET, "Expected '[' after array.");
+            consume(RIGHT_BRACKET, "Expected ']' after array.");
+            final Type arrayType = nextType();
+            final Parameter.Passed passed = nextPassedParameters();
+            return new Expression.ArrayValue(arrayType, passed);
         } else if (check(LEFT_BRACE)) {
             // Inline block
             final Parameter.Passed passed = nextPassedParameters();
