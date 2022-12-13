@@ -78,6 +78,10 @@ public final class Parser {
             } else {
                 throw error(literal, "Unexpected literal type: " + value);
             }
+        } else if (match(IDENTIFIER)) {
+            // Variable
+            final Token identifier = previous();
+            expression = new Expression.Variable(identifier.input());
         } else {
             throw error(peek(), "Expect expression.");
         }

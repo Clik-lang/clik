@@ -53,6 +53,12 @@ public final class Interpreter {
     private Object evaluate(Expression argument) {
         if (argument instanceof Expression.Constant constant) {
             return constant.value();
+        } else if (argument instanceof Expression.Variable variable) {
+            final Expression variableExpression = walker.find(variable.name());
+            if (variableExpression == null) {
+                throw new RuntimeException("Variable not found: " + variable.name());
+            }
+            return evaluate(variableExpression);
         } else {
             throw new RuntimeException("Unknown expression: " + argument);
         }

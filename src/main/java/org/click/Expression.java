@@ -8,4 +8,7 @@ public sealed interface Expression {
 
     record Constant(Object value) implements Expression {
     }
+
+    record Variable(String name) implements Expression {
+    }
 }

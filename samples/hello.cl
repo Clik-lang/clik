@@ -1,3 +1,4 @@
 main :: () {
-  print("Hello world");
+  value :: "Hello, World!";
+  print(value);
 }
