@@ -117,7 +117,7 @@ public final class Parser {
 
     Expression.Function nextFunction() {
         consume(LEFT_PAREN, "Expect '('.");
-        final List<String> parameters = new ArrayList<>();
+        final List<Parameter> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
             do {
                 if (parameters.size() >= 255) {
@@ -125,8 +125,9 @@ public final class Parser {
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect parameter name.");
                 consume(COLON, "Expect ':' after parameter name.");
-                consume(IDENTIFIER, "Expect parameter type.");
-                parameters.add(identifier.input());
+                final Token type = consume(IDENTIFIER, "Expect parameter type.");
+                final Parameter parameter = new Parameter(identifier.input(), Type.of(type.input()));
+                parameters.add(parameter);
             } while (match(COMMA));
         }
         consume(RIGHT_PAREN, "Expect ')'.");
@@ -143,7 +144,7 @@ public final class Parser {
     private Expression.Struct nextStruct() {
         consume(STRUCT, "Expect 'struct'.");
         consume(LEFT_BRACE, "Expect '{'.");
-        final List<String> fields = new ArrayList<>();
+        final List<Parameter> fields = new ArrayList<>();
         if (!check(RIGHT_BRACE)) {
             do {
                 if (fields.size() >= 255) {
@@ -151,8 +152,9 @@ public final class Parser {
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect field name.");
                 consume(COLON, "Expect ':' after field name.");
-                consume(IDENTIFIER, "Expect field type.");
-                fields.add(identifier.input());
+                final Token type = consume(IDENTIFIER, "Expect field type.");
+                final Parameter parameter = new Parameter(identifier.input(), Type.of(type.input()));
+                fields.add(parameter);
             } while (match(COMMA));
         }
         consume(RIGHT_BRACE, "Expect '}'.");

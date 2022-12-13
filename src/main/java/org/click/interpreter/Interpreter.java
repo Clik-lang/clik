@@ -1,6 +1,7 @@
 package org.click.interpreter;
 
 import org.click.Expression;
+import org.click.Parameter;
 import org.click.Statement;
 
 import java.util.List;
@@ -33,9 +34,9 @@ public final class Interpreter {
 
         walker.enterBlock();
         for (int i = 0; i < parameters.size(); i++) {
-            final String token = functionDeclaration.parameters().get(i);
+            final Parameter parameter = functionDeclaration.parameters().get(i);
             final Expression expression = parameters.get(i);
-            walker.register(token, expression);
+            walker.register(parameter.name(), expression);
         }
 
         Expression result = null;
