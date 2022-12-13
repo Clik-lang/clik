@@ -40,8 +40,14 @@ public final class Scanner {
             } else {
                 type = Token.Type.DOT;
             }
-        } else if (c == '-') type = Token.Type.MINUS;
-        else if (c == '+') type = Token.Type.PLUS;
+        } else if (c == '-') {
+            if (peek() == '>') {
+                advance();
+                type = Token.Type.ARROW;
+            } else {
+                type = Token.Type.MINUS;
+            }
+        } else if (c == '+') type = Token.Type.PLUS;
         else if (c == ';') type = Token.Type.SEMICOLON;
         else if (c == '*') type = Token.Type.STAR;
         else if (c == '/') type = Token.Type.SLASH;

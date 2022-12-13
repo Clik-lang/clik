@@ -64,7 +64,7 @@ public final class Parser {
             throw error(peek(), "Expect statement.");
         }
 
-        if (previous().type() != RIGHT_BRACE)
+        if (previous().type() != RIGHT_BRACE && previous().type() != SEMICOLON)
             consume(SEMICOLON, "Expected ';' after expression.");
         return statement;
     }
@@ -199,13 +199,18 @@ public final class Parser {
     }
 
     List<Statement> readBlock() {
-        consume(LEFT_BRACE, "Expect '{'.");
-        final List<Statement> statements = new ArrayList<>();
-        while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            statements.add(nextStatement());
+        if (match(LEFT_BRACE)) {
+            final List<Statement> statements = new ArrayList<>();
+            while (!check(RIGHT_BRACE) && !isAtEnd()) {
+                statements.add(nextStatement());
+            }
+            consume(RIGHT_BRACE, "Expect '}'.");
+            return statements;
+        } else if (match(ARROW)) {
+            final Statement statement = nextStatement();
+            return List.of(statement);
         }
-        consume(RIGHT_BRACE, "Expect '}'.");
-        return statements;
+        throw error(peek(), "Expect '{' or '->'.");
     }
 
     Token consume(Token.Type type, String message) {

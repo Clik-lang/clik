@@ -15,7 +15,7 @@ public record Token(Type type, int line, String input,
         COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
 
         // Declarations
-        EQUAL, COLON, TIDE, RANGE,
+        EQUAL, COLON, TIDE, RANGE, ARROW,
 
         // Values
         IDENTIFIER, LITERAL,
