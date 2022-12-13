@@ -19,9 +19,7 @@ public final class Parser {
         if (match(IDENTIFIER)) {
             final Token identifier = previous();
             final String name = identifier.input();
-            if (name.equals("return")) {
-                statement = new Statement.Return(nextExpression());
-            } else if (match(EQUAL)) {
+            if (match(EQUAL)) {
                 // Assign
                 final Expression expression = nextExpression();
                 statement = new Statement.Assign(name, expression);
@@ -63,6 +61,10 @@ public final class Parser {
                 assert expression != null;
                 statement = new Statement.Return(expression);
             }
+        } else if (check(RETURN)) {
+            // Explicit return
+            consume(RETURN, "Expected 'return'.");
+            statement = new Statement.Return(nextExpression());
         } else if (check(IF)) {
             statement = readBranch();
         } else if (check(FOR)) {

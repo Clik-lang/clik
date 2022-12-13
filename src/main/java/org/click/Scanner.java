@@ -62,7 +62,9 @@ public final class Scanner {
             value = nextNumber();
         } else if (Character.isLetter(c)) {
             value = nextIdentifier();
-            if (value.equals("if")) {
+            if (value.equals("return")) {
+                type = Token.Type.RETURN;
+            } else if (value.equals("if")) {
                 type = Token.Type.IF;
             } else if (value.equals("else")) {
                 type = Token.Type.ELSE;
