@@ -9,22 +9,23 @@ public final class IntegrationTest {
 
     private static final Expression ZERO = new Expression.Constant(0);
     private static final Expression ONE = new Expression.Constant(1);
+    private static final Expression TWO = new Expression.Constant(2);
 
     @Test
     public void functionBlock() {
-        assertProgram(ZERO, "main",
+        assertProgram(ZERO,
                 """
                         main :: () {
                             return 0;
                         }
                         """);
-        assertProgram(ZERO, "main",
+        assertProgram(ZERO,
                 """
                         main :: () {
                             0;
                         }
                         """);
-        assertProgram(ZERO, "main",
+        assertProgram(ZERO,
                 """
                         main :: () -> 0;
                         """);
@@ -32,14 +33,14 @@ public final class IntegrationTest {
 
     @Test
     public void param() {
-        assertProgram(ONE, "main",
+        assertProgram(ONE,
                 """
                         main :: () {
                             return get();
                         }
                         get :: () -> 1;
                         """);
-        assertProgram(ONE, "main",
+        assertProgram(ONE,
                 """
                         main :: () {
                             value :: get();
@@ -47,18 +48,34 @@ public final class IntegrationTest {
                         }
                         get :: () -> 1;
                         """);
-        assertProgram(ONE, "main",
+        assertProgram(ONE,
                 """
                         main :: () {
                             get();
                         }
                         get :: () -> 1;
                         """);
-        assertProgram(ONE, "main",
+        assertProgram(ONE,
                 """
                         main :: () -> get();
                         get :: () -> 1;
                         """);
+    }
+
+    @Test
+    public void math() {
+        assertProgram(ONE,
+                """
+                        main :: () -> 1;
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () -> 1 + 1;
+                        """);
+    }
+
+    private static void assertProgram(Expression expected, String input) {
+        assertProgram(expected, "main", input);
     }
 
     private static void assertProgram(Expression expected, String name, String input) {
