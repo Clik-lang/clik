@@ -26,9 +26,8 @@ public final class Parser {
             } else if (match(COLON)) {
                 // Declare
                 Type explicitType = null;
-                if (match(IDENTIFIER)) {
-                    final Token type = peek();
-                    explicitType = Type.of(type.input());
+                if (check(IDENTIFIER)) {
+                    explicitType = nextType();
                 }
 
                 Statement.DeclarationType declarationType;
@@ -152,6 +151,11 @@ public final class Parser {
         return expression;
     }
 
+    Type nextType() {
+        final Token identifier = consume(IDENTIFIER, "Expected type name.");
+        return Type.of(identifier.input());
+    }
+
     Expression.Function nextFunction() {
         consume(LEFT_PAREN, "Expect '('.");
         final List<Parameter> parameters = new ArrayList<>();
@@ -162,17 +166,15 @@ public final class Parser {
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect parameter name.");
                 consume(COLON, "Expect ':' after parameter name.");
-                final Token type = consume(IDENTIFIER, "Expect parameter type.");
-                final Parameter parameter = new Parameter(identifier.input(), Type.of(type.input()));
+                final Type type = nextType();
+                final Parameter parameter = new Parameter(identifier.input(), type);
                 parameters.add(parameter);
             } while (match(COMMA));
         }
         consume(RIGHT_PAREN, "Expect ')'.");
         Type returnType = Type.VOID;
-        if (match(IDENTIFIER)) {
-            // Return type
-            final Token identifier = previous();
-            returnType = Type.of(identifier.input());
+        if (check(IDENTIFIER)) {
+            returnType = nextType();
         }
         final List<Statement> body = readBlock();
         return new Expression.Function(parameters, returnType, body);
@@ -189,8 +191,8 @@ public final class Parser {
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect field name.");
                 consume(COLON, "Expect ':' after field name.");
-                final Token type = consume(IDENTIFIER, "Expect field type.");
-                final Parameter parameter = new Parameter(identifier.input(), Type.of(type.input()));
+                final Type type = nextType();
+                final Parameter parameter = new Parameter(identifier.input(), type);
                 fields.add(parameter);
             } while (match(COMMA));
         }
