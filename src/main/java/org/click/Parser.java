@@ -85,6 +85,12 @@ public final class Parser {
         return statement;
     }
 
+    Expression nextExpression() {
+        if (check(SEMICOLON)) return null;
+        // Pratt's algorithm
+        return nextExpression(0);
+    }
+
     Expression nextExpression(int precedence) {
         Expression expression = nextPrimary();
         while (precedence < getPrecedence(peek().type())) {
@@ -177,12 +183,6 @@ public final class Parser {
             case STAR, SLASH -> 40;
             default -> -1;
         };
-    }
-
-    Expression nextExpression() {
-        if (check(SEMICOLON)) return null;
-        // Pratt's algorithm
-        return nextExpression(0);
     }
 
     Type nextType() {

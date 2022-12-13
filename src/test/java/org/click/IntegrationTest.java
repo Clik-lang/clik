@@ -77,6 +77,16 @@ public final class IntegrationTest {
                 """
                         main :: () -> 1 + 1;
                         """);
+
+        assertProgram(TWO,
+                """
+                        main :: () i32 {
+                            value := 1;
+                            value = value + 1;
+                            return value;
+                        }
+                        """);
+
         assertProgram(new Expression.Constant(14),
                 """
                         main :: () -> 2 + 3 * 4;
@@ -182,6 +192,34 @@ public final class IntegrationTest {
                 """
                         Direction :: enum {North,South}
                         main :: () i32 -> Direction.South;
+                        """);
+    }
+
+    @Test
+    public void loop() {
+        assertProgram(new Expression.Constant(10),
+                """
+                        main :: () i32 {
+                          value := 0;
+                          for 0..10 -> value = value + 1;
+                          return value;
+                        }
+                        """);
+        assertProgram(new Expression.Constant(10),
+                """
+                        main :: () i32 {
+                          value := 0;
+                          for i: 0..10 -> value = value + 1;
+                          return value;
+                        }
+                        """);
+        assertProgram(new Expression.Constant(45),
+                """
+                        main :: () i32 {
+                          value := 0;
+                          for i: 0..10 -> value = value + i;
+                          return value;
+                        }
                         """);
     }
 

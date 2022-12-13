@@ -58,7 +58,8 @@ public final class Interpreter {
             assert evaluated != null;
             walker.register(name, evaluated);
         } else if (statement instanceof Statement.Assign assign) {
-            walker.update(assign.name(), assign.expression());
+            final Expression evaluated = evaluate(assign.expression());
+            walker.update(assign.name(), evaluated);
         } else if (statement instanceof Statement.Call call) {
             return evaluate(new Expression.Call(call.name(), call.arguments()));
         } else if (statement instanceof Statement.Branch branch) {
@@ -86,18 +87,19 @@ public final class Interpreter {
                     }
                 }
             } else {
+                final List<String> declarations = loop.declarations();
                 final Expression iterable = evaluate(loop.iterable());
                 if (iterable instanceof Expression.Range range) {
                     final int start = (int) ((Expression.Constant) range.start()).value();
                     final int end = (int) ((Expression.Constant) range.end()).value();
                     final int step = (int) ((Expression.Constant) range.step()).value();
                     walker.enterBlock();
-                    for (int i = 0; i < loop.declarations().size(); i++) {
+                    for (int i = 0; i < declarations.size(); i++) {
                         final String declaration = loop.declarations().get(i);
                         walker.register(declaration, new Expression.Constant(0));
                     }
                     for (int i = start; i < end; i += step) {
-                        walker.update(loop.declarations().get(0), new Expression.Constant(i));
+                        if (!declarations.isEmpty()) walker.update(declarations.get(0), new Expression.Constant(i));
                         for (Statement body : loop.body()) {
                             execute(body);
                         }
