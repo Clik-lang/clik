@@ -154,6 +154,20 @@ public final class IntegrationTest {
                         """);
     }
 
+    @Test
+    public void enumDecl() {
+        assertProgram(ZERO,
+                """
+                        Direction :: enum {North,South}
+                        main :: () i32 -> return Direction.North;
+                        """);
+        assertProgram(ONE,
+                """
+                        Direction :: enum {North,South}
+                        main :: () i32 -> Direction.South;
+                        """);
+    }
+
     private static void assertProgram(Expression expected, String input) {
         assertProgram(expected, "main", input);
     }

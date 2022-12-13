@@ -1,5 +1,10 @@
+Direction :: enum {
+  North,
+  South,
+  East,
+  West
+}
 main :: () {
-  test :: true;
-  if test -> print("true");
-  else -> print("false");
+  value :: Direction.South;
+  print(value);
 }

@@ -96,6 +96,8 @@ public final class Scanner {
                 type = Token.Type.FOR;
             } else if (value.equals("struct")) {
                 type = Token.Type.STRUCT;
+            } else if (value.equals("enum")) {
+                type = Token.Type.ENUM;
             } else {
                 type = Token.Type.IDENTIFIER;
             }

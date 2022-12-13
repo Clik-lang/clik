@@ -1,6 +1,9 @@
 package org.click;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
+import java.util.Map;
 
 public sealed interface Expression {
     record Function(List<Parameter> parameters, Type returnType, List<Statement> body) implements Expression {
@@ -9,10 +12,16 @@ public sealed interface Expression {
     record Struct(List<Parameter> parameters) implements Expression {
     }
 
+    record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
+    }
+
     record Constant(Object value) implements Expression {
     }
 
     record Variable(String name) implements Expression {
+    }
+
+    record Field(Expression object, String name) implements Expression {
     }
 
     record Call(String name, List<Expression> arguments) implements Expression {

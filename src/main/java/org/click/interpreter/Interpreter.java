@@ -127,6 +127,8 @@ public final class Interpreter {
             return functionDeclaration;
         } else if (argument instanceof Expression.Struct structDeclaration) {
             return structDeclaration;
+        } else if (argument instanceof Expression.Enum enumDeclaration) {
+            return enumDeclaration;
         } else if (argument instanceof Expression.Constant constant) {
             return constant;
         } else if (argument instanceof Expression.Variable variable) {
@@ -136,6 +138,17 @@ public final class Interpreter {
                 throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked.keySet());
             }
             return variableExpression;
+        } else if (argument instanceof Expression.Field field) {
+            final Expression expression = evaluate(field.object());
+            if (expression instanceof Expression.Enum enumDecl) {
+                final Expression value = enumDecl.entries().get(field.name());
+                if (value == null) {
+                    throw new RuntimeException("Enum entry not found: " + field.name());
+                }
+                return value;
+            } else {
+                throw new RuntimeException("Expected struct, got: " + expression);
+            }
         } else if (argument instanceof Expression.Call call) {
             final String name = call.name();
             final List<Expression> params = call.arguments().stream().map(this::evaluate).toList();

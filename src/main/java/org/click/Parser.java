@@ -1,7 +1,9 @@
 package org.click;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.click.Token.Type.*;
 
@@ -112,6 +114,8 @@ public final class Parser {
             return nextFunction();
         } else if (check(STRUCT)) {
             return nextStruct();
+        } else if (check(ENUM)) {
+            return nextEnum();
         } else if (match(LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
@@ -150,6 +154,11 @@ public final class Parser {
                 }
                 consume(RIGHT_BRACE, "Expected '}' after fields.");
                 return new Expression.StructInit(identifier.input(), fields);
+            } else if (match(DOT)) {
+                // Field
+                final Expression expression = new Expression.Variable(identifier.input());
+                final Token field = consume(IDENTIFIER, "Expected field name.");
+                return new Expression.Field(expression, field.input());
             } else {
                 return new Expression.Variable(identifier.input());
             }
@@ -223,6 +232,31 @@ public final class Parser {
         }
         consume(RIGHT_BRACE, "Expect '}'.");
         return new Expression.Struct(fields);
+    }
+
+    private Expression.Enum nextEnum() {
+        consume(ENUM, "Expect 'enum'.");
+        consume(LEFT_BRACE, "Expect '{'.");
+        final Map<String, Expression> entries = new HashMap<>();
+        int index = 0;
+        if (!check(RIGHT_BRACE)) {
+            do {
+                if (entries.size() >= 255) {
+                    throw error(peek(), "Cannot have more than 255 fields.");
+                }
+                final Token identifier = consume(IDENTIFIER, "Expect field name.");
+                final Expression value;
+                if (match(COLON)) {
+                    consume(COLON, "Expect '::' after field name.");
+                    value = nextExpression();
+                } else {
+                    value = new Expression.Constant(index++);
+                }
+                entries.put(identifier.input(), value);
+            } while (match(COMMA));
+        }
+        consume(RIGHT_BRACE, "Expect '}'.");
+        return new Expression.Enum(null, entries);
     }
 
     Statement.Branch readBranch() {
