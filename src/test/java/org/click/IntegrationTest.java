@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class IntegrationTest {
 
+    private static final Expression TRUE = new Expression.Constant(true);
+    private static final Expression FALSE = new Expression.Constant(false);
+
     private static final Expression ZERO = new Expression.Constant(0);
     private static final Expression ONE = new Expression.Constant(1);
     private static final Expression TWO = new Expression.Constant(2);
@@ -63,7 +66,7 @@ public final class IntegrationTest {
     }
 
     @Test
-    public void math() {
+    public void mathInteger() {
         assertProgram(ONE,
                 """
                         main :: () -> 1;
@@ -71,6 +74,45 @@ public final class IntegrationTest {
         assertProgram(TWO,
                 """
                         main :: () -> 1 + 1;
+                        """);
+        assertProgram(new Expression.Constant(14),
+                """
+                        main :: () -> 2 + 3 * 4;
+                        """);
+        assertProgram(new Expression.Constant(20),
+                """
+                        main :: () -> (2 + 3) * 4;
+                        """);
+    }
+
+    @Test
+    public void mathBool() {
+        assertProgram(TRUE,
+                """
+                        main :: () -> true;
+                        """);
+        assertProgram(FALSE,
+                """
+                        main :: () -> false;
+                        """);
+
+        assertProgram(TRUE,
+                """
+                        main :: () -> true && true;
+                        """);
+        assertProgram(TRUE,
+                """
+                        main :: () -> true || true;
+                        """);
+
+        assertProgram(FALSE,
+                """
+                        main :: () -> true && false;
+                        """);
+
+        assertProgram(FALSE,
+                """
+                        main :: () -> false || false;
                         """);
     }
 

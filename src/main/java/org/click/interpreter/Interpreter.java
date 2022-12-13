@@ -3,6 +3,7 @@ package org.click.interpreter;
 import org.click.Expression;
 import org.click.Parameter;
 import org.click.Statement;
+import org.click.Token;
 
 import java.util.List;
 
@@ -150,8 +151,46 @@ public final class Interpreter {
             return new Expression.StructInit(init.name(), init.fields().stream().map(this::evaluate).toList());
         } else if (argument instanceof Expression.Range init) {
             return new Expression.Range(evaluate(init.start()), evaluate(init.end()), evaluate(init.step()));
+        } else if (argument instanceof Expression.Binary binary) {
+            final Expression left = evaluate(binary.left());
+            final Expression right = evaluate(binary.right());
+            return operate(binary.operator(), left, right);
         } else {
             throw new RuntimeException("Unknown expression: " + argument);
+        }
+    }
+
+    private Expression operate(Token operator, Expression left, Expression right) {
+        if (left instanceof Expression.Constant leftConstant && right instanceof Expression.Constant rightConstant) {
+            final Object leftValue = leftConstant.value();
+            final Object rightValue = rightConstant.value();
+            if (leftValue instanceof Integer leftInt && rightValue instanceof Integer rightInt) {
+                final int result = switch (operator.type()) {
+                    case PLUS -> leftInt + rightInt;
+                    case MINUS -> leftInt - rightInt;
+                    case STAR -> leftInt * rightInt;
+                    case SLASH -> leftInt / rightInt;
+                    case EQUAL_EQUAL -> leftInt.equals(rightInt) ? 1 : 0;
+                    case GREATER -> leftInt > rightInt ? 1 : 0;
+                    case GREATER_EQUAL -> leftInt >= rightInt ? 1 : 0;
+                    case LESS -> leftInt < rightInt ? 1 : 0;
+                    case LESS_EQUAL -> leftInt <= rightInt ? 1 : 0;
+                    default -> throw new RuntimeException("Unknown operator: " + operator);
+                };
+                return new Expression.Constant(result);
+            }else if (leftValue instanceof Boolean leftBool && rightValue instanceof Boolean rightBool) {
+                final boolean result = switch (operator.type()) {
+                    case OR -> leftBool || rightBool;
+                    case AND -> leftBool && rightBool;
+                    case EQUAL_EQUAL -> leftBool.equals(rightBool);
+                    default -> throw new RuntimeException("Unknown operator: " + operator);
+                };
+                return new Expression.Constant(result);
+            }else {
+                throw new RuntimeException("Unknown types: " + leftValue.getClass() + " and " + rightValue.getClass());
+            }
+        } else {
+            throw new RuntimeException("Unknown types: " + left + " and " + right);
         }
     }
 

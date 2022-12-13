@@ -8,14 +8,15 @@ public record Token(Type type, int line, String input,
         this(type, line, input, null);
     }
 
-    enum Type {
+    public enum Type {
         // Single character tokens
         LEFT_PAREN, RIGHT_PAREN,
         LEFT_BRACE, RIGHT_BRACE,
         COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
 
         // Boolean operators
-        AND, OR,
+        AND, OR, EQUAL_EQUAL, NOT_EQUAL,
+        LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
 
         // Declarations
         EQUAL, COLON, TIDE, RANGE, ARROW,

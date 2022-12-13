@@ -82,9 +82,17 @@ public final class Parser {
         return statement;
     }
 
-    Expression nextExpression() {
-        if (check(SEMICOLON)) return null;
+    Expression nextExpression(int precedence) {
+        Expression expression = nextPrimary();
+        while (precedence < getPrecedence(peek().type())) {
+            final Token operator = advance();
+            final Expression right = nextExpression(getPrecedence(operator.type()));
+            expression = new Expression.Binary(expression, operator, right);
+        }
+        return expression;
+    }
 
+    private Expression nextPrimary() {
         // Range
         if (check(LITERAL) && checkNext(RANGE)) {
             final Expression start = new Expression.Constant(advance().value());
@@ -99,26 +107,25 @@ public final class Parser {
             return new Expression.Range(start, end, step);
         }
 
-        final Expression expression;
         if (check(LEFT_PAREN)) {
-            expression = nextFunction();
+            return nextFunction();
         } else if (check(STRUCT)) {
-            expression = nextStruct();
+            return nextStruct();
         } else if (match(LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
             if (value instanceof String) {
-                expression = new Expression.Constant(value);
+                return new Expression.Constant(value);
             } else if (value instanceof Number) {
                 // Parse math
-                expression = new Expression.Constant(value);
+                return new Expression.Constant(value);
             } else {
                 throw error(literal, "Unexpected literal type: " + value);
             }
         } else if (match(TRUE)) {
-            expression = new Expression.Constant(true);
+            return new Expression.Constant(true);
         } else if (match(FALSE)) {
-            expression = new Expression.Constant(false);
+            return new Expression.Constant(false);
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
@@ -131,7 +138,7 @@ public final class Parser {
                     } while (match(COMMA));
                 }
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
-                expression = new Expression.Call(identifier.input(), arguments);
+                return new Expression.Call(identifier.input(), arguments);
             } else if (match(LEFT_BRACE)) {
                 // Struct
                 final List<Expression> fields = new ArrayList<>();
@@ -141,14 +148,31 @@ public final class Parser {
                     } while (match(COMMA));
                 }
                 consume(RIGHT_BRACE, "Expected '}' after fields.");
-                expression = new Expression.StructInit(identifier.input(), fields);
+                return new Expression.StructInit(identifier.input(), fields);
             } else {
-                expression = new Expression.Variable(identifier.input());
+                return new Expression.Variable(identifier.input());
             }
         } else {
             throw error(peek(), "Expect expression.");
         }
-        return expression;
+    }
+
+    private int getPrecedence(Token.Type type) {
+        return switch (type) {
+            case OR, AND -> 10;
+            case EQUAL_EQUAL, NOT_EQUAL,
+                    LESS, LESS_EQUAL,
+                    GREATER, GREATER_EQUAL -> 20;
+            case PLUS, MINUS -> 30;
+            case STAR, SLASH -> 40;
+            default -> -1;
+        };
+    }
+
+    Expression nextExpression() {
+        if (check(SEMICOLON)) return null;
+        // Pratt's algorithm
+        return nextExpression(0);
     }
 
     Type nextType() {
