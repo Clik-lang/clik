@@ -71,10 +71,13 @@ public final class Scanner {
     private Number nextNumber() {
         var start = index - 1;
         while (Character.isDigit(peek())) advance();
-        if (peek() == '.') {
-            advance();
-            while (Character.isDigit(peek())) advance();
+        if (peek() != '.') {
+            // Integer
+            return Integer.parseInt(input.substring(start, index));
         }
+        // Float
+        advance();
+        while (Character.isDigit(peek())) advance();
         var text = input.substring(start, index);
         return Double.parseDouble(text);
     }
