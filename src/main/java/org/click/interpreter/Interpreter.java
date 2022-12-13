@@ -60,6 +60,22 @@ public final class Interpreter {
             walker.update(assign.name(), assign.expression());
         } else if (statement instanceof Statement.Call call) {
             evaluate(new Expression.Call(call.name(), call.arguments()));
+        } else if (statement instanceof Statement.Branch branch) {
+            final Expression condition = evaluate(branch.condition());
+            assert condition != null;
+            if (condition instanceof Expression.Constant constant) {
+                if ((boolean) constant.value()) {
+                    for (Statement thenBranch : branch.thenBranch()) {
+                        execute(thenBranch);
+                    }
+                } else if (branch.elseBranch() != null) {
+                    for (Statement elseBranch : branch.elseBranch()) {
+                        execute(elseBranch);
+                    }
+                }
+            } else {
+                throw new RuntimeException("Condition must be a boolean");
+            }
         } else if (statement instanceof Statement.Loop loop) {
             if (loop.iterable() == null) {
                 // Infinite loop

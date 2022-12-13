@@ -1,4 +1,5 @@
 main :: () {
   test :: true;
-  print(test);
+  if test -> print("true");
+  else -> print("false");
 }

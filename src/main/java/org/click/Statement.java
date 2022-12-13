@@ -14,6 +14,11 @@ public sealed interface Statement {
     record Call(String name, List<Expression> arguments) implements Statement {
     }
 
+    record Branch(Expression condition,
+                  List<Statement> thenBranch,
+                  @Nullable List<Statement> elseBranch) implements Statement {
+    }
+
     record Loop(List<String> declarations,
                 Expression iterable, List<Statement> body) implements Statement {
     }

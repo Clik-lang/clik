@@ -60,6 +60,8 @@ public final class Parser {
                 assert expression != null;
                 statement = new Statement.Return(expression);
             }
+        } else if (check(IF)) {
+            statement = readBranch();
         } else if (check(FOR)) {
             statement = readLoop();
         } else if (check(LEFT_BRACE)) {
@@ -189,6 +191,14 @@ public final class Parser {
         }
         consume(RIGHT_BRACE, "Expect '}'.");
         return new Expression.Struct(fields);
+    }
+
+    Statement.Branch readBranch() {
+        consume(IF, "Expect 'if'.");
+        final Expression condition = nextExpression();
+        final List<Statement> thenBranch = readBlock();
+        final List<Statement> elseBranch = match(ELSE) ? readBlock() : null;
+        return new Statement.Branch(condition, thenBranch, elseBranch);
     }
 
     Statement.Loop readLoop() {
