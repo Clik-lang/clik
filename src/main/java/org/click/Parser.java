@@ -79,6 +79,7 @@ public final class Parser {
 
         if (previous().type() != RIGHT_BRACE && previous().type() != SEMICOLON)
             consume(SEMICOLON, "Expected ';' after expression.");
+        while (match(SEMICOLON)) ;
         return statement;
     }
 

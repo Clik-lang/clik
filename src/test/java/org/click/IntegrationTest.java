@@ -3,6 +3,8 @@ package org.click;
 import org.click.interpreter.Interpreter;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class IntegrationTest {
@@ -122,6 +124,33 @@ public final class IntegrationTest {
         assertProgram(FALSE,
                 """
                         main :: () -> false || false;
+                        """);
+    }
+
+    @Test
+    public void struct() {
+        assertProgram(new Expression.StructInit("Point", List.of(ONE, TWO)),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point -> Point {1, 2};
+                        """);
+        assertProgram(new Expression.StructInit("Point", List.of(ONE, TWO)),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point { Point {1, 2} }
+                        """);
+        assertProgram(new Expression.StructInit("Point", List.of(ONE, TWO)),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point { return Point {1, 2} }
+                        """);
+
+        assertProgram(new Expression.StructInit("Point", List.of(ONE, TWO)),
+                """
+                        main :: () Point {
+                            Point :: struct {x: i32, y: i32}
+                            return Point {1, 2};
+                        }
                         """);
     }
 

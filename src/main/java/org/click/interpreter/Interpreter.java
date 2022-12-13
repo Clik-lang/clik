@@ -125,6 +125,8 @@ public final class Interpreter {
     private Expression evaluate(Expression argument) {
         if (argument instanceof Expression.Function functionDeclaration) {
             return functionDeclaration;
+        } else if (argument instanceof Expression.Struct structDeclaration) {
+            return structDeclaration;
         } else if (argument instanceof Expression.Constant constant) {
             return constant;
         } else if (argument instanceof Expression.Variable variable) {
