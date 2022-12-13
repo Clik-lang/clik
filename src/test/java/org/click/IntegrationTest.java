@@ -229,6 +229,33 @@ public final class IntegrationTest {
                         """);
     }
 
+    @Test
+    public void explicitType() {
+        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point { return {1, 2} }
+                        """);
+        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point {
+                            value :Point: {1, 2};
+                            return value;
+                        }
+                        """);
+        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(
+                        new Expression.Constant(3), new Expression.Constant(4)))),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point {
+                          point :Point= {x: 1, y: 2}
+                          point = {x: 3, y: 4}
+                          return point;
+                        }
+                        """);
+    }
+
     private static void assertProgram(Expression expected, String input) {
         assertProgram(expected, "main", input);
     }

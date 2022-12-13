@@ -150,32 +150,16 @@ public final class Parser {
                 }
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
                 return new Expression.Call(identifier.input(), new Parameter.Passed.Positional(arguments));
-            } else if (match(LEFT_BRACE)) {
+            } else if (check(LEFT_BRACE)) {
                 // Struct
-                if (match(RIGHT_BRACE)) {
+                if (checkNext(RIGHT_BRACE)) {
                     // Empty struct
+                    consume(LEFT_BRACE, "Expected '{' after struct name.");
+                    consume(RIGHT_BRACE, "Expected '}' after struct.");
                     return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(List.of()));
                 }
-                if (check(IDENTIFIER) && checkNext(COLON)) {
-                    // Named struct
-                    final Map<String, Expression> fields = new HashMap<>();
-                    do {
-                        final String name = consume(IDENTIFIER, "Expected field name.").input();
-                        consume(COLON, "Expected ':' after field name.");
-                        final Expression value = nextExpression();
-                        fields.put(name, value);
-                    } while (match(COMMA));
-                    consume(RIGHT_BRACE, "Expected '}' after struct fields.");
-                    return new Expression.StructValue(identifier.input(), new Parameter.Passed.Named(fields));
-                } else {
-                    // Positional struct
-                    final List<Expression> fields = new ArrayList<>();
-                    do {
-                        fields.add(nextExpression());
-                    } while (match(COMMA));
-                    consume(RIGHT_BRACE, "Expected '}' after struct fields.");
-                    return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(fields));
-                }
+                final Parameter.Passed passed = nextPassedParameters();
+                return new Expression.StructValue(identifier.input(), passed);
             } else if (match(DOT)) {
                 // Field
                 final Expression expression = new Expression.Variable(identifier.input());
@@ -184,8 +168,36 @@ public final class Parser {
             } else {
                 return new Expression.Variable(identifier.input());
             }
+        } else if (check(LEFT_BRACE)) {
+            // Inline block
+            final Parameter.Passed passed = nextPassedParameters();
+            return new Expression.InitializationBlock(passed);
         } else {
             throw error(peek(), "Expect expression.");
+        }
+    }
+
+    private Parameter.Passed nextPassedParameters() {
+        consume(LEFT_BRACE, "Expected '{' after struct name.");
+        if (check(IDENTIFIER) && checkNext(COLON)) {
+            // Named struct
+            final Map<String, Expression> fields = new HashMap<>();
+            do {
+                final String name = consume(IDENTIFIER, "Expected field name.").input();
+                consume(COLON, "Expected ':' after field name.");
+                final Expression value = nextExpression();
+                fields.put(name, value);
+            } while (match(COMMA));
+            consume(RIGHT_BRACE, "Expected '}' after struct fields.");
+            return new Parameter.Passed.Named(fields);
+        } else {
+            // Positional struct
+            final List<Expression> fields = new ArrayList<>();
+            do {
+                fields.add(nextExpression());
+            } while (match(COMMA));
+            consume(RIGHT_BRACE, "Expected '}' after struct fields.");
+            return new Parameter.Passed.Positional(fields);
         }
     }
 

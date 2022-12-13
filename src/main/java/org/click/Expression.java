@@ -30,6 +30,9 @@ public sealed interface Expression {
     record StructValue(String name, Parameter.Passed fields) implements Expression {
     }
 
+    record InitializationBlock(Parameter.Passed parameters) implements Expression {
+    }
+
     record Range(Expression start, Expression end, Expression step) implements Expression {
     }
 

@@ -1,10 +1,8 @@
 package org.click.interpreter;
 
-import org.click.Expression;
-import org.click.Parameter;
-import org.click.Statement;
-import org.click.Token;
+import org.click.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class Interpreter {
@@ -43,36 +41,48 @@ public final class Interpreter {
 
         Expression result = null;
         for (Statement statement : functionDeclaration.body()) {
-            result = execute(statement);
+            result = execute(functionDeclaration, statement);
         }
 
         walker.exitBlock();
         return result;
     }
 
-    private Expression execute(Statement statement) {
+    private Type extractType(Expression expression) {
+        if (expression instanceof Expression.Constant constant) {
+            final Object value = constant.value();
+            if (value instanceof String) return Type.STRING;
+            if (value instanceof Integer) return Type.I32;
+        } else if (expression instanceof Expression.StructValue structValue) {
+            return Type.of(structValue.name());
+        }
+        throw new RuntimeException("Unknown type: " + expression);
+    }
+
+    private Expression execute(Expression.Function function, Statement statement) {
         if (statement instanceof Statement.Declare declare) {
             final String name = declare.name();
             final Expression initializer = declare.initializer();
-            final Expression evaluated = evaluate(initializer);
+            final Expression evaluated = evaluate(initializer, declare.explicitType());
             assert evaluated != null;
             walker.register(name, evaluated);
         } else if (statement instanceof Statement.Assign assign) {
-            final Expression evaluated = evaluate(assign.expression());
+            final Type variableType = extractType(walker.find(assign.name()));
+            final Expression evaluated = evaluate(assign.expression(), variableType);
             walker.update(assign.name(), evaluated);
         } else if (statement instanceof Statement.Call call) {
-            return evaluate(new Expression.Call(call.name(), call.arguments()));
+            return evaluate(new Expression.Call(call.name(), call.arguments()), null);
         } else if (statement instanceof Statement.Branch branch) {
-            final Expression condition = evaluate(branch.condition());
+            final Expression condition = evaluate(branch.condition(), null);
             assert condition != null;
             if (condition instanceof Expression.Constant constant) {
                 if ((boolean) constant.value()) {
                     for (Statement thenBranch : branch.thenBranch()) {
-                        execute(thenBranch);
+                        execute(function, thenBranch);
                     }
                 } else if (branch.elseBranch() != null) {
                     for (Statement elseBranch : branch.elseBranch()) {
-                        execute(elseBranch);
+                        execute(function, elseBranch);
                     }
                 }
             } else {
@@ -83,12 +93,12 @@ public final class Interpreter {
                 // Infinite loop
                 while (true) {
                     for (Statement body : loop.body()) {
-                        execute(body);
+                        execute(function, body);
                     }
                 }
             } else {
                 final List<String> declarations = loop.declarations();
-                final Expression iterable = evaluate(loop.iterable());
+                final Expression iterable = evaluate(loop.iterable(), null);
                 if (iterable instanceof Expression.Range range) {
                     final int start = (int) ((Expression.Constant) range.start()).value();
                     final int end = (int) ((Expression.Constant) range.end()).value();
@@ -101,7 +111,7 @@ public final class Interpreter {
                     for (int i = start; i < end; i += step) {
                         if (!declarations.isEmpty()) walker.update(declarations.get(0), new Expression.Constant(i));
                         for (Statement body : loop.body()) {
-                            execute(body);
+                            execute(function, body);
                         }
                     }
                     walker.exitBlock();
@@ -112,19 +122,20 @@ public final class Interpreter {
         } else if (statement instanceof Statement.Block block) {
             this.walker.enterBlock();
             for (Statement inner : block.statements()) {
-                execute(inner);
+                execute(function, inner);
             }
             this.walker.exitBlock();
         } else if (statement instanceof Statement.Return returnStatement) {
             final Expression expression = returnStatement.expression();
             if (expression != null) {
-                return evaluate(expression);
+                final Type returnType = function.returnType();
+                return evaluate(expression, returnType);
             }
         }
         return null;
     }
 
-    private Expression evaluate(Expression argument) {
+    private Expression evaluate(Expression argument, Type explicitType) {
         if (argument instanceof Expression.Function functionDeclaration) {
             return functionDeclaration;
         } else if (argument instanceof Expression.Struct structDeclaration) {
@@ -141,7 +152,7 @@ public final class Interpreter {
             }
             return variableExpression;
         } else if (argument instanceof Expression.Field field) {
-            final Expression expression = evaluate(field.object());
+            final Expression expression = evaluate(field.object(), null);
             if (expression instanceof Expression.StructValue structValue) {
                 if (!(walker.find(structValue.name()) instanceof Expression.Struct structDeclaration)) {
                     throw new RuntimeException("Struct not found: " + structValue.name());
@@ -162,7 +173,7 @@ public final class Interpreter {
             final String name = call.name();
 
             if (name.equals("print")) {
-                final List<Expression> params = call.arguments().expressions().stream().map(this::evaluate).toList();
+                final List<Expression> params = call.arguments().expressions().stream().map(expression -> evaluate(expression, null)).toList();
                 for (Expression param : params) {
                     final String serialize = serialize(param);
                     System.out.print(serialize);
@@ -173,13 +184,34 @@ public final class Interpreter {
             }
             return null;
         } else if (argument instanceof Expression.StructValue init) {
-            final List<Expression> evaluated = init.fields().expressions().stream().map(this::evaluate).toList();
+            final Expression.Struct struct = (Expression.Struct) walker.find(init.name());
+            var parameters = struct.parameters();
+            List<Expression> evaluated = new ArrayList<>();
+            for (var param : struct.parameters()) {
+                final Expression value = init.fields().find(parameters, param);
+                if (value == null) {
+                    throw new RuntimeException("Missing field: " + param.name());
+                }
+                evaluated.add(evaluate(value, param.type()));
+            }
             return new Expression.StructValue(init.name(), new Parameter.Passed.Positional(evaluated));
+        } else if (argument instanceof Expression.InitializationBlock initializationBlock) {
+            // Retrieve explicit type from context
+            if (explicitType == null)
+                throw new RuntimeException("Expected explicit type for initialization block");
+            if (!explicitType.primitive()) {
+                // Struct
+                return evaluate(new Expression.StructValue(explicitType.name(), initializationBlock.parameters()), null);
+            } else {
+                throw new RuntimeException("Expected struct, got: " + explicitType);
+            }
         } else if (argument instanceof Expression.Range init) {
-            return new Expression.Range(evaluate(init.start()), evaluate(init.end()), evaluate(init.step()));
+            return new Expression.Range(evaluate(init.start(), null),
+                    evaluate(init.end(), null),
+                    evaluate(init.step(), null));
         } else if (argument instanceof Expression.Binary binary) {
-            final Expression left = evaluate(binary.left());
-            final Expression right = evaluate(binary.right());
+            final Expression left = evaluate(binary.left(), explicitType);
+            final Expression right = evaluate(binary.right(), explicitType);
             return operate(binary.operator(), left, right);
         } else {
             throw new RuntimeException("Unknown expression: " + argument);
