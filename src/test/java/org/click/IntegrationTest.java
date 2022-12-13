@@ -157,6 +157,12 @@ public final class IntegrationTest {
 
         assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
                 """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point { return Point {x:1, y:2} }
+                        """);
+
+        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+                """
                         main :: () Point {
                             Point :: struct {x: i32, y: i32}
                             return Point {1, 2};

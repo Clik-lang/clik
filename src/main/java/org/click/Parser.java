@@ -152,14 +152,30 @@ public final class Parser {
                 return new Expression.Call(identifier.input(), new Parameter.Passed.Positional(arguments));
             } else if (match(LEFT_BRACE)) {
                 // Struct
-                final List<Expression> fields = new ArrayList<>();
-                if (!check(RIGHT_BRACE)) {
+                if (match(RIGHT_BRACE)) {
+                    // Empty struct
+                    return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(List.of()));
+                }
+                if (check(IDENTIFIER) && checkNext(COLON)) {
+                    // Named struct
+                    final Map<String, Expression> fields = new HashMap<>();
+                    do {
+                        final String name = consume(IDENTIFIER, "Expected field name.").input();
+                        consume(COLON, "Expected ':' after field name.");
+                        final Expression value = nextExpression();
+                        fields.put(name, value);
+                    } while (match(COMMA));
+                    consume(RIGHT_BRACE, "Expected '}' after struct fields.");
+                    return new Expression.StructValue(identifier.input(), new Parameter.Passed.Named(fields));
+                } else {
+                    // Positional struct
+                    final List<Expression> fields = new ArrayList<>();
                     do {
                         fields.add(nextExpression());
                     } while (match(COMMA));
+                    consume(RIGHT_BRACE, "Expected '}' after struct fields.");
+                    return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(fields));
                 }
-                consume(RIGHT_BRACE, "Expected '}' after fields.");
-                return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(fields));
             } else if (match(DOT)) {
                 // Field
                 final Expression expression = new Expression.Variable(identifier.input());
