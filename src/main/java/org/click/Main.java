@@ -11,8 +11,8 @@ public class Main {
         final String input = Files.readString(Path.of("samples", "hello.cl"));
         var scanner = new Scanner(input);
         var tokens = scanner.scanTokens();
-        //System.out.println("Tokens:");
-        //for (var token : tokens) System.out.println(token);
+        System.out.println("Tokens:");
+        for (var token : tokens) System.out.println(token);
 
         var parser = new Parser(tokens);
         var statements = parser.parse();

@@ -49,8 +49,12 @@ public final class Scanner {
             type = Token.Type.LITERAL;
             value = nextNumber();
         } else if (Character.isLetter(c)) {
-            type = Token.Type.IDENTIFIER;
             value = nextIdentifier();
+            if (value.equals("struct")) {
+                type = Token.Type.STRUCT;
+            } else {
+                type = Token.Type.IDENTIFIER;
+            }
         } else if (c == '\n') {
             line++;
             return nextToken();

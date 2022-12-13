@@ -70,6 +70,8 @@ public final class Parser {
         final Expression expression;
         if (check(LEFT_PAREN)) {
             expression = nextFunction();
+        } else if (check(STRUCT)) {
+            expression = nextStruct();
         } else if (match(LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
@@ -94,6 +96,16 @@ public final class Parser {
                 }
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
                 expression = new Expression.Call(identifier.input(), arguments);
+            } else if (match(LEFT_BRACE)) {
+                // Struct
+                final List<Expression> fields = new ArrayList<>();
+                if (!check(RIGHT_BRACE)) {
+                    do {
+                        fields.add(nextExpression());
+                    } while (match(COMMA));
+                }
+                consume(RIGHT_BRACE, "Expected '}' after fields.");
+                expression = new Expression.StructAlloc(identifier.input(), fields);
             } else {
                 expression = new Expression.Variable(identifier.input());
             }
@@ -126,6 +138,25 @@ public final class Parser {
         }
         final List<Statement> body = readBlock();
         return new Expression.Function(parameters, returnType, body);
+    }
+
+    private Expression.Struct nextStruct() {
+        consume(STRUCT, "Expect 'struct'.");
+        consume(LEFT_BRACE, "Expect '{'.");
+        final List<String> fields = new ArrayList<>();
+        if (!check(RIGHT_BRACE)) {
+            do {
+                if (fields.size() >= 255) {
+                    throw error(peek(), "Cannot have more than 255 fields.");
+                }
+                final Token identifier = consume(IDENTIFIER, "Expect field name.");
+                consume(COLON, "Expect ':' after field name.");
+                consume(IDENTIFIER, "Expect field type.");
+                fields.add(identifier.input());
+            } while (match(COMMA));
+        }
+        consume(RIGHT_BRACE, "Expect '}'.");
+        return new Expression.Struct(fields);
     }
 
     List<Statement> readBlock() {

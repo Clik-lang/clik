@@ -76,9 +76,10 @@ public final class Interpreter {
             return variableExpression;
         } else if (argument instanceof Expression.Call call) {
             final String name = call.name();
+            final List<Expression> params = call.arguments().stream().map(this::evaluate).toList();
             if (name.equals("print")) {
-                for (Expression param : call.arguments()) {
-                    final String serialize = serialize(evaluate(param));
+                for (Expression param : params) {
+                    final String serialize = serialize(param);
                     System.out.print(serialize);
                 }
                 System.out.println();
@@ -86,6 +87,8 @@ public final class Interpreter {
                 return interpret(name, call.arguments());
             }
             return null;
+        } else if (argument instanceof Expression.StructAlloc structAlloc) {
+            return new Expression.StructAlloc(structAlloc.name(), structAlloc.fields().stream().map(this::evaluate).toList());
         } else {
             throw new RuntimeException("Unknown expression: " + argument);
         }
@@ -94,6 +97,18 @@ public final class Interpreter {
     private String serialize(Expression expression) {
         if (expression instanceof Expression.Constant constant) {
             return constant.value().toString();
+        } else if (expression instanceof Expression.StructAlloc structAlloc) {
+            final StringBuilder builder = new StringBuilder();
+            builder.append(structAlloc.name()).append("{");
+            for (int i = 0; i < structAlloc.fields().size(); i++) {
+                final Expression field = structAlloc.fields().get(i);
+                builder.append(serialize(field));
+                if (i < structAlloc.fields().size() - 1) {
+                    builder.append(", ");
+                }
+            }
+            builder.append("}");
+            return builder.toString();
         } else {
             throw new RuntimeException("Unknown expression: " + expression);
         }

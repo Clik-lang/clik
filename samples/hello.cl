@@ -1,8 +1,6 @@
-main :: () {
-  value :: add(5, 6);
-  print(value);
-}
+Point :: struct {x:i32, y:i32}
 
-add :: (a: i32, b: i32) i32 {
-  return a;
+main :: () {
+  point :: Point {1, 2}
+  print(point);
 }
