@@ -142,16 +142,16 @@ public final class Interpreter {
             return variableExpression;
         } else if (argument instanceof Expression.Field field) {
             final Expression expression = evaluate(field.object());
-            if (expression instanceof Expression.StructInit structInit) {
-                if (!(walker.find(structInit.name()) instanceof Expression.Struct structDeclaration)) {
-                    throw new RuntimeException("Struct not found: " + structInit.name());
+            if (expression instanceof Expression.StructValue structValue) {
+                if (!(walker.find(structValue.name()) instanceof Expression.Struct structDeclaration)) {
+                    throw new RuntimeException("Struct not found: " + structValue.name());
                 }
                 final var params = structDeclaration.parameters().stream().map(Parameter::name).toList();
                 int index = params.indexOf(field.name());
                 if (index == -1) {
                     throw new RuntimeException("Field not found: " + field.name());
                 }
-                return structInit.fields().get(index);
+                return structValue.fields().get(index);
             } else if (expression instanceof Expression.Enum enumDecl) {
                 final Expression value = enumDecl.entries().get(field.name());
                 if (value == null) {
@@ -174,8 +174,8 @@ public final class Interpreter {
                 return interpret(name, call.arguments());
             }
             return null;
-        } else if (argument instanceof Expression.StructInit init) {
-            return new Expression.StructInit(init.name(), init.fields().stream().map(this::evaluate).toList());
+        } else if (argument instanceof Expression.StructValue init) {
+            return new Expression.StructValue(init.name(), init.fields().stream().map(this::evaluate).toList());
         } else if (argument instanceof Expression.Range init) {
             return new Expression.Range(evaluate(init.start()), evaluate(init.end()), evaluate(init.step()));
         } else if (argument instanceof Expression.Binary binary) {
@@ -240,7 +240,7 @@ public final class Interpreter {
     private String serialize(Expression expression) {
         if (expression instanceof Expression.Constant constant) {
             return constant.value().toString();
-        } else if (expression instanceof Expression.StructInit init) {
+        } else if (expression instanceof Expression.StructValue init) {
             final StringBuilder builder = new StringBuilder();
             builder.append(init.name()).append("{");
             for (int i = 0; i < init.fields().size(); i++) {
