@@ -20,4 +20,7 @@ public sealed interface Expression {
 
     record StructInit(String name, List<Expression> fields) implements Expression {
     }
+
+    record Range(Expression start, Expression end, Expression step) implements Expression {
+    }
 }

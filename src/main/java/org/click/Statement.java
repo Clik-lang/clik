@@ -14,6 +14,10 @@ public sealed interface Statement {
     record Call(String name, List<Expression> arguments) implements Statement {
     }
 
+    record Loop(List<String> declarations,
+                Expression iterable, List<Statement> body) implements Statement {
+    }
+
     record Block(List<Statement> statements) implements Statement {
     }
 

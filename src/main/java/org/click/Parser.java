@@ -56,6 +56,8 @@ public final class Parser {
             } else {
                 throw error(identifier, "Expected ':' or '=' after identifier.");
             }
+        } else if (check(FOR)) {
+            statement = readLoop();
         } else if (check(LEFT_BRACE)) {
             statement = new Statement.Block(readBlock());
         } else {
@@ -69,6 +71,21 @@ public final class Parser {
 
     Expression nextExpression() {
         if (check(SEMICOLON)) return null;
+
+        // Range
+        if (check(LITERAL) && checkNext(RANGE)) {
+            final Expression start = new Expression.Constant(advance().value());
+            consume(RANGE, "Expected '..' after start of range.");
+            final Expression end = new Expression.Constant(advance().value());
+            final Expression step;
+            if (match(RANGE)) {
+                step = new Expression.Constant(advance().value());
+            } else {
+                step = new Expression.Constant(1);
+            }
+            return new Expression.Range(start, end, step);
+        }
+
         final Expression expression;
         if (check(LEFT_PAREN)) {
             expression = nextFunction();
@@ -163,6 +180,24 @@ public final class Parser {
         return new Expression.Struct(fields);
     }
 
+    Statement.Loop readLoop() {
+        consume(FOR, "Expect 'for'.");
+        if (check(IDENTIFIER) && checkNext(COLON)) {
+            final Token identifier = consume(IDENTIFIER, "Expect identifier.");
+            consume(COLON, "Expect ':'.");
+            // For each
+            final List<String> declarations = List.of(identifier.input());
+            final Expression iterable = nextExpression();
+            final List<Statement> body = readBlock();
+            return new Statement.Loop(declarations, iterable, body);
+        } else {
+            // For
+            final Expression iterable = nextExpression();
+            final List<Statement> body = readBlock();
+            return new Statement.Loop(List.of(), iterable, body);
+        }
+    }
+
     List<Statement> readBlock() {
         consume(LEFT_BRACE, "Expect '{'.");
         final List<Statement> statements = new ArrayList<>();
@@ -200,6 +235,11 @@ public final class Parser {
     boolean check(Token.Type type) {
         if (isAtEnd()) return false;
         return peek().type() == type;
+    }
+
+    boolean checkNext(Token.Type type) {
+        if (isAtEnd()) return false;
+        return tokens.get(index + 1).type() == type;
     }
 
     boolean isAtEnd() {

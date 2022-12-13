@@ -57,6 +57,27 @@ public final class Interpreter {
             walker.update(assign.name(), assign.expression());
         } else if (statement instanceof Statement.Call call) {
             evaluate(new Expression.Call(call.name(), call.arguments()));
+        } else if (statement instanceof Statement.Loop loop) {
+            final Expression iterable = evaluate(loop.iterable());
+            if(iterable instanceof Expression.Range range){
+                final int start = (int) ((Expression.Constant)range.start()).value();
+                final int end = (int) ((Expression.Constant)range.end()).value();
+                final int step = (int) ((Expression.Constant)range.step()).value();
+                walker.enterBlock();
+                for (int i = 0; i < loop.declarations().size(); i++) {
+                    final String declaration = loop.declarations().get(i);
+                    walker.register(declaration, new Expression.Constant(0));
+                }
+                for (int i = start; i < end; i += step) {
+                    walker.update(loop.declarations().get(0), new Expression.Constant(i));
+                    for (Statement body : loop.body()) {
+                        execute(body);
+                    }
+                }
+                walker.exitBlock();
+            }else{
+                throw new RuntimeException("Expected iterable, got: " + iterable);
+            }
         } else if (statement instanceof Statement.Block block) {
             this.walker.enterBlock();
             for (Statement inner : block.statements()) {
@@ -96,6 +117,8 @@ public final class Interpreter {
             return null;
         } else if (argument instanceof Expression.StructInit init) {
             return new Expression.StructInit(init.name(), init.fields().stream().map(this::evaluate).toList());
+        } else if (argument instanceof Expression.Range init) {
+            return new Expression.Range(evaluate(init.start()), evaluate(init.end()), evaluate(init.step()));
         } else {
             throw new RuntimeException("Unknown expression: " + argument);
         }

@@ -1,6 +1,5 @@
-Point :: struct {x:i32, y:i32}
-
 main :: () {
-  point :: Point {1, 2}
-  print(point);
+  for i: 0..10 {
+    print(i);
+  }
 }
