@@ -140,7 +140,17 @@ public final class Interpreter {
             return variableExpression;
         } else if (argument instanceof Expression.Field field) {
             final Expression expression = evaluate(field.object());
-            if (expression instanceof Expression.Enum enumDecl) {
+            if (expression instanceof Expression.StructInit structInit) {
+                if (!(walker.find(structInit.name()) instanceof Expression.Struct structDeclaration)) {
+                    throw new RuntimeException("Struct not found: " + structInit.name());
+                }
+                final var params = structDeclaration.parameters().stream().map(Parameter::name).toList();
+                int index = params.indexOf(field.name());
+                if (index == -1) {
+                    throw new RuntimeException("Field not found: " + field.name());
+                }
+                return structInit.fields().get(index);
+            } else if (expression instanceof Expression.Enum enumDecl) {
                 final Expression value = enumDecl.entries().get(field.name());
                 if (value == null) {
                     throw new RuntimeException("Enum entry not found: " + field.name());

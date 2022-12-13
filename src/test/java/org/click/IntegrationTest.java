@@ -152,6 +152,23 @@ public final class IntegrationTest {
                             return Point {1, 2};
                         }
                         """);
+
+        assertProgram(ONE,
+                """
+                        main :: () i32 {
+                            Point :: struct {x: i32, y: i32}
+                            point :: Point {1, 2};
+                            return point.x;
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () i32 {
+                            Point :: struct {x: i32, y: i32}
+                            point :: Point {1, 2};
+                            return point.y;
+                        }
+                        """);
     }
 
     @Test
