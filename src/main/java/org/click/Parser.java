@@ -30,7 +30,7 @@ public final class Parser {
                 Type explicitType = null;
                 if (match(IDENTIFIER)) {
                     final Token type = peek();
-                    explicitType = new Type(type.input(), false);
+                    explicitType = Type.of(type.input());
                 }
 
                 if (match(COLON)) {
@@ -54,14 +54,21 @@ public final class Parser {
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
                 statement = new Statement.Call(name, arguments);
             } else {
-                throw error(identifier, "Expected ':' or '=' after identifier.");
+                // Implicit return
+                index--;
+                final Expression expression = nextExpression();
+                assert expression != null;
+                statement = new Statement.Return(expression);
             }
         } else if (check(FOR)) {
             statement = readLoop();
         } else if (check(LEFT_BRACE)) {
             statement = new Statement.Block(readBlock());
         } else {
-            throw error(peek(), "Expect statement.");
+            // Implicit return
+            final Expression expression = nextExpression();
+            assert expression != null;
+            statement = new Statement.Return(expression);
         }
 
         if (previous().type() != RIGHT_BRACE && previous().type() != SEMICOLON)

@@ -36,6 +36,7 @@ public final class Interpreter {
         for (int i = 0; i < parameters.size(); i++) {
             final Parameter parameter = functionDeclaration.parameters().get(i);
             final Expression expression = parameters.get(i);
+            assert expression != null;
             walker.register(parameter.name(), expression);
         }
 
@@ -50,9 +51,11 @@ public final class Interpreter {
 
     private Expression execute(Statement statement) {
         if (statement instanceof Statement.Declare declare) {
+            final String name = declare.name();
             final Expression initializer = declare.initializer();
             final Expression evaluated = evaluate(initializer);
-            walker.register(declare.name(), evaluated);
+            assert evaluated != null;
+            walker.register(name, evaluated);
         } else if (statement instanceof Statement.Assign assign) {
             walker.update(assign.name(), assign.expression());
         } else if (statement instanceof Statement.Call call) {
@@ -103,12 +106,15 @@ public final class Interpreter {
     }
 
     private Expression evaluate(Expression argument) {
-        if (argument instanceof Expression.Constant constant) {
+        if (argument instanceof Expression.Function functionDeclaration) {
+            return functionDeclaration;
+        } else if (argument instanceof Expression.Constant constant) {
             return constant;
         } else if (argument instanceof Expression.Variable variable) {
-            final Expression variableExpression = walker.find(variable.name());
+            final String name = variable.name();
+            final Expression variableExpression = walker.find(name);
             if (variableExpression == null) {
-                throw new RuntimeException("Variable not found: " + variable.name());
+                throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked.keySet());
             }
             return variableExpression;
         } else if (argument instanceof Expression.Call call) {

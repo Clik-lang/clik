@@ -1,3 +1,5 @@
 main :: () {
-  for i: 0..10 -> print(i);
+  get :: (a: i32) i32 -> a;
+  value :: get(55);
+  print(value);
 }
