@@ -71,7 +71,14 @@ public final class Parser {
         } else if (check(FOR)) {
             statement = readLoop();
         } else if (check(LEFT_BRACE)) {
-            statement = new Statement.Block(readBlock());
+            if (checkNext(DOT) || checkNext(LITERAL)) {
+                // Inline block return
+                final Expression expression = nextExpression();
+                assert expression != null;
+                statement = new Statement.Return(expression);
+            } else {
+                statement = new Statement.Block(readBlock());
+            }
         } else {
             // Implicit return
             final Expression expression = nextExpression();
@@ -179,10 +186,11 @@ public final class Parser {
 
     private Parameter.Passed nextPassedParameters() {
         consume(LEFT_BRACE, "Expected '{' after struct name.");
-        if (check(IDENTIFIER) && checkNext(COLON)) {
+        if (check(DOT)) {
             // Named struct
             final Map<String, Expression> fields = new HashMap<>();
             do {
+                consume(DOT, "Expected '.' before field name.");
                 final String name = consume(IDENTIFIER, "Expected field name.").input();
                 consume(COLON, "Expected ':' after field name.");
                 final Expression value = nextExpression();

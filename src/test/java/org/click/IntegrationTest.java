@@ -158,7 +158,7 @@ public final class IntegrationTest {
         assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
                 """
                         Point :: struct {x: i32, y: i32}
-                        main :: () Point { return Point {x:1, y:2} }
+                        main :: () Point { return Point {.x:1, .y:2} }
                         """);
 
         assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
@@ -239,6 +239,16 @@ public final class IntegrationTest {
         assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
                 """
                         Point :: struct {x: i32, y: i32}
+                        main :: () Point -> {.x: 1, .y: 2}
+                        """);
+        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point -> {1, 2}
+                        """);
+        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+                """
+                        Point :: struct {x: i32, y: i32}
                         main :: () Point {
                             value :Point: {1, 2};
                             return value;
@@ -249,8 +259,8 @@ public final class IntegrationTest {
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point {
-                          point :Point= {x: 1, y: 2}
-                          point = {x: 3, y: 4}
+                          point :Point = {.x: 1, .y: 2}
+                          point = {.x: 3, .y: 4}
                           return point;
                         }
                         """);
