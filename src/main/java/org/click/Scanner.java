@@ -1,0 +1,99 @@
+package org.click;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class Scanner {
+    private final String input;
+    private int index;
+    private int line;
+
+    public Scanner(String input) {
+        this.input = input;
+    }
+
+    void skipWhitespace() {
+        while (Character.isWhitespace(advance())) ;
+        index--;
+    }
+
+    Token nextToken() {
+        if (index >= input.length())
+            return null;
+        skipWhitespace();
+        if (index >= input.length())
+            return null;
+        final int startIndex = index;
+
+        Token.Type type;
+        Object value = null;
+
+        char c = advance();
+        if (c == '(') type = Token.Type.LEFT_PAREN;
+        else if (c == ')') type = Token.Type.RIGHT_PAREN;
+        else if (c == '{') type = Token.Type.LEFT_BRACE;
+        else if (c == '}') type = Token.Type.RIGHT_BRACE;
+        else if (c == ',') type = Token.Type.COMMA;
+        else if (c == '.') type = Token.Type.DOT;
+        else if (c == '-') type = Token.Type.MINUS;
+        else if (c == '+') type = Token.Type.PLUS;
+        else if (c == ';') type = Token.Type.SEMICOLON;
+        else if (c == '*') type = Token.Type.STAR;
+        else if (c == '/') type = Token.Type.SLASH;
+        else if (c == '=') type = Token.Type.EQUAL;
+        else if (c == ':') type = Token.Type.COLON;
+        else if (c == '~') type = Token.Type.TIDE;
+        else if (c == '\"'){
+            type = Token.Type.LITERAL;
+            value = nextString();
+        }else if (Character.isLetterOrDigit(c)) {
+            // Potential identifier
+            var start = index - 1;
+            while (Character.isLetterOrDigit(peek())) advance();
+            var text = input.substring(start, index);
+            type = Token.Type.IDENTIFIER;
+            value = text;
+        } else if (c == '\n') {
+            line++;
+            return nextToken();
+        } else {
+            throw new RuntimeException("Unexpected character: " + c);
+        }
+
+        final String text = input.substring(startIndex, index);
+        return new Token(type, line, text, value);
+    }
+
+    private String nextString() {
+        final var start = index;
+        while (peek() != '\"') {
+            if (peek() == '\n') line++;
+            advance();
+        }
+        advance();
+        return input.substring(start, index - 1);
+    }
+
+    char advance() {
+        return input.charAt(index++);
+    }
+
+    char peekNext() {
+        return input.charAt(index + 1);
+    }
+
+    char peek() {
+        if (index >= input.length()) return '\0';
+        return input.charAt(index);
+    }
+
+    public List<Token> scanTokens() {
+        List<Token> tokens = new ArrayList<>();
+        Token token;
+        while ((token = nextToken()) != null) {
+            tokens.add(token);
+        }
+        tokens.add(new Token(Token.Type.EOF, line, ""));
+        return List.copyOf(tokens);
+    }
+}
