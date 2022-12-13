@@ -14,6 +14,9 @@ public sealed interface Statement {
     record Call(String name, List<Expression> arguments) implements Statement {
     }
 
+    record Block(List<Statement> statements) implements Statement {
+    }
+
     record Return(@Nullable Expression expression) implements Statement {
     }
 }

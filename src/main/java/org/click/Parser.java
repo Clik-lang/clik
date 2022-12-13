@@ -56,6 +56,8 @@ public final class Parser {
             } else {
                 throw error(identifier, "Expected ':' or '=' after identifier.");
             }
+        } else if (check(LEFT_BRACE)) {
+            statement = new Statement.Block(readBlock());
         } else {
             throw error(peek(), "Expect statement.");
         }

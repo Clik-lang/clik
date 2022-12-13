@@ -28,6 +28,10 @@ public final class ScopeWalker<T> {
         currentScope().register(name, value);
     }
 
+    public void update(@NotNull String name, @UnknownNullability T value) {
+        currentScope().update(name, value);
+    }
+
     public @UnknownNullability T find(@NotNull String name) {
         return currentScope().tracked.get(name);
     }
@@ -54,6 +58,13 @@ public final class ScopeWalker<T> {
 
         void register(String name, T value) {
             this.tracked.put(name, value);
+        }
+
+        void update(String name, T value) {
+            this.tracked.put(name, value);
+            if (parent != null) {
+                parent.update(name, value);
+            }
         }
     }
 }

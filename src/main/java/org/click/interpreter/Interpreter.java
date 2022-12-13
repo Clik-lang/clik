@@ -54,9 +54,15 @@ public final class Interpreter {
             final Expression evaluated = evaluate(initializer);
             walker.register(declare.name(), evaluated);
         } else if (statement instanceof Statement.Assign assign) {
-            walker.register(assign.name(), assign.expression());
+            walker.update(assign.name(), assign.expression());
         } else if (statement instanceof Statement.Call call) {
             evaluate(new Expression.Call(call.name(), call.arguments()));
+        } else if (statement instanceof Statement.Block block) {
+            this.walker.enterBlock();
+            for (Statement inner : block.statements()) {
+                execute(inner);
+            }
+            this.walker.exitBlock();
         } else if (statement instanceof Statement.Return returnStatement) {
             final Expression expression = returnStatement.expression();
             if (expression != null) {
