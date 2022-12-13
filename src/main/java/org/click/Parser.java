@@ -187,6 +187,28 @@ public final class Parser {
             final Type arrayType = nextType();
             final Parameter.Passed passed = nextPassedParameters();
             return new Expression.ArrayValue(arrayType, passed);
+        } else if (check(MAP)) {
+            // Map
+            consume(MAP, "Expected 'map' after '['.");
+            consume(LEFT_BRACKET, "Expected '[' after map.");
+            final Type keyType = nextType();
+            consume(RIGHT_BRACKET, "Expected ']' after key type.");
+            final Type valueType = nextType();
+            Map<Expression, Expression> entries = new HashMap<>();
+            if (check(LEFT_BRACE)) {
+                consume(LEFT_BRACE, "Expected '{' after map.");
+                while (!check(RIGHT_BRACE)) {
+                    final Expression key = nextExpression();
+                    consume(COLON, "Expected ':' after key.");
+                    final Expression value = nextExpression();
+                    entries.put(key, value);
+                    if (check(COMMA)) {
+                        consume(COMMA, "Expected ',' after entry.");
+                    }
+                }
+                consume(RIGHT_BRACE, "Expected '}' after map.");
+            }
+            return new Expression.MapValue(keyType, valueType, entries);
         } else if (check(LEFT_BRACE)) {
             // Inline block
             final Parameter.Passed passed = nextPassedParameters();

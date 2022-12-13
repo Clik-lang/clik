@@ -149,6 +149,25 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void map() {
+        assertProgram(new Expression.Constant(5),
+                """
+                        main :: () i32 {
+                          values :: map[i32]i32 {"test": 5};
+                          return values["test"];
+                        }
+                        """);
+        assertProgram(new Expression.Constant(5),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () i32 {
+                          values :: map[Point]i32 {{1, 2}: 5};
+                          return values[{1,2}];
+                        }
+                        """);
+    }
+
+    @Test
     public void struct() {
         assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
                 """
@@ -285,7 +304,7 @@ public final class IntegrationTest {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
         var interpreter = new Interpreter(statements);
-        var actual = interpreter.interpret("main");
+        var actual = interpreter.interpret("main", List.of());
         interpreter.stop();
         assertEquals(expected, actual);
     }

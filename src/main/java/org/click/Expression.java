@@ -36,6 +36,10 @@ public sealed interface Expression {
     record ArrayValue(Type type, Parameter.Passed parameters) implements Expression {
     }
 
+    record MapValue(Type keyType, Type valueType,
+                    Map<Expression, Expression> entries) implements Expression {
+    }
+
     record InitializationBlock(Parameter.Passed parameters) implements Expression {
     }
 

@@ -3,7 +3,9 @@ package org.click.interpreter;
 import org.click.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class Interpreter {
     private final List<Statement> statements;
@@ -183,18 +185,26 @@ public final class Interpreter {
             }
         } else if (argument instanceof Expression.ArrayAccess arrayAccess) {
             final Expression array = evaluate(arrayAccess.array(), null);
-            final Expression index = evaluate(arrayAccess.index(), null);
-            if (!(array instanceof Expression.ArrayValue arrayValue)) {
-                throw new RuntimeException("Expected array, got: " + array);
+            if (array instanceof Expression.ArrayValue arrayValue) {
+                final Expression index = evaluate(arrayAccess.index(), null);
+                if (!(index instanceof Expression.Constant constant) || !(constant.value() instanceof Integer integer)) {
+                    throw new RuntimeException("Expected constant, got: " + index);
+                }
+                final List<Expression> content = arrayValue.parameters().expressions();
+                if (integer < 0 || integer >= content.size()) {
+                    throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
+                }
+                return content.get(integer);
+            } else if (array instanceof Expression.MapValue mapValue) {
+                final Expression index = evaluate(arrayAccess.index(), mapValue.keyType());
+                var result = mapValue.entries().get(index);
+                if (result == null) {
+                    throw new RuntimeException("Key not found: " + index);
+                }
+                return result;
+            } else {
+                throw new RuntimeException("Expected array/map, got: " + array);
             }
-            if (!(index instanceof Expression.Constant constant) || !(constant.value() instanceof Integer integer)) {
-                throw new RuntimeException("Expected constant, got: " + index);
-            }
-            final List<Expression> content = arrayValue.parameters().expressions();
-            if (integer < 0 || integer >= content.size()) {
-                throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
-            }
-            return content.get(integer);
         } else if (argument instanceof Expression.Call call) {
             final String name = call.name();
 
@@ -227,6 +237,14 @@ public final class Interpreter {
             final List<Expression> evaluated = positional.expressions().stream()
                     .map(expression -> evaluate(expression, arrayValue.type())).toList();
             return new Expression.ArrayValue(arrayValue.type(), new Parameter.Passed.Positional(evaluated));
+        } else if (argument instanceof Expression.MapValue mapValue) {
+            Map<Expression, Expression> evaluatedEntries = new HashMap<>();
+            for (var entry : mapValue.entries().entrySet()) {
+                final Expression key = evaluate(entry.getKey(), mapValue.keyType());
+                final Expression value = evaluate(entry.getValue(), mapValue.valueType());
+                evaluatedEntries.put(key, value);
+            }
+            return new Expression.MapValue(mapValue.keyType(), mapValue.valueType(), evaluatedEntries);
         } else if (argument instanceof Expression.InitializationBlock initializationBlock) {
             // Retrieve explicit type from context
             if (explicitType == null)
