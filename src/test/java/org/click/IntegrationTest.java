@@ -47,6 +47,18 @@ public final class IntegrationTest {
                         }
                         get :: () -> 1;
                         """);
+        assertProgram(ONE, "main",
+                """
+                        main :: () {
+                            get();
+                        }
+                        get :: () -> 1;
+                        """);
+        assertProgram(ONE, "main",
+                """
+                        main :: () -> get();
+                        get :: () -> 1;
+                        """);
     }
 
     private static void assertProgram(Expression expected, String name, String input) {

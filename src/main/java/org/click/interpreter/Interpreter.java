@@ -59,7 +59,7 @@ public final class Interpreter {
         } else if (statement instanceof Statement.Assign assign) {
             walker.update(assign.name(), assign.expression());
         } else if (statement instanceof Statement.Call call) {
-            evaluate(new Expression.Call(call.name(), call.arguments()));
+            return evaluate(new Expression.Call(call.name(), call.arguments()));
         } else if (statement instanceof Statement.Branch branch) {
             final Expression condition = evaluate(branch.condition());
             assert condition != null;
