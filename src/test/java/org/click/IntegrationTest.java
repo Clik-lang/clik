@@ -98,6 +98,15 @@ public final class IntegrationTest {
 
         assertProgram(TRUE,
                 """
+                        main :: () -> 1 == 1;
+                        """);
+        assertProgram(TRUE,
+                """
+                        main :: () -> 1 + 1 == 2;
+                        """);
+
+        assertProgram(TRUE,
+                """
                         main :: () -> true && true;
                         """);
         assertProgram(TRUE,

@@ -165,20 +165,36 @@ public final class Interpreter {
             final Object leftValue = leftConstant.value();
             final Object rightValue = rightConstant.value();
             if (leftValue instanceof Integer leftInt && rightValue instanceof Integer rightInt) {
+                boolean isComparison = false;
                 final int result = switch (operator.type()) {
                     case PLUS -> leftInt + rightInt;
                     case MINUS -> leftInt - rightInt;
                     case STAR -> leftInt * rightInt;
                     case SLASH -> leftInt / rightInt;
-                    case EQUAL_EQUAL -> leftInt.equals(rightInt) ? 1 : 0;
-                    case GREATER -> leftInt > rightInt ? 1 : 0;
-                    case GREATER_EQUAL -> leftInt >= rightInt ? 1 : 0;
-                    case LESS -> leftInt < rightInt ? 1 : 0;
-                    case LESS_EQUAL -> leftInt <= rightInt ? 1 : 0;
+                    case EQUAL_EQUAL -> {
+                        isComparison = true;
+                        yield leftInt.equals(rightInt) ? 1 : 0;
+                    }
+                    case GREATER -> {
+                        isComparison = true;
+                        yield leftInt > rightInt ? 1 : 0;
+                    }
+                    case GREATER_EQUAL -> {
+                        isComparison = true;
+                        yield leftInt >= rightInt ? 1 : 0;
+                    }
+                    case LESS -> {
+                        isComparison = true;
+                        yield leftInt < rightInt ? 1 : 0;
+                    }
+                    case LESS_EQUAL -> {
+                        isComparison = true;
+                        yield leftInt <= rightInt ? 1 : 0;
+                    }
                     default -> throw new RuntimeException("Unknown operator: " + operator);
                 };
-                return new Expression.Constant(result);
-            }else if (leftValue instanceof Boolean leftBool && rightValue instanceof Boolean rightBool) {
+                return new Expression.Constant(isComparison ? result == 1 : result);
+            } else if (leftValue instanceof Boolean leftBool && rightValue instanceof Boolean rightBool) {
                 final boolean result = switch (operator.type()) {
                     case OR -> leftBool || rightBool;
                     case AND -> leftBool && rightBool;
@@ -186,7 +202,7 @@ public final class Interpreter {
                     default -> throw new RuntimeException("Unknown operator: " + operator);
                 };
                 return new Expression.Constant(result);
-            }else {
+            } else {
                 throw new RuntimeException("Unknown types: " + leftValue.getClass() + " and " + rightValue.getClass());
             }
         } else {

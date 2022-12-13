@@ -51,8 +51,14 @@ public final class Scanner {
         else if (c == ';') type = Token.Type.SEMICOLON;
         else if (c == '*') type = Token.Type.STAR;
         else if (c == '/') type = Token.Type.SLASH;
-        else if (c == '=') type = Token.Type.EQUAL;
-        else if (c == ':') type = Token.Type.COLON;
+        else if (c == '=') {
+            if (peek() == '=') {
+                advance();
+                type = Token.Type.EQUAL_EQUAL;
+            } else {
+                type = Token.Type.EQUAL;
+            }
+        } else if (c == ':') type = Token.Type.COLON;
         else if (c == '~') type = Token.Type.TIDE;
         else if (c == '|') {
             if (peek() == '|') {
