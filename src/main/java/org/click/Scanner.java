@@ -33,8 +33,14 @@ public final class Scanner {
         else if (c == '{') type = Token.Type.LEFT_BRACE;
         else if (c == '}') type = Token.Type.RIGHT_BRACE;
         else if (c == ',') type = Token.Type.COMMA;
-        else if (c == '.') type = Token.Type.DOT;
-        else if (c == '-') type = Token.Type.MINUS;
+        else if (c == '.') {
+            if (peek() == '.') {
+                advance();
+                type = Token.Type.RANGE;
+            } else {
+                type = Token.Type.DOT;
+            }
+        } else if (c == '-') type = Token.Type.MINUS;
         else if (c == '+') type = Token.Type.PLUS;
         else if (c == ';') type = Token.Type.SEMICOLON;
         else if (c == '*') type = Token.Type.STAR;
@@ -50,7 +56,9 @@ public final class Scanner {
             value = nextNumber();
         } else if (Character.isLetter(c)) {
             value = nextIdentifier();
-            if (value.equals("struct")) {
+            if (value.equals("for")) {
+                type = Token.Type.FOR;
+            } else if (value.equals("struct")) {
                 type = Token.Type.STRUCT;
             } else {
                 type = Token.Type.IDENTIFIER;
@@ -75,7 +83,7 @@ public final class Scanner {
     private Number nextNumber() {
         var start = index - 1;
         while (Character.isDigit(peek())) advance();
-        if (peek() != '.') {
+        if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer
             return Integer.parseInt(input.substring(start, index));
         }

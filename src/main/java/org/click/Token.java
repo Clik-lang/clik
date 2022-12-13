@@ -15,13 +15,13 @@ public record Token(Type type, int line, String input,
         COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
 
         // Declarations
-        EQUAL, COLON, TIDE,
+        EQUAL, COLON, TIDE, RANGE,
 
         // Values
         IDENTIFIER, LITERAL,
 
         // Keywords
-        IF, ELSE, STRUCT, ENUM, UNION,
+        IF, ELSE, FOR, STRUCT, ENUM, UNION,
 
         // End of file
         EOF,
