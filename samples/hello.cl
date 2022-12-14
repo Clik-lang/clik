@@ -1,8 +1,8 @@
-Point :: struct {x: i32, y: i32}
 main :: () {
-  Component :: enum Point {
-    Position :: {.x: 1, .y: 2},
-    Velocity :: {.x: 3, .y: 4},
+  Component :: union {
+    Position :: struct {x: i32, y: i32},
+    Velocity :: struct {x: i32, y: i32},
   }
-  print(Component.Velocity);
+  value :: Position {.x: 1, .y: 2};
+  print(value);
 }

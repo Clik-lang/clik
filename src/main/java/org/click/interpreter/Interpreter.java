@@ -26,7 +26,7 @@ public final class Interpreter {
     public Value interpret(String function, List<Value> parameters) {
         final Value call = walker.find(function);
         if (!(call instanceof Value.FunctionDecl functionDeclaration)) {
-            throw new RuntimeException("Function not found: " + call+ " " + function);
+            throw new RuntimeException("Function not found: " + call + " " + function);
         }
 
         walker.enterBlock();
@@ -161,6 +161,24 @@ public final class Interpreter {
                 evaluated.put(entry.getKey(), evaluate(entry.getValue(), type));
             }
             return new Value.EnumDecl(type, evaluated);
+        } else if (argument instanceof Expression.Union unionDeclaration) {
+            Map<String, Value.StructDecl> entries = new HashMap<>();
+            for (Map.Entry<String, Expression.Struct> entry : unionDeclaration.entries().entrySet()) {
+                final String name = entry.getKey();
+                final Expression.Struct struct = entry.getValue();
+                final Value.StructDecl structDecl;
+                if (struct == null) {
+                    if (!(walker.find(name) instanceof Value.StructDecl structDeclaration)) {
+                        throw new RuntimeException("Struct not found: " + name);
+                    }
+                    structDecl = structDeclaration;
+                } else {
+                    structDecl = (Value.StructDecl) evaluate(struct, null);
+                    walker.register(name, structDecl);
+                }
+                entries.put(name, structDecl);
+            }
+            return new Value.UnionDecl(entries);
         } else if (argument instanceof Expression.Constant constant) {
             return new Value.Constant(constant.value());
         } else if (argument instanceof Expression.Variable variable) {

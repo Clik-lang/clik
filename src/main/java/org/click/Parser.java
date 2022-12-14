@@ -129,6 +129,8 @@ public final class Parser {
             return nextStruct();
         } else if (check(ENUM)) {
             return nextEnum();
+        } else if (check(UNION)) {
+            return nextUnion();
         } else if (match(LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
@@ -329,6 +331,29 @@ public final class Parser {
         }
         consume(RIGHT_BRACE, "Expect '}'.");
         return new Expression.Enum(type, entries);
+    }
+
+    private Expression.Union nextUnion() {
+        consume(UNION, "Expect 'union'.");
+        consume(LEFT_BRACE, "Expect '{'.");
+        Map<String, Expression.Struct> entries = new HashMap<>();
+        if (!check(RIGHT_BRACE)) {
+            do {
+                if (entries.size() >= 255) {
+                    throw error(peek(), "Cannot have more than 255 fields.");
+                }
+                final Token identifier = consume(IDENTIFIER, "Expect field name.");
+                Expression.Struct struct = null;
+                if (match(COLON)) {
+                    // Inline struct
+                    consume(COLON, "Expect ':' after field name.");
+                    struct = nextStruct();
+                }
+                entries.put(identifier.input(), struct);
+            } while (match(COMMA) && !check(RIGHT_BRACE));
+        }
+        consume(RIGHT_BRACE, "Expect '}'.");
+        return new Expression.Union(entries);
     }
 
     Statement.Branch nextBranch() {

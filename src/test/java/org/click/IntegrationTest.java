@@ -243,6 +243,44 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void union() {
+        assertProgram(ONE,
+                """
+                        Point :: struct {x: i32, y: i32};
+                        main :: () i32 {
+                          Component :: union {
+                            Point,
+                            Velocity :: struct {x: i32, y: i32},
+                          }
+                          value :: Point {.x: 1, .y: 2};
+                          return value.x;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        Point :: struct {x: i32, y: i32};
+                        main :: () i32 {
+                          Component :: union {
+                            Point,
+                          }
+                          value :: Point {.x: 1, .y: 2};
+                          return value.x;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () i32 {
+                          Component :: union {
+                            Position :: struct {x: i32, y: i32},
+                            Velocity :: struct {x: i32, y: i32},
+                          }
+                          value :: Position {.x: 1, .y: 2};
+                          return value.x;
+                        }
+                        """);
+    }
+
+    @Test
     public void loop() {
         assertProgram(new Value.Constant(10),
                 """

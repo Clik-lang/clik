@@ -102,6 +102,8 @@ public final class Scanner {
                 type = Token.Type.STRUCT;
             } else if (value.equals("enum")) {
                 type = Token.Type.ENUM;
+            } else if (value.equals("union")) {
+                type = Token.Type.UNION;
             } else {
                 type = Token.Type.IDENTIFIER;
             }

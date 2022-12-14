@@ -19,6 +19,9 @@ public sealed interface Value {
     record EnumDecl(@Nullable Type type, java.util.Map<String, Value> entries) implements Value {
     }
 
+    record UnionDecl(java.util.Map<String, StructDecl> entries) implements Value {
+    }
+
     // VALUES
 
     record Constant(Object value) implements Value {

@@ -15,6 +15,9 @@ public sealed interface Expression {
     record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
     }
 
+    record Union(Map<String, @Nullable Struct> entries) implements Expression {
+    }
+
     record Constant(Object value) implements Expression {
     }
 
