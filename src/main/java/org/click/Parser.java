@@ -67,9 +67,9 @@ public final class Parser {
             consume(RETURN, "Expected 'return'.");
             statement = new Statement.Return(nextExpression());
         } else if (check(IF)) {
-            statement = readBranch();
+            statement = nextBranch();
         } else if (check(FOR)) {
-            statement = readLoop();
+            statement = nextLoop();
         } else if (check(LEFT_BRACE)) {
             if (checkNext(DOT) || checkNext(LITERAL)) {
                 // Inline block return
@@ -77,7 +77,7 @@ public final class Parser {
                 assert expression != null;
                 statement = new Statement.Return(expression);
             } else {
-                statement = new Statement.Block(readBlock());
+                statement = new Statement.Block(nextBlock());
             }
         } else {
             // Implicit return
@@ -280,7 +280,7 @@ public final class Parser {
         if (check(IDENTIFIER)) {
             returnType = nextType();
         }
-        final List<Statement> body = readBlock();
+        final List<Statement> body = nextBlock();
         return new Expression.Function(parameters, returnType, body);
     }
 
@@ -329,19 +329,19 @@ public final class Parser {
         return new Expression.Enum(null, entries);
     }
 
-    Statement.Branch readBranch() {
+    Statement.Branch nextBranch() {
         consume(IF, "Expect 'if'.");
         final Expression condition = nextExpression();
-        final List<Statement> thenBranch = readBlock();
-        final List<Statement> elseBranch = match(ELSE) ? readBlock() : null;
+        final List<Statement> thenBranch = nextBlock();
+        final List<Statement> elseBranch = match(ELSE) ? nextBlock() : null;
         return new Statement.Branch(condition, thenBranch, elseBranch);
     }
 
-    Statement.Loop readLoop() {
+    Statement.Loop nextLoop() {
         consume(FOR, "Expect 'for'.");
         // Infinite loop
         if (check(LEFT_BRACE) || check(ARROW)) {
-            return new Statement.Loop(List.of(), null, readBlock());
+            return new Statement.Loop(List.of(), null, nextBlock());
         }
         // Conditional loop
         if (check(IDENTIFIER) && checkNext(COLON)) {
@@ -350,17 +350,17 @@ public final class Parser {
             // For each
             final List<String> declarations = List.of(identifier.input());
             final Expression iterable = nextExpression();
-            final List<Statement> body = readBlock();
+            final List<Statement> body = nextBlock();
             return new Statement.Loop(declarations, iterable, body);
         } else {
             // For
             final Expression iterable = nextExpression();
-            final List<Statement> body = readBlock();
+            final List<Statement> body = nextBlock();
             return new Statement.Loop(List.of(), iterable, body);
         }
     }
 
-    List<Statement> readBlock() {
+    List<Statement> nextBlock() {
         if (match(LEFT_BRACE)) {
             final List<Statement> statements = new ArrayList<>();
             while (!check(RIGHT_BRACE) && !isAtEnd()) {
