@@ -23,7 +23,7 @@ public record Token(Type type, int line, String input,
         LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
 
         // Declarations
-        EQUAL, COLON, TIDE, RANGE, ARROW,
+        EQUAL, COLON, TILDE, RANGE, ARROW,
 
         // Values
         IDENTIFIER, LITERAL,

@@ -37,7 +37,7 @@ public final class Parser {
                     declarationType = Statement.DeclarationType.CONSTANT;
                 } else if (match(EQUAL)) {
                     declarationType = Statement.DeclarationType.VARIABLE;
-                } else if (match(TIDE)) {
+                } else if (match(TILDE)) {
                     declarationType = Statement.DeclarationType.SHARED;
                 } else {
                     throw error(peek(), "Expected declaration type");

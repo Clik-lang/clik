@@ -61,7 +61,7 @@ public final class Scanner {
                 type = Token.Type.EQUAL;
             }
         } else if (c == ':') type = Token.Type.COLON;
-        else if (c == '~') type = Token.Type.TIDE;
+        else if (c == '~') type = Token.Type.TILDE;
         else if (c == '|') {
             if (peek() == '|') {
                 advance();
