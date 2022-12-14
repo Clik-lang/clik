@@ -32,9 +32,9 @@ public final class Interpreter {
         walker.enterBlock();
         for (int i = 0; i < parameters.size(); i++) {
             final Parameter parameter = functionDeclaration.parameters().get(i);
-            final Value expression = parameters.get(i);
-            assert expression != null;
-            walker.register(parameter.name(), expression);
+            final Value value = parameters.get(i);
+            assert value != null;
+            walker.register(parameter.name(), value);
         }
 
         Value result = null;
@@ -175,9 +175,7 @@ public final class Interpreter {
                 return struct.parameters().get(field.name());
             } else if (expression instanceof Value.EnumDecl enumDecl) {
                 final Value value = enumDecl.entries().get(field.name());
-                if (value == null) {
-                    throw new RuntimeException("Enum entry not found: " + field.name());
-                }
+                if (value == null) throw new RuntimeException("Enum entry not found: " + field.name());
                 return value;
             } else {
                 throw new RuntimeException("Expected struct, got: " + expression);
@@ -196,22 +194,19 @@ public final class Interpreter {
             } else if (array instanceof Value.Map mapValue) {
                 final Value index = evaluate(arrayAccess.index(), mapValue.keyType());
                 final Value result = mapValue.entries().get(index);
-                if (result == null)
-                    throw new RuntimeException("Key not found: " + index);
+                if (result == null) throw new RuntimeException("Key not found: " + index);
                 return result;
             } else {
                 throw new RuntimeException("Expected array/map, got: " + array);
             }
         } else if (argument instanceof Expression.Call call) {
             final String name = call.name();
-
-            final List<Value> evaluated = call.arguments().expressions().stream().map(expression -> evaluate(expression, null)).toList();
+            final List<Value> evaluated = call.arguments().expressions().stream()
+                    .map(expression -> evaluate(expression, null)).toList();
             if (name.equals("print")) {
-                for (Value param : evaluated) {
-                    final String serialize = serialize(param);
-                    System.out.print(serialize);
-                }
-                System.out.println();
+                StringBuilder builder = new StringBuilder();
+                for (Value value : evaluated) builder.append(serialize(value));
+                System.out.println(builder);
             } else {
                 return interpret(name, evaluated);
             }
@@ -222,9 +217,7 @@ public final class Interpreter {
             Map<String, Value> evaluated = new HashMap<>();
             for (Parameter param : struct.parameters()) {
                 final Expression value = structValue.fields().find(parameters, param);
-                if (value == null) {
-                    throw new RuntimeException("Missing field: " + param.name());
-                }
+                if (value == null) throw new RuntimeException("Missing field: " + param.name());
                 evaluated.put(param.name(), evaluate(value, param.type()));
             }
             return new Value.Struct(structValue.name(), evaluated);
@@ -244,8 +237,7 @@ public final class Interpreter {
             return new Value.Map(mapValue.keyType(), mapValue.valueType(), evaluatedEntries);
         } else if (argument instanceof Expression.InitializationBlock initializationBlock) {
             // Retrieve explicit type from context
-            if (explicitType == null)
-                throw new RuntimeException("Expected explicit type for initialization block");
+            if (explicitType == null) throw new RuntimeException("Expected explicit type for initialization block");
             if (!explicitType.primitive()) {
                 // Struct
                 return evaluate(new Expression.StructValue(explicitType.name(), initializationBlock.parameters()), null);
