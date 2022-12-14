@@ -104,40 +104,42 @@ public final class Interpreter {
                 } else {
                     final List<String> declarations = loop.declarations();
                     final Value iterable = evaluate(loop.iterable(), null);
-                    if (iterable instanceof Value.Range range) {
-                        final int start = (int) ((Value.Constant) range.start()).value();
-                        final int end = (int) ((Value.Constant) range.end()).value();
-                        final int step = (int) ((Value.Constant) range.step()).value();
-                        walker.enterBlock();
-                        for (int i = 0; i < declarations.size(); i++) {
-                            final String declaration = loop.declarations().get(i);
-                            walker.register(declaration, new Value.Constant(0));
-                        }
-                        for (int i = start; i < end; i += step) {
-                            if (!declarations.isEmpty()) walker.update(declarations.get(0), new Value.Constant(i));
-                            for (Statement body : loop.body()) {
-                                execute(function, body);
+                    switch (iterable) {
+                        case Value.Range range -> {
+                            final int start = (int) ((Value.Constant) range.start()).value();
+                            final int end = (int) ((Value.Constant) range.end()).value();
+                            final int step = (int) ((Value.Constant) range.step()).value();
+                            walker.enterBlock();
+                            for (int i = 0; i < declarations.size(); i++) {
+                                final String declaration = loop.declarations().get(i);
+                                walker.register(declaration, new Value.Constant(0));
                             }
-                        }
-                        walker.exitBlock();
-                    } else if (iterable instanceof Value.Array array) {
-                        walker.enterBlock();
-                        final List<Value> values = array.values();
-                        if (declarations.size() == 1) {
-                            final String name = declarations.get(0);
-                            walker.register(name, new Value.Constant(0));
-                        } else if (declarations.size() > 1) {
-                            throw new RuntimeException("Too many declarations for array iteration");
-                        }
-                        for (Value value : values) {
-                            if (!declarations.isEmpty()) walker.update(declarations.get(0), value);
-                            for (Statement body : loop.body()) {
-                                execute(function, body);
+                            for (int i = start; i < end; i += step) {
+                                if (!declarations.isEmpty()) walker.update(declarations.get(0), new Value.Constant(i));
+                                for (Statement body : loop.body()) {
+                                    execute(function, body);
+                                }
                             }
+                            walker.exitBlock();
                         }
-                        walker.exitBlock();
-                    } else {
-                        throw new RuntimeException("Expected iterable, got: " + iterable);
+                        case Value.Array array -> {
+                            walker.enterBlock();
+                            final List<Value> values = array.values();
+                            if (declarations.size() == 1) {
+                                final String name = declarations.get(0);
+                                walker.register(name, new Value.Constant(0));
+                            } else if (declarations.size() > 1) {
+                                throw new RuntimeException("Too many declarations for array iteration");
+                            }
+                            for (Value value : values) {
+                                if (!declarations.isEmpty()) walker.update(declarations.get(0), value);
+                                for (Statement body : loop.body()) {
+                                    execute(function, body);
+                                }
+                            }
+                            walker.exitBlock();
+                        }
+                        case null, default -> throw new RuntimeException("Expected iterable, got: " + iterable);
                     }
                 }
             }
@@ -193,9 +195,7 @@ public final class Interpreter {
                 }
                 yield new Value.UnionDecl(entries);
             }
-            case Expression.Constant constant -> {
-                yield new Value.Constant(constant.value());
-            }
+            case Expression.Constant constant -> new Value.Constant(constant.value());
             case Expression.Variable variable -> {
                 final String name = variable.name();
                 final Value value = walker.find(name);
@@ -206,34 +206,37 @@ public final class Interpreter {
             }
             case Expression.Field field -> {
                 final Value expression = evaluate(field.object(), null);
-                if (expression instanceof Value.Struct struct) {
-                    yield struct.parameters().get(field.name());
-                } else if (expression instanceof Value.EnumDecl enumDecl) {
-                    final Value value = enumDecl.entries().get(field.name());
-                    if (value == null) throw new RuntimeException("Enum entry not found: " + field.name());
-                    yield value;
-                }
-                throw new RuntimeException("Expected struct, got: " + expression);
+                yield switch (expression) {
+                    case Value.Struct struct -> struct.parameters().get(field.name());
+                    case Value.EnumDecl enumDecl -> {
+                        final Value value = enumDecl.entries().get(field.name());
+                        if (value == null) throw new RuntimeException("Enum entry not found: " + field.name());
+                        yield value;
+                    }
+                    case null, default -> throw new RuntimeException("Expected struct, got: " + expression);
+                };
             }
             case Expression.ArrayAccess arrayAccess -> {
                 final Value array = evaluate(arrayAccess.array(), null);
-                if (array instanceof Value.Array arrayValue) {
-                    final Value index = evaluate(arrayAccess.index(), null);
-                    if (!(index instanceof Value.Constant constant) || !(constant.value() instanceof Integer integer)) {
-                        throw new RuntimeException("Expected constant, got: " + index);
+                yield switch (array) {
+                    case Value.Array arrayValue -> {
+                        final Value index = evaluate(arrayAccess.index(), null);
+                        if (!(index instanceof Value.Constant constant) || !(constant.value() instanceof Integer integer)) {
+                            throw new RuntimeException("Expected constant, got: " + index);
+                        }
+                        final List<Value> content = arrayValue.values();
+                        if (integer < 0 || integer >= content.size())
+                            throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
+                        yield content.get(integer);
                     }
-                    final List<Value> content = arrayValue.values();
-                    if (integer < 0 || integer >= content.size())
-                        throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
-                    yield content.get(integer);
-                } else if (array instanceof Value.Map mapValue) {
-                    final Value index = evaluate(arrayAccess.index(), mapValue.keyType());
-                    final Value result = mapValue.entries().get(index);
-                    if (result == null) throw new RuntimeException("Key not found: " + index);
-                    yield result;
-                } else {
-                    throw new RuntimeException("Expected array/map, got: " + array);
-                }
+                    case Value.Map mapValue -> {
+                        final Value index = evaluate(arrayAccess.index(), mapValue.keyType());
+                        final Value result = mapValue.entries().get(index);
+                        if (result == null) throw new RuntimeException("Key not found: " + index);
+                        yield result;
+                    }
+                    case null, default -> throw new RuntimeException("Expected array/map, got: " + array);
+                };
             }
             case Expression.Call call -> {
                 final String name = call.name();
