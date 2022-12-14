@@ -112,10 +112,11 @@ public final class Interpreter {
                             walker.enterBlock();
                             for (int i = 0; i < declarations.size(); i++) {
                                 final String declaration = loop.declarations().get(i);
-                                walker.register(declaration, new Value.Constant(0));
+                                walker.register(declaration, new Value.Constant(Type.I32, 0));
                             }
                             for (int i = start; i < end; i += step) {
-                                if (!declarations.isEmpty()) walker.update(declarations.get(0), new Value.Constant(i));
+                                if (!declarations.isEmpty())
+                                    walker.update(declarations.get(0), new Value.Constant(Type.I32, i));
                                 for (Statement body : loop.body()) {
                                     execute(function, body);
                                 }
@@ -127,7 +128,7 @@ public final class Interpreter {
                             final List<Value> values = array.values();
                             if (declarations.size() == 1) {
                                 final String name = declarations.get(0);
-                                walker.register(name, new Value.Constant(0));
+                                walker.register(name, new Value.Constant(Type.I32, 0));
                             } else if (declarations.size() > 1) {
                                 throw new RuntimeException("Too many declarations for array iteration");
                             }
@@ -164,7 +165,7 @@ public final class Interpreter {
     }
 
     private Value evaluate(Expression argument, Type explicitType) {
-        return switch (argument) {
+        final Value rawValue = switch (argument) {
             case Expression.Function functionDeclaration ->
                     new Value.FunctionDecl(functionDeclaration.parameters(), functionDeclaration.returnType(), functionDeclaration.body());
             case Expression.Struct structDeclaration -> new Value.StructDecl(structDeclaration.parameters());
@@ -195,7 +196,7 @@ public final class Interpreter {
                 }
                 yield new Value.UnionDecl(entries);
             }
-            case Expression.Constant constant -> new Value.Constant(constant.value());
+            case Expression.Constant constant -> new Value.Constant(constant.type(), constant.value());
             case Expression.Variable variable -> {
                 final String name = variable.name();
                 final Value value = walker.find(name);
@@ -297,6 +298,25 @@ public final class Interpreter {
             }
             case null -> throw new RuntimeException("Unknown expression: " + argument);
         };
+
+        if (explicitType == null) {
+            // No type defined, use inferred type
+            return rawValue;
+        }
+        if (explicitType.primitive()) {
+            // Primitive type, no conversion needed
+            // TODO: downcast
+            return rawValue;
+        }
+        final Value trackedType = walker.find(explicitType.name());
+        if (trackedType instanceof Value.UnionDecl unionDecl && rawValue instanceof Value.Struct struct) {
+            // Put struct in union wrapper
+            final String unionName = explicitType.name();
+            assert unionDecl.entries().containsKey(struct.name()) : "Struct not found in union: " + struct.name();
+            return new Value.Union(unionName, rawValue);
+        }
+        // Valid type, no conversion needed
+        return rawValue;
     }
 
     private Value operate(Token operator, Value left, Value right) {
@@ -332,7 +352,7 @@ public final class Interpreter {
                     }
                     default -> throw new RuntimeException("Unknown operator: " + operator);
                 };
-                return new Value.Constant(isComparison ? result == 1 : result);
+                return isComparison ? new Value.Constant(Type.BOOL, result == 1) : new Value.Constant(Type.I32, result);
             } else if (leftValue instanceof Boolean leftBool && rightValue instanceof Boolean rightBool) {
                 final boolean result = switch (operator.type()) {
                     case OR -> leftBool || rightBool;
@@ -340,7 +360,7 @@ public final class Interpreter {
                     case EQUAL_EQUAL -> leftBool.equals(rightBool);
                     default -> throw new RuntimeException("Unknown operator: " + operator);
                 };
-                return new Value.Constant(result);
+                return new Value.Constant(Type.BOOL, result);
             } else {
                 throw new RuntimeException("Unknown types: " + leftValue.getClass() + " and " + rightValue.getClass());
             }
@@ -369,6 +389,13 @@ public final class Interpreter {
                 }
                 builder.append("}");
                 yield builder.toString();
+            }
+            case Value.Union union -> {
+                if (!(walker.find(union.name()) instanceof Value.UnionDecl)) {
+                    throw new RuntimeException("Union not found: " + union.name());
+                }
+                final Value field = union.value();
+                yield union.name() + "." + serialize(field);
             }
             case Value.Array array -> {
                 final List<Value> values = array.values();

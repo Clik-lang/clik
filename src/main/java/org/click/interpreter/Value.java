@@ -24,10 +24,13 @@ public sealed interface Value {
 
     // VALUES
 
-    record Constant(Object value) implements Value {
+    record Constant(Type type, Object value) implements Value {
     }
 
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
+    }
+
+    record Union(String name, Value value) implements Value {
     }
 
     record Array(Type type, List<Value> values) implements Value {

@@ -10,12 +10,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class IntegrationTest {
-    private static final Value TRUE = new Value.Constant(true);
-    private static final Value FALSE = new Value.Constant(false);
+    private static final Value TRUE = new Value.Constant(Type.BOOL, true);
+    private static final Value FALSE = new Value.Constant(Type.BOOL, false);
 
-    private static final Value ZERO = new Value.Constant(0);
-    private static final Value ONE = new Value.Constant(1);
-    private static final Value TWO = new Value.Constant(2);
+    private static final Value ZERO = new Value.Constant(Type.I32, 0);
+    private static final Value ONE = new Value.Constant(Type.I32, 1);
+    private static final Value TWO = new Value.Constant(Type.I32, 2);
 
     @Test
     public void functionBlock() {
@@ -95,11 +95,11 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(14),
+        assertProgram(new Value.Constant(Type.I32, 14),
                 """
                         main :: () i32 -> 2 + 3 * 4;
                         """);
-        assertProgram(new Value.Constant(20),
+        assertProgram(new Value.Constant(Type.I32, 20),
                 """
                         main :: () i32 -> (2 + 3) * 4;
                         """);
@@ -158,14 +158,14 @@ public final class IntegrationTest {
 
     @Test
     public void map() {
-        assertProgram(new Value.Constant(5),
+        assertProgram(new Value.Constant(Type.I32, 5),
                 """
                         main :: () i32 {
                           values :: map[string]i32 {"test": 5};
                           return values["test"];
                         }
                         """);
-        assertProgram(new Value.Constant(5),
+        assertProgram(new Value.Constant(Type.I32, 5),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () i32 {
@@ -285,11 +285,34 @@ public final class IntegrationTest {
                           return value.x;
                         }
                         """);
+
+        assertProgram(new Value.Union("Component", new Value.Struct("Position", Map.of("x", ONE, "y", TWO))),
+                """
+                        Component :: union {
+                            Position :: struct {x: i32, y: i32},
+                            Velocity :: struct {x: i32, y: i32},
+                        }
+                        main :: () Component {
+                          value :Component: Position {1, 2};
+                          return value;
+                        }
+                        """);
+
+        assertProgram(new Value.Union("Component", new Value.Struct("Position", Map.of("x", ONE, "y", TWO))),
+                """
+                        Component :: union {
+                            Position :: struct {x: i32, y: i32},
+                            Velocity :: struct {x: i32, y: i32},
+                        }
+                        main :: () Component {
+                          return Position {1, 2};
+                        }
+                        """);
     }
 
     @Test
     public void loop() {
-        assertProgram(new Value.Constant(10),
+        assertProgram(new Value.Constant(Type.I32, 10),
                 """
                         main :: () i32 {
                           value := 0;
@@ -297,7 +320,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(10),
+        assertProgram(new Value.Constant(Type.I32, 10),
                 """
                         main :: () i32 {
                           value := 0;
@@ -305,7 +328,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(45),
+        assertProgram(new Value.Constant(Type.I32, 45),
                 """
                         main :: () i32 {
                           value := 0;
@@ -341,7 +364,7 @@ public final class IntegrationTest {
                         }
                         """);
         assertProgram(new Value.Struct("Point", Map.of(
-                        "x", new Value.Constant(3), "y", new Value.Constant(4))),
+                        "x", new Value.Constant(Type.I32, 3), "y", new Value.Constant(Type.I32, 4))),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point {
