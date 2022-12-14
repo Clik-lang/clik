@@ -336,6 +336,18 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void branch() {
+        assertProgram(ONE,
+                """
+                        main :: () i32 {
+                          value := 0;
+                          if true -> value = 1;
+                          return value;
+                        }
+                        """);
+    }
+
+    @Test
     public void loop() {
         assertProgram(new Value.Constant(Type.I32, 10),
                 """
