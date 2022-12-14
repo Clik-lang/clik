@@ -228,7 +228,7 @@ public final class Parser {
                 consume(COLON, "Expected ':' after field name.");
                 final Expression value = nextExpression();
                 fields.put(name, value);
-            } while (match(COMMA));
+            } while (match(COMMA) && !check(RIGHT_BRACE));
             consume(RIGHT_BRACE, "Expected '}' after struct fields.");
             return new Parameter.Passed.Named(fields);
         } else {
@@ -236,7 +236,7 @@ public final class Parser {
             final List<Expression> fields = new ArrayList<>();
             do {
                 fields.add(nextExpression());
-            } while (match(COMMA));
+            } while (match(COMMA) && !check(RIGHT_BRACE));
             consume(RIGHT_BRACE, "Expected '}' after struct fields.");
             return new Parameter.Passed.Positional(fields);
         }

@@ -154,6 +154,31 @@ public final class IntegrationTest {
                           return array[0];
                         }
                         """);
+        assertProgram(ONE,
+                """
+                        main :: () i32 {
+                          array :: []i32 {1, 2, 3, 4, 5,};
+                          return array[0];
+                        }
+                        """);
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () i32 {
+                          array :: []Point {
+                            Point {.x: 1, .y: 2},
+                          }
+                          return array[0];
+                        }
+                        """);
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () i32 {
+                          array :: []Point {{1,2}}
+                          return array[0];
+                        }
+                        """);
     }
 
     @Test
