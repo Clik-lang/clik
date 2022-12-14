@@ -120,7 +120,8 @@ public final class Scanner {
 
     private String nextIdentifier() {
         var start = index - 1;
-        while (Character.isLetterOrDigit(peek())) advance();
+        char peek;
+        while (Character.isLetterOrDigit((peek = peek())) || peek == '_') advance();
         return input.substring(start, index);
     }
 

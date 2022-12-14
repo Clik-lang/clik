@@ -35,6 +35,13 @@ public final class IntegrationTest {
                 """
                         main :: () -> 0;
                         """);
+
+        assertProgram(ZERO, "main_score",
+                """
+                        main_score :: () {
+                            return 0;
+                        }
+                        """);
     }
 
     @Test
@@ -353,7 +360,7 @@ public final class IntegrationTest {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
         var interpreter = new Interpreter(statements);
-        var actual = interpreter.interpret("main", List.of());
+        var actual = interpreter.interpret(name, List.of());
         interpreter.stop();
         assertEquals(expected, actual);
     }
