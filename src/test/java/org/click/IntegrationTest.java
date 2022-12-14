@@ -1,20 +1,21 @@
 package org.click;
 
 import org.click.interpreter.Interpreter;
+import org.click.interpreter.Value;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class IntegrationTest {
+    private static final Value TRUE = new Value.Constant(true);
+    private static final Value FALSE = new Value.Constant(false);
 
-    private static final Expression TRUE = new Expression.Constant(true);
-    private static final Expression FALSE = new Expression.Constant(false);
-
-    private static final Expression ZERO = new Expression.Constant(0);
-    private static final Expression ONE = new Expression.Constant(1);
-    private static final Expression TWO = new Expression.Constant(2);
+    private static final Value ZERO = new Value.Constant(0);
+    private static final Value ONE = new Value.Constant(1);
+    private static final Value TWO = new Value.Constant(2);
 
     @Test
     public void functionBlock() {
@@ -87,11 +88,11 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Expression.Constant(14),
+        assertProgram(new Value.Constant(14),
                 """
                         main :: () -> 2 + 3 * 4;
                         """);
-        assertProgram(new Expression.Constant(20),
+        assertProgram(new Value.Constant(20),
                 """
                         main :: () -> (2 + 3) * 4;
                         """);
@@ -150,14 +151,14 @@ public final class IntegrationTest {
 
     @Test
     public void map() {
-        assertProgram(new Expression.Constant(5),
+        assertProgram(new Value.Constant(5),
                 """
                         main :: () i32 {
                           values :: map[i32]i32 {"test": 5};
                           return values["test"];
                         }
                         """);
-        assertProgram(new Expression.Constant(5),
+        assertProgram(new Value.Constant(5),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () i32 {
@@ -169,29 +170,29 @@ public final class IntegrationTest {
 
     @Test
     public void struct() {
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point -> Point {1, 2};
                         """);
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point { Point {1, 2} }
                         """);
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point { return Point {1, 2} }
                         """);
 
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point { return Point {.x:1, .y:2} }
                         """);
 
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         main :: () Point {
                             Point :: struct {x: i32, y: i32}
@@ -233,7 +234,7 @@ public final class IntegrationTest {
 
     @Test
     public void loop() {
-        assertProgram(new Expression.Constant(10),
+        assertProgram(new Value.Constant(10),
                 """
                         main :: () i32 {
                           value := 0;
@@ -241,7 +242,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Expression.Constant(10),
+        assertProgram(new Value.Constant(10),
                 """
                         main :: () i32 {
                           value := 0;
@@ -249,7 +250,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Expression.Constant(45),
+        assertProgram(new Value.Constant(45),
                 """
                         main :: () i32 {
                           value := 0;
@@ -261,22 +262,22 @@ public final class IntegrationTest {
 
     @Test
     public void explicitType() {
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point { return {1, 2} }
                         """);
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point -> {.x: 1, .y: 2}
                         """);
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point -> {1, 2}
                         """);
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(ONE, TWO))),
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point {
@@ -284,8 +285,8 @@ public final class IntegrationTest {
                             return value;
                         }
                         """);
-        assertProgram(new Expression.StructValue("Point", new Parameter.Passed.Positional(List.of(
-                        new Expression.Constant(3), new Expression.Constant(4)))),
+        assertProgram(new Value.Struct("Point", Map.of(
+                        "x", new Value.Constant(3), "y", new Value.Constant(4))),
                 """
                         Point :: struct {x: i32, y: i32}
                         main :: () Point {
@@ -296,11 +297,11 @@ public final class IntegrationTest {
                         """);
     }
 
-    private static void assertProgram(Expression expected, String input) {
+    private static void assertProgram(Value expected, String input) {
         assertProgram(expected, "main", input);
     }
 
-    private static void assertProgram(Expression expected, String name, String input) {
+    private static void assertProgram(Value expected, String name, String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
         var interpreter = new Interpreter(statements);
