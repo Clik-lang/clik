@@ -306,6 +306,7 @@ public final class Parser {
 
     private Expression.Enum nextEnum() {
         consume(ENUM, "Expect 'enum'.");
+        final Type type = check(IDENTIFIER) ? nextType() : null;
         consume(LEFT_BRACE, "Expect '{'.");
         final Map<String, Expression> entries = new HashMap<>();
         int index = 0;
@@ -316,17 +317,18 @@ public final class Parser {
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect field name.");
                 final Expression value;
-                if (match(COLON)) {
+                if (type != null) {
+                    consume(COLON, "Expect ':' after field name.");
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
                     value = new Expression.Constant(index++);
                 }
                 entries.put(identifier.input(), value);
-            } while (match(COMMA));
+            } while (match(COMMA) && !check(RIGHT_BRACE));
         }
         consume(RIGHT_BRACE, "Expect '}'.");
-        return new Expression.Enum(null, entries);
+        return new Expression.Enum(type, entries);
     }
 
     Statement.Branch nextBranch() {

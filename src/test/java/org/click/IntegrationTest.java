@@ -230,6 +230,16 @@ public final class IntegrationTest {
                         Direction :: enum {North,South}
                         main :: () i32 -> Direction.South;
                         """);
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () Point {
+                          Component :: enum Point {
+                            Position :: {.x: 1, .y: 2},
+                          }
+                          return Component.Position;
+                        }
+                        """);
     }
 
     @Test

@@ -26,7 +26,7 @@ public final class Interpreter {
     public Value interpret(String function, List<Value> parameters) {
         final Value call = walker.find(function);
         if (!(call instanceof Value.FunctionDecl functionDeclaration)) {
-            throw new RuntimeException("Function not found: " + call);
+            throw new RuntimeException("Function not found: " + call+ " " + function);
         }
 
         walker.enterBlock();
@@ -155,11 +155,12 @@ public final class Interpreter {
         } else if (argument instanceof Expression.Struct structDeclaration) {
             return new Value.StructDecl(structDeclaration.parameters());
         } else if (argument instanceof Expression.Enum enumDeclaration) {
+            final Type type = enumDeclaration.type();
             Map<String, Value> evaluated = new HashMap<>();
             for (Map.Entry<String, Expression> entry : enumDeclaration.entries().entrySet()) {
-                evaluated.put(entry.getKey(), evaluate(entry.getValue(), null));
+                evaluated.put(entry.getKey(), evaluate(entry.getValue(), type));
             }
-            return new Value.EnumDecl(enumDeclaration.type(), evaluated);
+            return new Value.EnumDecl(type, evaluated);
         } else if (argument instanceof Expression.Constant constant) {
             return new Value.Constant(constant.value());
         } else if (argument instanceof Expression.Variable variable) {
@@ -318,8 +319,8 @@ public final class Interpreter {
             final StringBuilder builder = new StringBuilder();
             builder.append(struct.name()).append("{");
             for (int i = 0; i < parameters.size(); i++) {
-                var param = parameters.get(i);
-                final Value field = struct.parameters().get(param);
+                final Parameter param = parameters.get(i);
+                final Value field = struct.parameters().get(param.name());
                 builder.append(serialize(field));
                 if (i < parameters.size() - 1) {
                     builder.append(", ");
