@@ -143,14 +143,14 @@ public final class Interpreter {
                                     }
                                 } else if (declarations.size() == 2 && !declarations.get(0).ref() && !declarations.get(1).ref()) {
                                     // for-each counted loop
-                                    final String variableName = declarations.get(0).name();
-                                    final String indexName = declarations.get(1).name();
-                                    walker.register(variableName, null);
+                                    final String indexName = declarations.get(0).name();
+                                    final String variableName = declarations.get(1).name();
                                     walker.register(indexName, null);
+                                    walker.register(variableName, null);
                                     for (int i = 0; i < values.size(); i++) {
                                         final Value value = values.get(i);
-                                        walker.update(variableName, value);
                                         walker.update(indexName, new Value.Constant(Type.I32, i));
+                                        walker.update(variableName, value);
                                         for (Statement body : loop.body()) execute(function, body);
                                     }
                                 } else {
