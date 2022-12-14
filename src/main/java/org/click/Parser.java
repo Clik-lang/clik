@@ -127,7 +127,15 @@ public final class Parser {
         }
 
         if (check(LEFT_PAREN)) {
-            return nextFunction();
+            if (checkNext(RIGHT_PAREN) || checkNext(IDENTIFIER) && checkNextNext(COLON)) {
+                return nextFunction();
+            } else {
+                // Grouping
+                consume(LEFT_PAREN, "Expected '(' after expression.");
+                final Expression expression = nextExpression();
+                consume(RIGHT_PAREN, "Expected ')' after expression.");
+                return new Expression.Group(expression);
+            }
         } else if (check(STRUCT)) {
             return nextStruct();
         } else if (check(ENUM)) {
@@ -431,6 +439,11 @@ public final class Parser {
     boolean checkNext(Token.Type type) {
         if (isAtEnd()) return false;
         return tokens.get(index + 1).type() == type;
+    }
+
+    boolean checkNextNext(Token.Type type) {
+        if (isAtEnd()) return false;
+        return tokens.get(index + 2).type() == type;
     }
 
     boolean isAtEnd() {

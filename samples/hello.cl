@@ -1,5 +1,4 @@
-Point :: struct {x: i32, y: i32}
-main :: () i32 {
-  array :: []Point {{1,2}}
-  print(array);
+main :: () {
+  value :: (1 + 1) * 5;
+  print(value);
 }
