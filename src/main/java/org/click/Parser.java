@@ -376,7 +376,8 @@ public final class Parser {
             return new Statement.Loop(null, null, nextBlock());
         }
         List<Statement.Loop.Declaration> declarations = new ArrayList<>();
-        if (match(LEFT_PAREN)) {
+        if (check(LEFT_PAREN) || check(DOT) || check(IDENTIFIER) && (checkNext(COLON) || checkNext(COMMA))) {
+            final boolean paren = match(LEFT_PAREN);
             do {
                 if (declarations.size() >= 255) {
                     throw error(peek(), "Cannot have more than 255 declarations.");
@@ -385,12 +386,7 @@ public final class Parser {
                 final Token identifier = consume(IDENTIFIER, "Expect declaration name.");
                 declarations.add(new Statement.Loop.Declaration(ref, identifier.input()));
             } while (match(COMMA));
-            consume(RIGHT_PAREN, "Expect ')'.");
-        } else if (check(DOT) || check(IDENTIFIER) && checkNext(COLON)) {
-            // Single declaration
-            final boolean ref = match(DOT);
-            final Token identifier = consume(IDENTIFIER, "Expect declaration name.");
-            declarations.add(new Statement.Loop.Declaration(ref, identifier.input()));
+            if (paren) consume(RIGHT_PAREN, "Expect ')'.");
         }
         if (!declarations.isEmpty()) {
             consume(COLON, "Expect ':' after declaration name.");
