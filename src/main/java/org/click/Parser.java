@@ -111,14 +111,17 @@ public final class Parser {
     private Expression nextPrimary() {
         // Range
         if (check(LITERAL) && checkNext(RANGE)) {
-            final Expression start = new Expression.Constant(advance().literal().value());
+            final Token.Literal startLiteral = advance().literal();
+            final Expression start = new Expression.Constant(startLiteral.type(), startLiteral.value());
             consume(RANGE, "Expected '..' after start of range.");
-            final Expression end = new Expression.Constant(advance().literal().value());
+            final Token.Literal endLiteral = advance().literal();
+            final Expression end = new Expression.Constant(endLiteral.type(), endLiteral.value());
             final Expression step;
             if (match(RANGE)) {
-                step = new Expression.Constant(advance().input());
+                final Token.Literal stepLiteral = advance().literal();
+                step = new Expression.Constant(stepLiteral.type(), stepLiteral.value());
             } else {
-                step = new Expression.Constant(1);
+                step = new Expression.Constant(Type.I32, 1);
             }
             return new Expression.Range(start, end, step);
         }
@@ -133,19 +136,13 @@ public final class Parser {
             return nextUnion();
         } else if (match(LITERAL)) {
             final Token literal = previous();
+            final Type type = literal.literal().type();
             final Object value = literal.literal().value();
-            if (value instanceof String) {
-                return new Expression.Constant(value);
-            } else if (value instanceof Number) {
-                // Parse math
-                return new Expression.Constant(value);
-            } else {
-                throw error(literal, "Unexpected literal type: " + value);
-            }
+            return new Expression.Constant(type, value);
         } else if (match(TRUE)) {
-            return new Expression.Constant(true);
+            return new Expression.Constant(Type.BOOL, true);
         } else if (match(FALSE)) {
-            return new Expression.Constant(false);
+            return new Expression.Constant(Type.BOOL, false);
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
@@ -324,7 +321,7 @@ public final class Parser {
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
-                    value = new Expression.Constant(index++);
+                    value = new Expression.Constant(Type.I32, index++);
                 }
                 entries.put(identifier.input(), value);
             } while (match(COMMA) && !check(RIGHT_BRACE));

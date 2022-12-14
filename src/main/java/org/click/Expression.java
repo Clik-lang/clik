@@ -18,7 +18,7 @@ public sealed interface Expression {
     record Union(Map<String, @Nullable Struct> entries) implements Expression {
     }
 
-    record Constant(Object value) implements Expression {
+    record Constant(Type type, Object value) implements Expression {
     }
 
     record Variable(String name) implements Expression {
