@@ -21,24 +21,24 @@ public final class IntegrationTest {
     public void functionBlock() {
         assertProgram(ZERO,
                 """
-                        main :: () {
+                        main :: () i32 {
                             return 0;
                         }
                         """);
         assertProgram(ZERO,
                 """
-                        main :: () {
+                        main :: () i32 {
                             0;
                         }
                         """);
         assertProgram(ZERO,
                 """
-                        main :: () -> 0;
+                        main :: () i32 -> 0;
                         """);
 
         assertProgram(ZERO, "main_score",
                 """
-                        main_score :: () {
+                        main_score :: () i32 {
                             return 0;
                         }
                         """);
@@ -79,11 +79,11 @@ public final class IntegrationTest {
     public void mathInteger() {
         assertProgram(ONE,
                 """
-                        main :: () -> 1;
+                        main :: () i32 -> 1;
                         """);
         assertProgram(TWO,
                 """
-                        main :: () -> 1 + 1;
+                        main :: () i32 -> 1 + 1;
                         """);
 
         assertProgram(TWO,
@@ -97,11 +97,11 @@ public final class IntegrationTest {
 
         assertProgram(new Value.Constant(14),
                 """
-                        main :: () -> 2 + 3 * 4;
+                        main :: () i32 -> 2 + 3 * 4;
                         """);
         assertProgram(new Value.Constant(20),
                 """
-                        main :: () -> (2 + 3) * 4;
+                        main :: () i32 -> (2 + 3) * 4;
                         """);
     }
 
@@ -109,39 +109,39 @@ public final class IntegrationTest {
     public void mathBool() {
         assertProgram(TRUE,
                 """
-                        main :: () -> true;
+                        main :: () bool -> true;
                         """);
         assertProgram(FALSE,
                 """
-                        main :: () -> false;
+                        main :: () bool -> false;
                         """);
 
         assertProgram(TRUE,
                 """
-                        main :: () -> 1 == 1;
+                        main :: () bool -> 1 == 1;
                         """);
         assertProgram(TRUE,
                 """
-                        main :: () -> 1 + 1 == 2;
+                        main :: () bool -> 1 + 1 == 2;
                         """);
 
         assertProgram(TRUE,
                 """
-                        main :: () -> true && true;
+                        main :: () bool -> true && true;
                         """);
         assertProgram(TRUE,
                 """
-                        main :: () -> true || true;
-                        """);
-
-        assertProgram(FALSE,
-                """
-                        main :: () -> true && false;
+                        main :: () bool -> true || true;
                         """);
 
         assertProgram(FALSE,
                 """
-                        main :: () -> false || false;
+                        main :: () bool -> true && false;
+                        """);
+
+        assertProgram(FALSE,
+                """
+                        main :: () bool -> false || false;
                         """);
     }
 
@@ -161,7 +161,7 @@ public final class IntegrationTest {
         assertProgram(new Value.Constant(5),
                 """
                         main :: () i32 {
-                          values :: map[i32]i32 {"test": 5};
+                          values :: map[string]i32 {"test": 5};
                           return values["test"];
                         }
                         """);
