@@ -187,6 +187,10 @@ public final class Parser {
             } else {
                 return new Expression.Variable(identifier.input());
             }
+        } else if (match(DOT)) {
+            // Field reference
+            final Token field = consume(IDENTIFIER, "Expected field name.");
+            return new Expression.Reference(field.input());
         } else if (check(LEFT_BRACKET)) {
             // Array
             consume(LEFT_BRACKET, "Expected '[' after array.");
@@ -373,23 +377,18 @@ public final class Parser {
         consume(FOR, "Expect 'for'.");
         // Infinite loop
         if (check(LEFT_BRACE) || check(ARROW)) {
-            return new Statement.Loop(List.of(), null, nextBlock());
+            return new Statement.Loop(null, null, nextBlock());
         }
-        // Conditional loop
-        if (check(IDENTIFIER) && checkNext(COLON)) {
-            final Token identifier = consume(IDENTIFIER, "Expect identifier.");
-            consume(COLON, "Expect ':'.");
-            // For each
-            final List<String> declarations = List.of(identifier.input());
-            final Expression iterable = nextExpression();
-            final List<Statement> body = nextBlock();
-            return new Statement.Loop(declarations, iterable, body);
-        } else {
-            // For
-            final Expression iterable = nextExpression();
-            final List<Statement> body = nextBlock();
-            return new Statement.Loop(List.of(), iterable, body);
-        }
+        final Expression first = nextExpression();
+        final Expression second;
+        if (match(COLON)) {
+            second = nextExpression();
+        } else second = null;
+        final List<Statement> body = nextBlock();
+
+        final Expression declarations = second != null ? first : null;
+        final Expression iterable = second != null ? second : first;
+        return new Statement.Loop(declarations, iterable, body);
     }
 
     List<Statement> nextBlock() {

@@ -102,7 +102,7 @@ public final class Interpreter {
                         }
                     }
                 } else {
-                    final List<String> declarations = loop.declarations();
+                    final Expression declarations = loop.declarations();
                     final Value iterable = evaluate(loop.iterable(), null);
                     switch (iterable) {
                         case Value.Range range -> {
@@ -110,15 +110,20 @@ public final class Interpreter {
                             final int end = (int) ((Value.Constant) range.end()).value();
                             final int step = (int) ((Value.Constant) range.step()).value();
                             walker.enterBlock();
-                            for (int i = 0; i < declarations.size(); i++) {
-                                final String declaration = loop.declarations().get(i);
-                                walker.register(declaration, new Value.Constant(Type.I32, 0));
-                            }
-                            for (int i = start; i < end; i += step) {
-                                if (!declarations.isEmpty())
-                                    walker.update(declarations.get(0), new Value.Constant(Type.I32, i));
-                                for (Statement body : loop.body()) {
-                                    execute(function, body);
+                            if (declarations instanceof Expression.Variable ||
+                                    declarations instanceof Expression.Group group && group.expression() instanceof Expression.Variable) {
+                                // Index declared
+                                final String variableName = declarations instanceof Expression.Variable variable ? variable.name() :
+                                        ((Expression.Variable) ((Expression.Group) declarations).expression()).name();
+                                walker.register(variableName, new Value.Constant(Type.I32, start));
+                                for (int i = start; i < end; i += step) {
+                                    walker.update(variableName, new Value.Constant(Type.I32, i));
+                                    for (Statement body : loop.body()) execute(function, body);
+                                }
+                            } else {
+                                // No declaration
+                                for (int i = start; i < end; i += step) {
+                                    for (Statement body : loop.body()) execute(function, body);
                                 }
                             }
                             walker.exitBlock();
@@ -126,16 +131,30 @@ public final class Interpreter {
                         case Value.Array array -> {
                             walker.enterBlock();
                             final List<Value> values = array.values();
-                            if (declarations.size() == 1) {
-                                final String name = declarations.get(0);
-                                walker.register(name, new Value.Constant(Type.I32, 0));
-                            } else if (declarations.size() > 1) {
-                                throw new RuntimeException("Too many declarations for array iteration");
-                            }
-                            for (Value value : values) {
-                                if (!declarations.isEmpty()) walker.update(declarations.get(0), value);
-                                for (Statement body : loop.body()) {
-                                    execute(function, body);
+                            if (declarations instanceof Expression.Reference ||
+                                    declarations instanceof Expression.Group group && group.expression() instanceof Expression.Reference) {
+                                // Reference declared
+                                final String referenceName = declarations instanceof Expression.Reference reference ? reference.name() :
+                                        ((Expression.Reference) ((Expression.Group) declarations).expression()).name();
+                                final Type arrayType = array.type();
+                                final Value tracked = walker.find(arrayType.name());
+                                final Type referenceType = switch (tracked) {
+                                    case Value.StructDecl structDecl -> structDecl.get(referenceName);
+                                    default -> throw new RuntimeException("Unknown type: " + tracked);
+                                };
+                                walker.register(referenceName, new Value.Constant(referenceType, 0));
+                                for (Value value : values) {
+                                    final Value refValue = ((Value.Struct) value).parameters().get(referenceName);
+                                    walker.update(referenceName, refValue);
+                                    for (Statement body : loop.body()) {
+                                        execute(function, body);
+                                    }
+                                }
+                            } else {
+                                assert declarations == null : "Unknown declaration type: " + declarations;
+                                // No declaration
+                                for (Value value : values) {
+                                    for (Statement body : loop.body()) execute(function, body);
                                 }
                             }
                             walker.exitBlock();
@@ -205,6 +224,7 @@ public final class Interpreter {
                 }
                 yield value;
             }
+            case Expression.Reference reference -> new Value.Reference(reference.name());
             case Expression.Group group -> evaluate(group.expression(), explicitType);
             case Expression.Field field -> {
                 final Value expression = evaluate(field.object(), null);

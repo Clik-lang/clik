@@ -20,8 +20,9 @@ public sealed interface Statement {
                   @Nullable List<Statement> elseBranch) implements Statement {
     }
 
-    record Loop(List<String> declarations,
-                Expression iterable, List<Statement> body) implements Statement {
+    record Loop(@Nullable Expression declarations,
+                @Nullable Expression iterable,
+                List<Statement> body) implements Statement {
     }
 
     record Block(List<Statement> statements) implements Statement {

@@ -24,6 +24,9 @@ public sealed interface Expression {
     record Variable(String name) implements Expression {
     }
 
+    record Reference(String name) implements Expression {
+    }
+
     record Group(Expression expression) implements Expression {
     }
 

@@ -373,6 +373,26 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+        assertProgram(new Value.Constant(Type.I32, 9),
+                """
+                        main :: () i32 {
+                          Point :: struct {x: i32, y: i32}
+                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          value := 0;
+                          for .x: array -> value = value + x;
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.Constant(Type.I32, 12),
+                """
+                        main :: () i32 {
+                          Point :: struct {x: i32, y: i32}
+                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          value := 0;
+                          for .y: array -> value = value + y;
+                          return value;
+                        }
+                        """);
     }
 
     @Test

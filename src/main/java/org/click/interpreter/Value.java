@@ -14,6 +14,13 @@ public sealed interface Value {
     }
 
     record StructDecl(List<Parameter> parameters) implements Value {
+        Type get(String name) {
+            for (Parameter parameter : parameters) {
+                if (parameter.name().equals(name))
+                    return parameter.type();
+            }
+            return null;
+        }
     }
 
     record EnumDecl(@Nullable Type type, java.util.Map<String, Value> entries) implements Value {
@@ -25,6 +32,9 @@ public sealed interface Value {
     // VALUES
 
     record Constant(Type type, Object value) implements Value {
+    }
+
+    record Reference(String name) implements Value {
     }
 
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
