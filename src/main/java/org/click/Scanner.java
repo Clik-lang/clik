@@ -25,7 +25,7 @@ public final class Scanner {
         final int startIndex = index;
 
         Token.Type type;
-        Object value = null;
+        Token.Literal literal = null;
 
         char c = advance();
         if (c == '(') type = Token.Type.LEFT_PAREN;
@@ -78,12 +78,12 @@ public final class Scanner {
             }
         } else if (c == '\"') {
             type = Token.Type.LITERAL;
-            value = nextString();
+            literal = nextString();
         } else if (Character.isDigit(c)) {
             type = Token.Type.LITERAL;
-            value = nextNumber();
+            literal = nextNumber();
         } else if (Character.isLetter(c)) {
-            value = nextIdentifier();
+            final String value = nextIdentifier();
             if (value.equals("return")) {
                 type = Token.Type.RETURN;
             } else if (value.equals("if")) {
@@ -115,7 +115,7 @@ public final class Scanner {
         }
 
         final String text = input.substring(startIndex, index);
-        return new Token(type, line, text, value);
+        return new Token(type, line, text, literal);
     }
 
     private String nextIdentifier() {
@@ -124,28 +124,31 @@ public final class Scanner {
         return input.substring(start, index);
     }
 
-    private Number nextNumber() {
+    private Token.Literal nextNumber() {
         var start = index - 1;
         while (Character.isDigit(peek())) advance();
         if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer
-            return Integer.parseInt(input.substring(start, index));
+            final int value = Integer.parseInt(input.substring(start, index));
+            return new Token.Literal(Type.I32, value);
         }
         // Float
         advance();
         while (Character.isDigit(peek())) advance();
-        var text = input.substring(start, index);
-        return Double.parseDouble(text);
+        final String text = input.substring(start, index);
+        final double value = Double.parseDouble(text);
+        return new Token.Literal(Type.F64, value);
     }
 
-    private String nextString() {
+    private Token.Literal nextString() {
         final var start = index;
         while (peek() != '\"') {
             if (peek() == '\n') line++;
             advance();
         }
         advance();
-        return input.substring(start, index - 1);
+        final String value = input.substring(start, index - 1);
+        return new Token.Literal(Type.STRING, value);
     }
 
     char advance() {

@@ -111,12 +111,12 @@ public final class Parser {
     private Expression nextPrimary() {
         // Range
         if (check(LITERAL) && checkNext(RANGE)) {
-            final Expression start = new Expression.Constant(advance().value());
+            final Expression start = new Expression.Constant(advance().literal().value());
             consume(RANGE, "Expected '..' after start of range.");
-            final Expression end = new Expression.Constant(advance().value());
+            final Expression end = new Expression.Constant(advance().literal().value());
             final Expression step;
             if (match(RANGE)) {
-                step = new Expression.Constant(advance().value());
+                step = new Expression.Constant(advance().input());
             } else {
                 step = new Expression.Constant(1);
             }
@@ -133,7 +133,7 @@ public final class Parser {
             return nextUnion();
         } else if (match(LITERAL)) {
             final Token literal = previous();
-            final Object value = literal.value();
+            final Object value = literal.literal().value();
             if (value instanceof String) {
                 return new Expression.Constant(value);
             } else if (value instanceof Number) {
