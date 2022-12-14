@@ -7,6 +7,7 @@ import org.jetbrains.annotations.UnknownNullability;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class ScopeWalker<T> {
     final ArrayDeque<Scope> scopes = new ArrayDeque<>();
@@ -28,7 +29,7 @@ public final class ScopeWalker<T> {
         currentScope().register(name, value);
     }
 
-    public void update(@NotNull String name, @UnknownNullability T value) {
+    public void update(@NotNull String name, @NotNull T value) {
         currentScope().update(name, value);
     }
 
@@ -61,6 +62,7 @@ public final class ScopeWalker<T> {
         }
 
         void update(String name, T value) {
+            Objects.requireNonNull(value);
             this.tracked.put(name, value);
             if (parent != null) {
                 parent.update(name, value);

@@ -20,9 +20,10 @@ public sealed interface Statement {
                   @Nullable List<Statement> elseBranch) implements Statement {
     }
 
-    record Loop(@Nullable Expression declarations,
-                @Nullable Expression iterable,
+    record Loop(List<Declaration> declarations, Expression iterable,
                 List<Statement> body) implements Statement {
+        public record Declaration(boolean ref, String name) {
+        }
     }
 
     record Block(List<Statement> statements) implements Statement {

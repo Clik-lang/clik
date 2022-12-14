@@ -102,7 +102,7 @@ public final class Interpreter {
                         }
                     }
                 } else {
-                    final Expression declarations = loop.declarations();
+                    final List<Statement.Loop.Declaration> declarations = loop.declarations();
                     final Value iterable = evaluate(loop.iterable(), null);
                     switch (iterable) {
                         case Value.Range range -> {
@@ -110,11 +110,10 @@ public final class Interpreter {
                             final int end = (int) ((Value.Constant) range.end()).value();
                             final int step = (int) ((Value.Constant) range.step()).value();
                             walker.enterBlock();
-                            if (declarations instanceof Expression.Variable ||
-                                    declarations instanceof Expression.Group group && group.expression() instanceof Expression.Variable) {
+                            if (!declarations.isEmpty()) {
+                                assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
                                 // Index declared
-                                final String variableName = declarations instanceof Expression.Variable variable ? variable.name() :
-                                        ((Expression.Variable) ((Expression.Group) declarations).expression()).name();
+                                final String variableName = declarations.get(0).name();
                                 walker.register(variableName, new Value.Constant(Type.I32, start));
                                 for (int i = start; i < end; i += step) {
                                     walker.update(variableName, new Value.Constant(Type.I32, i));
@@ -131,27 +130,51 @@ public final class Interpreter {
                         case Value.Array array -> {
                             walker.enterBlock();
                             final List<Value> values = array.values();
-                            if (declarations instanceof Expression.Reference ||
-                                    declarations instanceof Expression.Group group && group.expression() instanceof Expression.Reference) {
-                                // Reference declared
-                                final String referenceName = declarations instanceof Expression.Reference reference ? reference.name() :
-                                        ((Expression.Reference) ((Expression.Group) declarations).expression()).name();
+                            if (!declarations.isEmpty()) {
                                 final Type arrayType = array.type();
                                 final Value tracked = walker.find(arrayType.name());
-                                final Type referenceType = switch (tracked) {
-                                    case Value.StructDecl structDecl -> structDecl.get(referenceName);
-                                    default -> throw new RuntimeException("Unknown type: " + tracked);
-                                };
-                                walker.register(referenceName, new Value.Constant(referenceType, 0));
-                                for (Value value : values) {
-                                    final Value refValue = ((Value.Struct) value).parameters().get(referenceName);
-                                    walker.update(referenceName, refValue);
-                                    for (Statement body : loop.body()) {
-                                        execute(function, body);
+                                if (declarations.size() == 1 && !declarations.get(0).ref()) {
+                                    // for-each loop
+                                    final String variableName = declarations.get(0).name();
+                                    walker.register(variableName, null);
+                                    for (Value value : values) {
+                                        walker.update(variableName, value);
+                                        for (Statement body : loop.body()) execute(function, body);
+                                    }
+                                } else if (declarations.size() == 2 && !declarations.get(0).ref() && !declarations.get(1).ref()) {
+                                    // for-each counted loop
+                                    final String variableName = declarations.get(0).name();
+                                    final String indexName = declarations.get(1).name();
+                                    walker.register(variableName, null);
+                                    walker.register(indexName, null);
+                                    for (int i = 0; i < values.size(); i++) {
+                                        final Value value = values.get(i);
+                                        walker.update(variableName, value);
+                                        walker.update(indexName, new Value.Constant(Type.I32, i));
+                                        for (Statement body : loop.body()) execute(function, body);
+                                    }
+                                } else {
+                                    // Ref loop
+                                    assert declarations.stream().allMatch(Statement.Loop.Declaration::ref) : "Invalid loop declaration: " + declarations;
+                                    List<String> refs = declarations.stream().map(Statement.Loop.Declaration::name).toList();
+                                    for (Statement.Loop.Declaration declaration : declarations) {
+                                        final String name = declaration.name();
+                                        final Type referenceType = switch (tracked) {
+                                            case Value.StructDecl structDecl -> structDecl.get(name);
+                                            default -> throw new RuntimeException("Unknown type: " + tracked);
+                                        };
+                                        walker.register(name, new Value.Constant(referenceType, 0));
+                                    }
+                                    for (Value value : values) {
+                                        for (String refName : refs) {
+                                            final Value refValue = ((Value.Struct) value).parameters().get(refName);
+                                            walker.update(refName, refValue);
+                                        }
+                                        for (Statement body : loop.body()) execute(function, body);
                                     }
                                 }
                             } else {
-                                assert declarations == null : "Unknown declaration type: " + declarations;
+                                assert declarations.isEmpty() : "Unknown declaration type: " + declarations;
                                 // No declaration
                                 for (Value value : values) {
                                     for (Statement body : loop.body()) execute(function, body);
@@ -224,7 +247,6 @@ public final class Interpreter {
                 }
                 yield value;
             }
-            case Expression.Reference reference -> new Value.Reference(reference.name());
             case Expression.Group group -> evaluate(group.expression(), explicitType);
             case Expression.Field field -> {
                 final Value expression = evaluate(field.object(), null);

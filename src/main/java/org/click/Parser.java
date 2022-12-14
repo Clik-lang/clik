@@ -187,10 +187,6 @@ public final class Parser {
             } else {
                 return new Expression.Variable(identifier.input());
             }
-        } else if (match(DOT)) {
-            // Field reference
-            final Token field = consume(IDENTIFIER, "Expected field name.");
-            return new Expression.Reference(field.input());
         } else if (check(LEFT_BRACKET)) {
             // Array
             consume(LEFT_BRACKET, "Expected '[' after array.");
@@ -379,15 +375,28 @@ public final class Parser {
         if (check(LEFT_BRACE) || check(ARROW)) {
             return new Statement.Loop(null, null, nextBlock());
         }
-        final Expression first = nextExpression();
-        final Expression second;
-        if (match(COLON)) {
-            second = nextExpression();
-        } else second = null;
+        List<Statement.Loop.Declaration> declarations = new ArrayList<>();
+        if (match(LEFT_PAREN)) {
+            do {
+                if (declarations.size() >= 255) {
+                    throw error(peek(), "Cannot have more than 255 declarations.");
+                }
+                final boolean ref = match(DOT);
+                final Token identifier = consume(IDENTIFIER, "Expect declaration name.");
+                declarations.add(new Statement.Loop.Declaration(ref, identifier.input()));
+            } while (match(COMMA));
+            consume(RIGHT_PAREN, "Expect ')'.");
+        } else if (check(DOT) || check(IDENTIFIER) && checkNext(COLON)) {
+            // Single declaration
+            final boolean ref = match(DOT);
+            final Token identifier = consume(IDENTIFIER, "Expect declaration name.");
+            declarations.add(new Statement.Loop.Declaration(ref, identifier.input()));
+        }
+        if (!declarations.isEmpty()) {
+            consume(COLON, "Expect ':' after declaration name.");
+        }
+        final Expression iterable = nextExpression();
         final List<Statement> body = nextBlock();
-
-        final Expression declarations = second != null ? first : null;
-        final Expression iterable = second != null ? second : first;
         return new Statement.Loop(declarations, iterable, body);
     }
 

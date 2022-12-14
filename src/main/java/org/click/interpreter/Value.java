@@ -32,6 +32,10 @@ public sealed interface Value {
     // VALUES
 
     record Constant(Type type, Object value) implements Value {
+        public Constant {
+            if (!type.primitive())
+                throw new IllegalArgumentException("Constant type must be primitive");
+        }
     }
 
     record Reference(String name) implements Value {
