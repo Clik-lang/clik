@@ -1,5 +1,7 @@
 main :: () {
-  print("Start");
-  #sleep(10000);
-  print("End");
+  value :~ 0;
+  fork 0..10 {
+    value = value + 1;
+  }
+  print(value);
 }

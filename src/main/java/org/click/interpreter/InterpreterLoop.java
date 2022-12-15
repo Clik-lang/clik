@@ -3,19 +3,65 @@ package org.click.interpreter;
 import org.click.Statement;
 import org.click.Type;
 
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.Phaser;
 
 public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker) {
     void interpret(Statement.Loop loop) {
+        final Context context = new Context(loop, new Phaser(), new ArrayList<>());
         final Value iterable = interpreter.evaluate(loop.iterable(), null);
         switch (iterable) {
-            case Value.Range range -> rangeLoop(loop, range);
-            case Value.Array array -> rangeArray(loop, array);
+            case Value.Range range -> rangeLoop(context, range);
+            case Value.Array array -> rangeArray(context, array);
             case null, default -> throw new RuntimeException("Expected iterable, got: " + iterable);
+        }
+        context.phaser().register();
+        context.phaser().arriveAndAwaitAdvance();
+        Map<String, Value> initials = walker.currentScope().tracked;
+        Map<String, Value> changes = new HashMap<>();
+        for (ScopeWalker<Value> copy : context.walkers()) {
+            for (Map.Entry<String, Value> entry : copy.currentScope().tracked.entrySet()) {
+                final String name = entry.getKey();
+                final Value value = entry.getValue();
+                final Value initial = initials.get(name);
+                if (!Objects.equals(initial, value)) {
+                    final Value current = changes.computeIfAbsent(name, s -> initial);
+                    final Value merged = ValueMerger.merge(current, value);
+                    changes.put(name, merged);
+                }
+            }
+        }
+        for (Map.Entry<String, Value> entry : changes.entrySet()) {
+            final String name = entry.getKey();
+            final Value value = entry.getValue();
+            walker.update(name, value);
         }
     }
 
-    private void rangeLoop(Statement.Loop loop, Value.Range range) {
+    record Context(Statement.Loop loop, Phaser phaser, List<ScopeWalker<Value>> walkers) {
+    }
+
+    private void iterate(Context context) {
+        final Statement.Loop loop = context.loop();
+        final List<Statement> body = loop.body();
+        if (!loop.fork()) {
+            // Single thread
+            for (Statement statement : body) interpreter.execute(statement);
+        } else {
+            // Virtual threads
+            final ScopeWalker<Value> copy = walker.flattenedCopy();
+            context.walkers().add(copy);
+            context.phaser().register();
+            final ExecutorStatement executor = new ExecutorStatement(interpreter, copy);
+            Thread.startVirtualThread(() -> {
+                for (Statement statement : body) executor.interpret(statement);
+                context.phaser().arriveAndDeregister();
+            });
+        }
+    }
+
+    private void rangeLoop(Context context, Value.Range range) {
+        final Statement.Loop loop = context.loop();
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
         final int start = (int) ((Value.Constant) range.start()).value();
@@ -29,18 +75,19 @@ public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker
             walker.register(variableName, new Value.Constant(Type.I32, start));
             for (int i = start; i < end; i += step) {
                 walker.update(variableName, new Value.Constant(Type.I32, i));
-                for (Statement body : loop.body()) interpreter.execute(body);
+                iterate(context);
             }
         } else {
             // No declaration
             for (int i = start; i < end; i += step) {
-                for (Statement body : loop.body()) interpreter.execute(body);
+                iterate(context);
             }
         }
         walker.exitBlock();
     }
 
-    private void rangeArray(Statement.Loop loop, Value.Array array) {
+    private void rangeArray(Context context, Value.Array array) {
+        final Statement.Loop loop = context.loop();
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
         walker.enterBlock();
@@ -54,7 +101,7 @@ public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker
                 walker.register(variableName, null);
                 for (Value value : values) {
                     walker.update(variableName, value);
-                    for (Statement body : loop.body()) interpreter.execute(body);
+                    iterate(context);
                 }
             } else if (declarations.size() == 2 && !declarations.get(0).ref() && !declarations.get(1).ref()) {
                 // for-each counted loop
@@ -66,7 +113,7 @@ public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker
                     final Value value = values.get(i);
                     walker.update(indexName, new Value.Constant(Type.I32, i));
                     walker.update(variableName, value);
-                    for (Statement body : loop.body()) interpreter.execute(body);
+                    iterate(context);
                 }
             } else {
                 // Ref loop
@@ -85,13 +132,13 @@ public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker
                         final Value refValue = ((Value.Struct) value).parameters().get(refName);
                         walker.update(refName, refValue);
                     }
-                    for (Statement body : loop.body()) interpreter.execute(body);
+                    iterate(context);
                 }
             }
         } else {
             // No declaration
             for (Value value : values) {
-                for (Statement body : loop.body()) interpreter.execute(body);
+                iterate(context);
             }
         }
         walker.exitBlock();
