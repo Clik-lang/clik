@@ -351,7 +351,6 @@ public final class Interpreter {
                 final Value right = evaluate(binary.right(), explicitType);
                 yield operate(binary.operator(), left, right);
             }
-            case null -> throw new RuntimeException("Unknown expression: " + argument);
         };
 
         if (explicitType == null) {
