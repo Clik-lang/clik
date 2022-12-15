@@ -11,6 +11,9 @@ public final class Interpreter {
     private final ScopeWalker<Value> walker = new ScopeWalker<>();
 
     private final ValueSerializer valueSerializer = new ValueSerializer(walker);
+    private final InterpreterLoop interpreterLoop = new InterpreterLoop(walker);
+
+    private Value.FunctionDecl currentFunction = null;
 
     public Interpreter(List<Statement> statements) {
         this.statements = statements;
@@ -39,11 +42,14 @@ public final class Interpreter {
             walker.register(parameter.name(), value);
         }
 
+        var previousFunction = currentFunction;
+        currentFunction = functionDeclaration;
         Value result = null;
         for (Statement statement : functionDeclaration.body()) {
-            result = execute(functionDeclaration, statement);
+            result = execute(statement);
             if (result != null) break;
         }
+        currentFunction = previousFunction;
         walker.exitBlock();
         return result;
     }
@@ -61,7 +67,7 @@ public final class Interpreter {
         };
     }
 
-    private Value execute(Value.FunctionDecl function, Statement statement) {
+    public Value execute(Statement statement) {
         switch (statement) {
             case Statement.Declare declare -> {
                 final String name = declare.name();
@@ -84,11 +90,11 @@ public final class Interpreter {
                 if (condition instanceof Value.Constant constant) {
                     if ((boolean) constant.value()) {
                         for (Statement thenBranch : branch.thenBranch()) {
-                            execute(function, thenBranch);
+                            execute(thenBranch);
                         }
                     } else if (branch.elseBranch() != null) {
                         for (Statement elseBranch : branch.elseBranch()) {
-                            execute(function, elseBranch);
+                            execute(elseBranch);
                         }
                     }
                 } else {
@@ -100,105 +106,25 @@ public final class Interpreter {
                     // Infinite loop
                     while (true) {
                         for (Statement body : loop.body()) {
-                            execute(function, body);
+                            execute(body);
                         }
                     }
                 } else {
-                    final List<Statement.Loop.Declaration> declarations = loop.declarations();
-                    final Value iterable = evaluate(loop.iterable(), null);
-                    switch (iterable) {
-                        case Value.Range range -> {
-                            final int start = (int) ((Value.Constant) range.start()).value();
-                            final int end = (int) ((Value.Constant) range.end()).value();
-                            final int step = (int) ((Value.Constant) range.step()).value();
-                            walker.enterBlock();
-                            if (!declarations.isEmpty()) {
-                                assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
-                                // Index declared
-                                final String variableName = declarations.get(0).name();
-                                walker.register(variableName, new Value.Constant(Type.I32, start));
-                                for (int i = start; i < end; i += step) {
-                                    walker.update(variableName, new Value.Constant(Type.I32, i));
-                                    for (Statement body : loop.body()) execute(function, body);
-                                }
-                            } else {
-                                // No declaration
-                                for (int i = start; i < end; i += step) {
-                                    for (Statement body : loop.body()) execute(function, body);
-                                }
-                            }
-                            walker.exitBlock();
-                        }
-                        case Value.Array array -> {
-                            walker.enterBlock();
-                            final List<Value> values = array.values();
-                            if (!declarations.isEmpty()) {
-                                final Type arrayType = array.type();
-                                final Value tracked = walker.find(arrayType.name());
-                                if (declarations.size() == 1 && !declarations.get(0).ref()) {
-                                    // for-each loop
-                                    final String variableName = declarations.get(0).name();
-                                    walker.register(variableName, null);
-                                    for (Value value : values) {
-                                        walker.update(variableName, value);
-                                        for (Statement body : loop.body()) execute(function, body);
-                                    }
-                                } else if (declarations.size() == 2 && !declarations.get(0).ref() && !declarations.get(1).ref()) {
-                                    // for-each counted loop
-                                    final String indexName = declarations.get(0).name();
-                                    final String variableName = declarations.get(1).name();
-                                    walker.register(indexName, null);
-                                    walker.register(variableName, null);
-                                    for (int i = 0; i < values.size(); i++) {
-                                        final Value value = values.get(i);
-                                        walker.update(indexName, new Value.Constant(Type.I32, i));
-                                        walker.update(variableName, value);
-                                        for (Statement body : loop.body()) execute(function, body);
-                                    }
-                                } else {
-                                    // Ref loop
-                                    assert declarations.stream().allMatch(Statement.Loop.Declaration::ref) : "Invalid loop declaration: " + declarations;
-                                    List<String> refs = declarations.stream().map(Statement.Loop.Declaration::name).toList();
-                                    for (Statement.Loop.Declaration declaration : declarations) {
-                                        final String name = declaration.name();
-                                        final Type referenceType = switch (tracked) {
-                                            case Value.StructDecl structDecl -> structDecl.get(name);
-                                            default -> throw new RuntimeException("Unknown type: " + tracked);
-                                        };
-                                        walker.register(name, new Value.Constant(referenceType, 0));
-                                    }
-                                    for (Value value : values) {
-                                        for (String refName : refs) {
-                                            final Value refValue = ((Value.Struct) value).parameters().get(refName);
-                                            walker.update(refName, refValue);
-                                        }
-                                        for (Statement body : loop.body()) execute(function, body);
-                                    }
-                                }
-                            } else {
-                                assert declarations.isEmpty() : "Unknown declaration type: " + declarations;
-                                // No declaration
-                                for (Value value : values) {
-                                    for (Statement body : loop.body()) execute(function, body);
-                                }
-                            }
-                            walker.exitBlock();
-                        }
-                        case null, default -> throw new RuntimeException("Expected iterable, got: " + iterable);
-                    }
+                    this.interpreterLoop.interpret(this, loop);
                 }
             }
             case Statement.Block block -> {
                 this.walker.enterBlock();
                 for (Statement inner : block.statements()) {
-                    execute(function, inner);
+                    execute(inner);
                 }
                 this.walker.exitBlock();
             }
             case Statement.Return returnStatement -> {
                 final Expression expression = returnStatement.expression();
                 if (expression != null) {
-                    final Type returnType = function.returnType();
+                    assert currentFunction != null : "Return outside of function";
+                    final Type returnType = currentFunction.returnType();
                     return evaluate(expression, returnType);
                 }
             }
@@ -220,7 +146,7 @@ public final class Interpreter {
         return null;
     }
 
-    private Value evaluate(Expression argument, Type explicitType) {
+    public Value evaluate(Expression argument, Type explicitType) {
         final Value rawValue = switch (argument) {
             case Expression.Function functionDeclaration ->
                     new Value.FunctionDecl(functionDeclaration.parameters(), functionDeclaration.returnType(), functionDeclaration.body());
