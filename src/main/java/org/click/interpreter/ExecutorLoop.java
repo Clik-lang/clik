@@ -30,16 +30,25 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final List<Statement> body = loop.body();
         if (!loop.fork()) {
             // Single thread
-            for (Statement statement : body) executor.interpret(statement);
+            iterateBody(executor, body);
         } else {
             // Virtual threads
-            final Executor executor = executor().fork();
+            final Executor executor = executor().fork(true);
             context.executors().add(executor);
             context.phaser().register();
             Thread.startVirtualThread(() -> {
-                for (Statement statement : body) executor.interpret(statement);
+                iterateBody(executor, body);
                 context.phaser().arriveAndDeregister();
             });
+        }
+    }
+
+    private void iterateBody(Executor executor, List<Statement> body) {
+        for (Statement statement : body) {
+            final Value value = executor.interpret(statement);
+            if (value instanceof Value.Break) {
+                break;
+            }
         }
     }
 

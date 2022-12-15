@@ -1,9 +1,10 @@
 main :: () {
   value :~ 0;
-  fork 0..10 {
-    select {
-      value = 10; -> value = value + 1;
+  fork i: 0..2 {
+    if i == 1 {
+      break;
     }
+    value = value + 1;
   }
   print(value);
 }

@@ -70,6 +70,8 @@ public final class Parser {
             statement = nextBranch();
         } else if (check(FOR) || check(FORK)) {
             statement = nextLoop();
+        } else if (match(BREAK)) {
+            statement = new Statement.Break();
         } else if (check(SELECT)) {
             statement = nextSelect();
         } else if (check(LEFT_BRACE)) {

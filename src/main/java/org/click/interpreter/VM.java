@@ -6,7 +6,7 @@ import java.util.List;
 
 public final class VM {
     private final ScopeWalker<Value> walker = new ScopeWalker<>();
-    private final Executor executor = new Executor(walker);
+    private final Executor executor = new Executor(walker, false);
 
     public VM(List<Statement> statements) {
         this.walker.enterBlock();

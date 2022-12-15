@@ -19,6 +19,7 @@ public final class Scanner {
             entry("false", Token.Type.FALSE),
             entry("for", Token.Type.FOR),
             entry("fork", Token.Type.FORK),
+            entry("break", Token.Type.BREAK),
             entry("select", Token.Type.SELECT),
             entry("map", Token.Type.MAP),
             entry("struct", Token.Type.STRUCT),

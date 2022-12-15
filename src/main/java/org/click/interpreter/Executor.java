@@ -6,6 +6,7 @@ import java.util.List;
 
 public final class Executor {
     private final ScopeWalker<Value> walker;
+    private final boolean insideLoop;
 
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
@@ -13,8 +14,9 @@ public final class Executor {
 
     private Value.FunctionDecl currentFunction = null;
 
-    public Executor(ScopeWalker<Value> walker) {
+    public Executor(ScopeWalker<Value> walker, boolean insideLoop) {
         this.walker = walker;
+        this.insideLoop = insideLoop;
 
         this.interpreter = new Evaluator(this, walker);
 
@@ -26,9 +28,9 @@ public final class Executor {
         return walker;
     }
 
-    public Executor fork() {
+    public Executor fork(boolean insideLoop) {
         final ScopeWalker<Value> copy = walker.flattenedCopy();
-        return new Executor(copy);
+        return new Executor(copy, insideLoop);
     }
 
     public Value interpret(String function, List<Value> parameters) {
@@ -84,11 +86,13 @@ public final class Executor {
                 if (condition instanceof Value.Constant constant) {
                     if ((boolean) constant.value()) {
                         for (Statement thenBranch : branch.thenBranch()) {
-                            interpret(thenBranch);
+                            final Value value = interpret(thenBranch);
+                            if (value != null) return value;
                         }
                     } else if (branch.elseBranch() != null) {
                         for (Statement elseBranch : branch.elseBranch()) {
-                            interpret(elseBranch);
+                            final Value value = interpret(elseBranch);
+                            if (value != null) return value;
                         }
                     }
                 } else {
@@ -104,6 +108,10 @@ public final class Executor {
                 } else {
                     this.interpreterLoop.interpret(loop);
                 }
+            }
+            case Statement.Break ignored -> {
+                if (!insideLoop) throw new RuntimeException("Break statement outside of loop");
+                return new Value.Break();
             }
             case Statement.Select select -> interpreterSelect.interpret(select);
             case Statement.Block block -> {

@@ -27,6 +27,9 @@ public sealed interface Statement {
         }
     }
 
+    record Break() implements Statement {
+    }
+
     record Select(Map<Statement, Block> cases) implements Statement {
     }
 

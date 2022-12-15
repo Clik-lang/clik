@@ -13,7 +13,7 @@ public record ExecutorSelect(Executor executor, ScopeWalker<Value> walker) {
         AtomicReference<FinishedCase> finishedRef = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
         for (Statement stmt : cases.keySet()) {
-            final Executor executor = executor().fork();
+            final Executor executor = executor().fork(false);
             Thread.startVirtualThread(() -> {
                 if (finishedRef.get() != null) return;
                 executor.interpret(stmt);
