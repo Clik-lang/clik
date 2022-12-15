@@ -1,11 +1,13 @@
 package org.click.interpreter;
 
 import org.click.Expression;
+import org.click.Parameter;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -105,12 +107,23 @@ public final class EvaluatorFunction {
 
     public Value evaluate(Expression.Call call) {
         final String name = call.name();
-        final List<Value> evaluated = call.arguments().expressions().stream()
-                .map(expression -> executor.evaluate(expression, null)).toList();
         final Function<List<Value>, Value> builtin = functions.get(name);
         if (builtin != null) {
+            // TODO: explicit type for builtin functions
+            final List<Value> evaluated = call.arguments().expressions().stream()
+                    .map(expression -> executor.evaluate(expression, null)).toList();
             return builtin.apply(evaluated);
         } else {
+            final Value.FunctionDecl functionDecl = (Value.FunctionDecl) executor.walker().find(name);
+            final List<Parameter> params = functionDecl.parameters();
+            final List<Expression> expressions = call.arguments().expressions();
+            List<Value> evaluated = new ArrayList<>();
+            for (int i = 0; i < call.arguments().expressions().size(); i++) {
+                final Parameter param = params.get(i);
+                final Expression expression = expressions.get(i);
+                final Value value = executor.evaluate(expression, param.type());
+                evaluated.add(value);
+            }
             return executor.interpret(name, evaluated);
         }
     }

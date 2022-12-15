@@ -20,6 +20,8 @@ public final class VM {
             if (statement instanceof Statement.Declare declare) {
                 final Value value = executor.evaluate(declare.initializer(), declare.explicitType());
                 this.context.walker().register(declare.name(), value);
+            } else {
+                throw new RuntimeException("Unexpected global declaration: " + statement);
             }
         }
     }

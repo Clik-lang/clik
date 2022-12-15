@@ -82,7 +82,7 @@ public final class Parser {
             final Statement deferred = nextStatement();
             statement = new Statement.Defer(deferred);
         } else if (check(LEFT_BRACE)) {
-            if (checkNext(DOT) || checkNext(LITERAL)) {
+            if (!checkStatementBlock()) {
                 // Inline block return
                 final Expression expression = nextExpression();
                 assert expression != null;
@@ -102,9 +102,27 @@ public final class Parser {
         }
 
         if (previous().type() != RIGHT_BRACE && previous().type() != SEMICOLON)
-            consume(SEMICOLON, "Expected ';' after expression.");
+            consume(SEMICOLON, "Expected ';' after expression. Got: " + statement);
         while (match(SEMICOLON)) ;
         return statement;
+    }
+
+    boolean checkStatementBlock() {
+        final int start = index;
+        consume(LEFT_BRACE, "Expected '{' before block.");
+        // Verify if there is at least one semicolon or statement keyword between the braces
+        int braceLevel = 0;
+        while (!check(RIGHT_BRACE) || braceLevel > 0) {
+            if (check(LEFT_BRACE)) braceLevel++;
+            if (check(RIGHT_BRACE)) braceLevel--;
+            if (check(SEMICOLON) || check(RETURN) || check(IF) || check(FOR) || check(FORK) || check(BREAK) || check(CONTINUE) || check(SELECT) || check(SPAWN) || check(DEFER) || check(HASH)) {
+                index = start;
+                return true;
+            }
+            advance();
+        }
+        index = start;
+        return false;
     }
 
     Expression nextExpression() {

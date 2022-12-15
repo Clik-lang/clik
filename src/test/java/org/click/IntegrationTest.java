@@ -248,6 +248,43 @@ public final class IntegrationTest {
                             return point.y;
                         }
                         """);
+
+        assertProgram(TWO,
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () i32 {
+                            point :: get_point();
+                            return point.y;
+                        }
+                        get_point :: () Point -> Point {1, 2};
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () i32 {
+                            point :: get_point();
+                            return point.y;
+                        }
+                        get_point :: () Point -> Point {1, 2};
+                        Point :: struct {x: i32, y: i32}
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () i32 {
+                            point :: update_point(Point{1, 2});
+                            return point.x;
+                        }
+                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
+                        Point :: struct {x: i32, y: i32}
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () i32 {
+                            point :: update_point({1, 2});
+                            return point.x;
+                        }
+                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
+                        Point :: struct {x: i32, y: i32}
+                        """);
     }
 
     @Test
