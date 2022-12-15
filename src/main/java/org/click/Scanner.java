@@ -98,6 +98,8 @@ public final class Scanner {
                 type = Token.Type.FALSE;
             } else if (value.equals("for")) {
                 type = Token.Type.FOR;
+            }  else if (value.equals("fork")) {
+                type = Token.Type.FORK;
             } else if (value.equals("select")) {
                 type = Token.Type.SELECT;
             } else if (value.equals("map")) {
