@@ -528,7 +528,7 @@ public final class IntegrationTest {
                           value :~ 0;
                           fork i: 0..2 {
                             if i == 1 {
-                              break;
+                              continue;
                             }
                             value = value + 1;
                           }

@@ -72,6 +72,8 @@ public final class Parser {
             statement = nextLoop();
         } else if (match(BREAK)) {
             statement = new Statement.Break();
+        } else if (match(CONTINUE)) {
+            statement = new Statement.Continue();
         } else if (check(SELECT)) {
             statement = nextSelect();
         } else if (check(LEFT_BRACE)) {

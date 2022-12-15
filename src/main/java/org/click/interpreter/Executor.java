@@ -130,6 +130,10 @@ public final class Executor {
                 if (!insideLoop) throw new RuntimeException("Break statement outside of loop");
                 yield new Value.Break();
             }
+            case Statement.Continue ignored -> {
+                if (!insideLoop) throw new RuntimeException("Continue statement outside of loop");
+                yield new Value.Continue();
+            }
             case Statement.Select select -> {
                 interpreterSelect.interpret(select);
                 yield null;

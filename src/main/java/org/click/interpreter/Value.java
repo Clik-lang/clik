@@ -34,6 +34,9 @@ public sealed interface Value {
     record Break() implements Value {
     }
 
+    record Continue() implements Value {
+    }
+
     record Constant(Type type, Object value) implements Value {
         public Constant {
             if (!type.primitive())

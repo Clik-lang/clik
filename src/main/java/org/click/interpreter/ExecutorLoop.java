@@ -29,12 +29,12 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                    Map<String, Value> sharedMutations) {
     }
 
-    private void iterate(Context context) {
+    private boolean iterate(Context context) {
         final Statement.Loop loop = context.loop();
         final List<Statement> body = loop.body();
         if (!loop.fork()) {
             // Single thread
-            iterateBody(executor, body);
+            return iterateBody(executor, body);
         } else {
             // Virtual threads
             final Executor executor = executor().forkLoop(true, context.sharedMutations());
@@ -44,16 +44,17 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 iterateBody(executor, body);
                 context.phaser().arriveAndDeregister();
             });
+            return true; // Fork cannot be stopped from within
         }
     }
 
-    private void iterateBody(Executor executor, List<Statement> body) {
+    private boolean iterateBody(Executor executor, List<Statement> body) {
         for (Statement statement : body) {
             final Value value = executor.interpret(statement);
-            if (value instanceof Value.Break) {
-                break;
-            }
+            if (value instanceof Value.Continue) break;
+            if (value instanceof Value.Break) return false;
         }
+        return true;
     }
 
     private void rangeLoop(Context context, Value.Range range) {
@@ -71,7 +72,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             walker.register(variableName, new Value.Constant(Type.I32, start));
             for (int i = start; i < end; i += step) {
                 walker.update(variableName, new Value.Constant(Type.I32, i));
-                iterate(context);
+                if (!iterate(context)) break;
             }
         } else {
             // No declaration
@@ -97,7 +98,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (Value value : values) {
                     walker.update(variableName, value);
-                    iterate(context);
+                    if (!iterate(context)) break;
                 }
             } else if (declarations.size() == 2 && !declarations.get(0).ref() && !declarations.get(1).ref()) {
                 // for-each counted loop
@@ -109,7 +110,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                     final Value value = values.get(i);
                     walker.update(indexName, new Value.Constant(Type.I32, i));
                     walker.update(variableName, value);
-                    iterate(context);
+                    if (!iterate(context)) break;
                 }
             } else {
                 // Ref loop
@@ -128,13 +129,13 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                         final Value refValue = ((Value.Struct) value).parameters().get(refName);
                         walker.update(refName, refValue);
                     }
-                    iterate(context);
+                    if (!iterate(context)) break;
                 }
             }
         } else {
             // No declaration
             for (Value value : values) {
-                iterate(context);
+                if (!iterate(context)) break;
             }
         }
         walker.exitBlock();
