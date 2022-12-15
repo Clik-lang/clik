@@ -4,24 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Map.entry;
+
 public final class Scanner {
     private final String input;
     private int index;
     private int line;
 
     private static final Map<String, Token.Type> KEYWORDS = Map.ofEntries(
-            Map.entry("return", Token.Type.RETURN),
-            Map.entry("if", Token.Type.IF),
-            Map.entry("else", Token.Type.ELSE),
-            Map.entry("true", Token.Type.TRUE),
-            Map.entry("false", Token.Type.FALSE),
-            Map.entry("for", Token.Type.FOR),
-            Map.entry("fork", Token.Type.FORK),
-            Map.entry("select", Token.Type.SELECT),
-            Map.entry("map", Token.Type.MAP),
-            Map.entry("struct", Token.Type.STRUCT),
-            Map.entry("enum", Token.Type.ENUM),
-            Map.entry("union", Token.Type.UNION)
+            entry("return", Token.Type.RETURN),
+            entry("if", Token.Type.IF),
+            entry("else", Token.Type.ELSE),
+            entry("true", Token.Type.TRUE),
+            entry("false", Token.Type.FALSE),
+            entry("for", Token.Type.FOR),
+            entry("fork", Token.Type.FORK),
+            entry("select", Token.Type.SELECT),
+            entry("map", Token.Type.MAP),
+            entry("struct", Token.Type.STRUCT),
+            entry("enum", Token.Type.ENUM),
+            entry("union", Token.Type.UNION)
     );
 
     public Scanner(String input) {
