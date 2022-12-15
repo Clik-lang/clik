@@ -76,6 +76,8 @@ public final class Parser {
             statement = new Statement.Continue();
         } else if (check(SELECT)) {
             statement = nextSelect();
+        } else if (check(SPAWN)) {
+            statement = nextSpawn();
         } else if (check(LEFT_BRACE)) {
             if (checkNext(DOT) || checkNext(LITERAL)) {
                 // Inline block return
@@ -424,6 +426,12 @@ public final class Parser {
         }
         consume(RIGHT_BRACE, "Expect '}'.");
         return new Statement.Select(cases);
+    }
+
+    Statement.Spawn nextSpawn() {
+        consume(SPAWN, "Expect 'spawn'.");
+        final List<Statement> block = nextBlock();
+        return new Statement.Spawn(block);
     }
 
     List<Statement> nextBlock() {

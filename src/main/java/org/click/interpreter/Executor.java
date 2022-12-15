@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Executor {
+    private final VM.Context context;
     private final ScopeWalker<Value> walker;
     boolean insideLoop;
     private final Map<String, Value> sharedMutations;
@@ -16,8 +17,9 @@ public final class Executor {
 
     private Value.FunctionDecl currentFunction = null;
 
-    public Executor(ScopeWalker<Value> walker, boolean insideLoop, Map<String, Value> sharedMutations) {
-        this.walker = walker;
+    public Executor(VM.Context context, boolean insideLoop, Map<String, Value> sharedMutations) {
+        this.context = context;
+        this.walker = context.walker();
         this.insideLoop = insideLoop;
         this.sharedMutations = sharedMutations;
 
@@ -37,7 +39,8 @@ public final class Executor {
 
     public Executor forkLoop(boolean insideLoop, Map<String, Value> sharedMutations) {
         final ScopeWalker<Value> copy = walker.flattenedCopy();
-        return new Executor(copy, insideLoop, sharedMutations);
+        final VM.Context context = new VM.Context(copy, this.context.phaser());
+        return new Executor(context, insideLoop, sharedMutations);
     }
 
     public Executor fork() {
@@ -136,6 +139,18 @@ public final class Executor {
             }
             case Statement.Select select -> {
                 interpreterSelect.interpret(select);
+                yield null;
+            }
+            case Statement.Spawn spawn -> {
+                final List<Statement> statements = spawn.statements();
+                final Executor executor = fork();
+                this.context.phaser().register();
+                Thread.startVirtualThread(() -> {
+                    for (Statement stmt : statements) {
+                        executor.interpret(stmt);
+                    }
+                    this.context.phaser().arriveAndDeregister();
+                });
                 yield null;
             }
             case Statement.Block block -> {

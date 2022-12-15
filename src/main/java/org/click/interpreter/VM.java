@@ -4,27 +4,33 @@ import org.click.Statement;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
 
 public final class VM {
-    private final ScopeWalker<Value> walker = new ScopeWalker<>();
-    private final Executor executor = new Executor(walker, false, Map.of());
+    private final Context context = new Context(new ScopeWalker<>(), new Phaser(1));
+    private final Executor executor = new Executor(context, false, Map.of());
+
+    public record Context(ScopeWalker<Value> walker, Phaser phaser) {
+    }
 
     public VM(List<Statement> statements) {
-        this.walker.enterBlock();
+        this.context.walker.enterBlock();
         // Global scope
         for (Statement statement : statements) {
             if (statement instanceof Statement.Declare declare) {
                 final Value value = executor.evaluate(declare.initializer(), declare.explicitType());
-                walker.register(declare.name(), value);
+                this.context.walker().register(declare.name(), value);
             }
         }
     }
 
     public Value interpret(String function, List<Value> parameters) {
-        return executor.interpret(function, parameters);
+        final Value value = executor.interpret(function, parameters);
+        this.context.phaser.arriveAndAwaitAdvance();
+        return value;
     }
 
     public void stop() {
-        walker.exitBlock();
+        this.context.walker().exitBlock();
     }
 }

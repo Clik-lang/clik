@@ -22,6 +22,7 @@ public final class Scanner {
             entry("break", Token.Type.BREAK),
             entry("continue", Token.Type.CONTINUE),
             entry("select", Token.Type.SELECT),
+            entry("spawn", Token.Type.SPAWN),
             entry("map", Token.Type.MAP),
             entry("struct", Token.Type.STRUCT),
             entry("enum", Token.Type.ENUM),
