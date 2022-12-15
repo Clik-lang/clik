@@ -10,6 +10,8 @@ public final class Interpreter {
     private final List<Statement> statements;
     private final ScopeWalker<Value> walker = new ScopeWalker<>();
 
+    private final ValueSerializer valueSerializer = new ValueSerializer(walker);
+
     public Interpreter(List<Statement> statements) {
         this.statements = statements;
 
@@ -300,7 +302,10 @@ public final class Interpreter {
                         .map(expression -> evaluate(expression, null)).toList();
                 if (name.equals("print")) {
                     StringBuilder builder = new StringBuilder();
-                    for (Value value : evaluated) builder.append(serialize(value));
+                    for (Value value : evaluated) {
+                        final String serialized = valueSerializer.serialize(value);
+                        builder.append(serialized);
+                    }
                     System.out.println(builder);
                 } else {
                     yield interpret(name, evaluated);
@@ -421,52 +426,6 @@ public final class Interpreter {
         } else {
             throw new RuntimeException("Unknown types: " + left + " and " + right);
         }
-    }
-
-    private String serialize(Value expression) {
-        return switch (expression) {
-            case Value.Constant constant -> constant.value().toString();
-            case Value.Struct struct -> {
-                if (!(walker.find(struct.name()) instanceof Value.StructDecl structDeclaration)) {
-                    throw new RuntimeException("Struct not found: " + struct.name());
-                }
-                var parameters = structDeclaration.parameters();
-                final StringBuilder builder = new StringBuilder();
-                builder.append(struct.name()).append("{");
-                for (int i = 0; i < parameters.size(); i++) {
-                    final Parameter param = parameters.get(i);
-                    final Value field = struct.parameters().get(param.name());
-                    builder.append(serialize(field));
-                    if (i < parameters.size() - 1) {
-                        builder.append(", ");
-                    }
-                }
-                builder.append("}");
-                yield builder.toString();
-            }
-            case Value.Union union -> {
-                if (!(walker.find(union.name()) instanceof Value.UnionDecl)) {
-                    throw new RuntimeException("Union not found: " + union.name());
-                }
-                final Value field = union.value();
-                yield union.name() + "." + serialize(field);
-            }
-            case Value.Array array -> {
-                final List<Value> values = array.values();
-                final StringBuilder builder = new StringBuilder();
-                builder.append("[");
-                for (int i = 0; i < values.size(); i++) {
-                    final Value value = values.get(i);
-                    builder.append(serialize(value));
-                    if (i < values.size() - 1) {
-                        builder.append(", ");
-                    }
-                }
-                builder.append("]");
-                yield builder.toString();
-            }
-            case null, default -> throw new RuntimeException("Unknown expression: " + expression);
-        };
     }
 
     public void stop() {
