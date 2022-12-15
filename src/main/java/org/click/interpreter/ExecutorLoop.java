@@ -34,7 +34,11 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final List<Statement> body = loop.body();
         if (!loop.fork()) {
             // Single thread
-            return iterateBody(executor, body);
+            var previousLoop = executor.insideLoop;
+            executor.insideLoop = true;
+            final boolean result = iterateBody(executor, body);
+            executor.insideLoop = previousLoop;
+            return result;
         } else {
             // Virtual threads
             final Executor executor = executor().forkLoop(true, context.sharedMutations());
@@ -77,7 +81,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         } else {
             // No declaration
             for (int i = start; i < end; i += step) {
-                iterate(context);
+                if (!iterate(context)) break;
             }
         }
         walker.exitBlock();

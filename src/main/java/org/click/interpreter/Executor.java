@@ -7,7 +7,7 @@ import java.util.Map;
 
 public final class Executor {
     private final ScopeWalker<Value> walker;
-    private final boolean insideLoop;
+    boolean insideLoop;
     private final Map<String, Value> sharedMutations;
 
     private final Evaluator interpreter;
