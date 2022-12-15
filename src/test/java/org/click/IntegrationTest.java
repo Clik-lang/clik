@@ -439,6 +439,20 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void fork() {
+        assertProgram(new Value.Constant(Type.I32, 10),
+                """
+                        main :: () i32 {
+                          value :~ 0;
+                          fork 0..10 {
+                            value = value + 1;
+                          }
+                          return value;
+                        }
+                        """);
+    }
+
+    @Test
     public void explicitType() {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """

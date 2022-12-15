@@ -68,7 +68,7 @@ public final class Parser {
             statement = new Statement.Return(nextExpression());
         } else if (check(IF)) {
             statement = nextBranch();
-        } else if (check(FOR)) {
+        } else if (check(FOR) || check(FORK)) {
             statement = nextLoop();
         } else if (check(LEFT_BRACE)) {
             if (checkNext(DOT) || checkNext(LITERAL)) {
@@ -374,10 +374,11 @@ public final class Parser {
     }
 
     Statement.Loop nextLoop() {
-        consume(FOR, "Expect 'for'.");
+        final boolean fork = match(FORK);
+        if (!fork) consume(FOR, "Expect 'for' or 'fork'.");
         // Infinite loop
         if (check(LEFT_BRACE) || check(ARROW)) {
-            return new Statement.Loop(null, null, nextBlock());
+            return new Statement.Loop(null, null, nextBlock(), fork);
         }
         List<Statement.Loop.Declaration> declarations = new ArrayList<>();
         if (check(LEFT_PAREN) || check(DOT) || check(IDENTIFIER) && (checkNext(COLON) || checkNext(COMMA))) {
@@ -397,7 +398,7 @@ public final class Parser {
         }
         final Expression iterable = nextExpression();
         final List<Statement> body = nextBlock();
-        return new Statement.Loop(declarations, iterable, body);
+        return new Statement.Loop(declarations, iterable, body, fork);
     }
 
     List<Statement> nextBlock() {
