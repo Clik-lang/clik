@@ -44,9 +44,6 @@ public sealed interface Value {
         }
     }
 
-    record Reference(String name) implements Value {
-    }
-
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
     }
 
