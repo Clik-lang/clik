@@ -4,8 +4,8 @@ import org.click.Parameter;
 
 import java.util.List;
 
-record ValueSerializer(ScopeWalker<Value> walker) {
-    String serialize(Value expression) {
+public final class ValueSerializer {
+    public static String serialize(ScopeWalker<Value> walker, Value expression) {
         return switch (expression) {
             case Value.Constant constant -> constant.value().toString();
             case Value.Struct struct -> {
@@ -18,7 +18,7 @@ record ValueSerializer(ScopeWalker<Value> walker) {
                 for (int i = 0; i < parameters.size(); i++) {
                     final Parameter param = parameters.get(i);
                     final Value field = struct.parameters().get(param.name());
-                    builder.append(serialize(field));
+                    builder.append(serialize(walker, field));
                     if (i < parameters.size() - 1) {
                         builder.append(", ");
                     }
@@ -31,7 +31,7 @@ record ValueSerializer(ScopeWalker<Value> walker) {
                     throw new RuntimeException("Union not found: " + union.name());
                 }
                 final Value field = union.value();
-                yield union.name() + "." + serialize(field);
+                yield union.name() + "." + serialize(walker, field);
             }
             case Value.Array array -> {
                 final List<Value> values = array.values();
@@ -39,7 +39,7 @@ record ValueSerializer(ScopeWalker<Value> walker) {
                 builder.append("[");
                 for (int i = 0; i < values.size(); i++) {
                     final Value value = values.get(i);
-                    builder.append(serialize(value));
+                    builder.append(serialize(walker, value));
                     if (i < values.size() - 1) {
                         builder.append(", ");
                     }
@@ -47,7 +47,7 @@ record ValueSerializer(ScopeWalker<Value> walker) {
                 builder.append("]");
                 yield builder.toString();
             }
-            case null, default -> throw new RuntimeException("Unknown expression: " + expression);
+            default -> throw new RuntimeException("Unknown expression: " + expression);
         };
     }
 }

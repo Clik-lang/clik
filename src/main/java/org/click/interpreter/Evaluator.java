@@ -13,14 +13,14 @@ public final class Evaluator {
     private final ScopeWalker<Value> walker;
 
     private final Operator operator;
-    private final ValueSerializer valueSerializer;
+    private final EvaluatorFunction evaluatorFunction;
 
     public Evaluator(Executor executor, ScopeWalker<Value> walker) {
         this.executor = executor;
         this.walker = walker;
 
         this.operator = new Operator();
-        this.valueSerializer = new ValueSerializer(walker);
+        this.evaluatorFunction = new EvaluatorFunction(executor);
     }
 
     public Value evaluate(Expression argument, Type explicitType) {
@@ -119,22 +119,7 @@ public final class Evaluator {
                     default -> throw new RuntimeException("Expected array/map, got: " + array);
                 };
             }
-            case Expression.Call call -> {
-                final String name = call.name();
-                final List<Value> evaluated = call.arguments().expressions().stream()
-                        .map(expression -> evaluate(expression, null)).toList();
-                if (name.equals("print")) {
-                    StringBuilder builder = new StringBuilder();
-                    for (Value value : evaluated) {
-                        final String serialized = valueSerializer.serialize(value);
-                        builder.append(serialized);
-                    }
-                    System.out.println(builder);
-                    yield null;
-                } else {
-                    yield executor.interpret(name, evaluated);
-                }
-            }
+            case Expression.Call call -> evaluatorFunction.evaluate(call);
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());
                 final List<Parameter> parameters = struct.parameters();
