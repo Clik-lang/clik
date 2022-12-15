@@ -397,6 +397,18 @@ public final class IntegrationTest {
                         }
                         """);
 
+        assertProgram(new Value.Constant(Type.I32, 10),
+                """
+                        main :: () i32 {
+                          value :~ 0;
+                          for 0..10 {
+                            value = value + 1;
+                            continue;
+                          }
+                          return value;
+                        }
+                        """);
+
         assertProgram(new Value.Constant(Type.I32, 9),
                 """
                         main :: () i32 {
