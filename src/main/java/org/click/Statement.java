@@ -3,6 +3,7 @@ package org.click;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 public sealed interface Statement {
     record Declare(String name, DeclarationType type, Expression initializer,
@@ -24,6 +25,9 @@ public sealed interface Statement {
                 List<Statement> body, boolean fork) implements Statement {
         public record Declaration(boolean ref, String name) {
         }
+    }
+
+    record Select(Map<Statement, Block> cases) implements Statement {
     }
 
     record Block(List<Statement> statements) implements Statement {

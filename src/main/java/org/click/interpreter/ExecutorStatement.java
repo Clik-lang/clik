@@ -9,12 +9,14 @@ public final class ExecutorStatement {
     private final Interpreter interpreter;
     private final ScopeWalker<Value> walker;
     private final InterpreterLoop interpreterLoop;
+    private final InterpreterSelect interpreterSelect;
 
     public ExecutorStatement(Interpreter interpreter, ScopeWalker<Value> walker) {
         this.interpreter = interpreter;
         this.walker = walker;
 
         this.interpreterLoop = new InterpreterLoop(interpreter, walker);
+        this.interpreterSelect = new InterpreterSelect(interpreter, walker);
     }
 
     Value interpret(Statement statement) {
@@ -63,6 +65,7 @@ public final class ExecutorStatement {
                     this.interpreterLoop.interpret(loop);
                 }
             }
+            case Statement.Select select -> interpreterSelect.interpret(select);
             case Statement.Block block -> {
                 this.walker.enterBlock();
                 for (Statement inner : block.statements()) {

@@ -1,7 +1,8 @@
 main :: () {
-  value :~ 0;
-  fork 0..10 {
-    value = value + 1;
+  value := 5;
+  select {
+    value = 10; {}
+    #sleep(3000); {}
   }
   print(value);
 }

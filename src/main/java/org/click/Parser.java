@@ -70,6 +70,8 @@ public final class Parser {
             statement = nextBranch();
         } else if (check(FOR) || check(FORK)) {
             statement = nextLoop();
+        } else if (check(SELECT)) {
+            statement = nextSelect();
         } else if (check(LEFT_BRACE)) {
             if (checkNext(DOT) || checkNext(LITERAL)) {
                 // Inline block return
@@ -399,6 +401,21 @@ public final class Parser {
         final Expression iterable = nextExpression();
         final List<Statement> body = nextBlock();
         return new Statement.Loop(declarations, iterable, body, fork);
+    }
+
+    Statement.Select nextSelect() {
+        consume(SELECT, "Expect 'select'.");
+        consume(LEFT_BRACE, "Expect '{'.");
+        Map<Statement, Statement.Block> cases = new HashMap<>();
+        if (!check(RIGHT_BRACE)) {
+            do {
+                final Statement condition = nextStatement();
+                final Statement.Block body = new Statement.Block(nextBlock());
+                cases.put(condition, body);
+            } while (!check(RIGHT_BRACE));
+        }
+        consume(RIGHT_BRACE, "Expect '}'.");
+        return new Statement.Select(cases);
     }
 
     List<Statement> nextBlock() {

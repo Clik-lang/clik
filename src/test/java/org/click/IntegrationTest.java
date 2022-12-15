@@ -453,6 +453,32 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void select() {
+        assertProgram(new Value.Constant(Type.I32, 10),
+                """
+                        main :: () i32 {
+                          value := 5;
+                          select {
+                            value = 10; {}
+                            #sleep(3000); {}
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.Constant(Type.I32, 15),
+                """
+                        main :: () i32 {
+                          value := 5;
+                          select {
+                            value = 10; {value = 15;}
+                            #sleep(3000); {}
+                          }
+                          return value;
+                        }
+                        """);
+    }
+
+    @Test
     public void explicitType() {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """

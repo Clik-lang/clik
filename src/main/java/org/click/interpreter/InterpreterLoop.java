@@ -3,7 +3,8 @@ package org.click.interpreter;
 import org.click.Statement;
 import org.click.Type;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Phaser;
 
 public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker) {
@@ -17,25 +18,7 @@ public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker
         }
         context.phaser().register();
         context.phaser().arriveAndAwaitAdvance();
-        Map<String, Value> initials = walker.currentScope().tracked;
-        Map<String, Value> changes = new HashMap<>();
-        for (ScopeWalker<Value> copy : context.walkers()) {
-            for (Map.Entry<String, Value> entry : copy.currentScope().tracked.entrySet()) {
-                final String name = entry.getKey();
-                final Value value = entry.getValue();
-                final Value initial = initials.get(name);
-                if (!Objects.equals(initial, value)) {
-                    final Value current = changes.computeIfAbsent(name, s -> initial);
-                    final Value merged = ValueMerger.merge(current, value);
-                    changes.put(name, merged);
-                }
-            }
-        }
-        for (Map.Entry<String, Value> entry : changes.entrySet()) {
-            final String name = entry.getKey();
-            final Value value = entry.getValue();
-            walker.update(name, value);
-        }
+        ValueMerger.merge(walker, context.walkers());
     }
 
     record Context(Statement.Loop loop, Phaser phaser, List<ScopeWalker<Value>> walkers) {
