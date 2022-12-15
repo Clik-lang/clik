@@ -2,11 +2,27 @@ package org.click;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class Scanner {
     private final String input;
     private int index;
     private int line;
+
+    private static final Map<String, Token.Type> KEYWORDS = Map.ofEntries(
+            Map.entry("return", Token.Type.RETURN),
+            Map.entry("if", Token.Type.IF),
+            Map.entry("else", Token.Type.ELSE),
+            Map.entry("true", Token.Type.TRUE),
+            Map.entry("false", Token.Type.FALSE),
+            Map.entry("for", Token.Type.FOR),
+            Map.entry("fork", Token.Type.FORK),
+            Map.entry("select", Token.Type.SELECT),
+            Map.entry("map", Token.Type.MAP),
+            Map.entry("struct", Token.Type.STRUCT),
+            Map.entry("enum", Token.Type.ENUM),
+            Map.entry("union", Token.Type.UNION)
+    );
 
     public Scanner(String input) {
         this.input = input;
@@ -86,33 +102,7 @@ public final class Scanner {
             literal = nextNumber();
         } else if (Character.isLetter(c)) {
             final String value = nextIdentifier();
-            if (value.equals("return")) {
-                type = Token.Type.RETURN;
-            } else if (value.equals("if")) {
-                type = Token.Type.IF;
-            } else if (value.equals("else")) {
-                type = Token.Type.ELSE;
-            } else if (value.equals("true")) {
-                type = Token.Type.TRUE;
-            } else if (value.equals("false")) {
-                type = Token.Type.FALSE;
-            } else if (value.equals("for")) {
-                type = Token.Type.FOR;
-            }  else if (value.equals("fork")) {
-                type = Token.Type.FORK;
-            } else if (value.equals("select")) {
-                type = Token.Type.SELECT;
-            } else if (value.equals("map")) {
-                type = Token.Type.MAP;
-            } else if (value.equals("struct")) {
-                type = Token.Type.STRUCT;
-            } else if (value.equals("enum")) {
-                type = Token.Type.ENUM;
-            } else if (value.equals("union")) {
-                type = Token.Type.UNION;
-            } else {
-                type = Token.Type.IDENTIFIER;
-            }
+            type = KEYWORDS.getOrDefault(value, Token.Type.IDENTIFIER);
         } else if (c == '\n') {
             line++;
             return nextToken();
