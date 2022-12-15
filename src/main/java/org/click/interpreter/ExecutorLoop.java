@@ -14,7 +14,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         switch (iterable) {
             case Value.Range range -> rangeLoop(context, range);
             case Value.Array array -> rangeArray(context, array);
-            case null, default -> throw new RuntimeException("Expected iterable, got: " + iterable);
+            default -> throw new RuntimeException("Expected iterable, got: " + iterable);
         }
         context.phaser().register();
         context.phaser().arriveAndAwaitAdvance();
