@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 public sealed interface Statement {
-    record Declare(String name, DeclarationType type, Expression initializer,
+    record Declare(List<String> names, DeclarationType type, Expression initializer,
                    @Nullable Type explicitType) implements Statement {
     }
 
-    record Assign(String name, Expression expression) implements Statement {
+    record Assign(List<String> names, Expression expression) implements Statement {
     }
 
     record Call(String name, Parameter.Passed arguments) implements Statement {

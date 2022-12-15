@@ -19,7 +19,7 @@ public final class VM {
         for (Statement statement : statements) {
             if (statement instanceof Statement.Declare declare) {
                 final Value value = executor.evaluate(declare.initializer(), declare.explicitType());
-                this.context.walker().register(declare.name(), value);
+                this.executor.registerMulti(declare.names(), value);
             } else {
                 throw new RuntimeException("Unexpected global declaration: " + statement);
             }

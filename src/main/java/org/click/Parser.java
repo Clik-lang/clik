@@ -18,13 +18,17 @@ public final class Parser {
     Statement nextStatement() {
         final Statement statement;
 
-        if (match(IDENTIFIER)) {
-            final Token identifier = previous();
-            final String name = identifier.input();
+        if (check(IDENTIFIER)) {
+            List<String> names = new ArrayList<>();
+            // Read all identifiers separated by commas
+            do {
+                final Token identifier = consume(IDENTIFIER, "Expected identifier");
+                names.add(identifier.input());
+            } while (match(COMMA));
             if (match(EQUAL)) {
                 // Assign
                 final Expression expression = nextExpression();
-                statement = new Statement.Assign(name, expression);
+                statement = new Statement.Assign(names, expression);
             } else if (match(COLON)) {
                 // Declare
                 Type explicitType = null;
@@ -44,9 +48,10 @@ public final class Parser {
                 }
 
                 final Expression initializer = nextExpression();
-                statement = new Statement.Declare(name, declarationType, initializer, explicitType);
-            } else if (match(LEFT_PAREN)) {
+                statement = new Statement.Declare(names, declarationType, initializer, explicitType);
+            } else if (match(LEFT_PAREN) && names.size() == 1) {
                 // Call
+                final String name = names.get(0);
                 final List<Expression> arguments = new ArrayList<>();
                 if (!check(RIGHT_PAREN)) {
                     do {

@@ -667,6 +667,19 @@ public final class IntegrationTest {
                         """);
     }
 
+    @Test
+    public void multiReturn() {
+        assertProgram(new Value.Constant(Type.I32, 3),
+                """
+                        Point :: struct {x: i32, y: i32}
+                        main :: () i32 {
+                            x, y :: get_point();
+                            return x + y;
+                        }
+                        get_point :: () Point { return {1, 2} }
+                        """);
+    }
+
     private static void assertProgram(Value expected, String input) {
         assertProgram(expected, "main", input);
     }

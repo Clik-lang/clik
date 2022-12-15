@@ -82,23 +82,51 @@ public final class Executor {
         return interpreter.evaluate(expression, explicitType);
     }
 
+    public void registerMulti(List<String> names, Value value) {
+        if (names.size() == 1) {
+            // Single return
+            final String name = names.get(0);
+            walker.register(name, value);
+        } else {
+            // Multiple return
+            for (int i = 0; i < names.size(); i++) {
+                final String name = names.get(i);
+                final Value deconstructed = ValueExtractor.deconstruct(walker, value, i);
+                walker.register(name, deconstructed);
+            }
+        }
+    }
+
     Value interpret(Statement statement) {
         return switch (statement) {
             case Statement.Declare declare -> {
-                final String name = declare.name();
+                final List<String> names = declare.names();
                 final Expression initializer = declare.initializer();
                 final Value evaluated = interpreter.evaluate(initializer, declare.explicitType());
                 assert evaluated != null;
-                walker.register(name, evaluated);
+                registerMulti(names, evaluated);
                 yield null;
             }
             case Statement.Assign assign -> {
-                final String name = assign.name();
-                final Type variableType = ValueTypeExtractor.extractType(walker.find(name));
-                final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
-                walker.update(name, evaluated);
-                if (sharedMutations.containsKey(name)) {
-                    sharedMutations.put(name, evaluated);
+                final List<String> names = assign.names();
+                if (names.size() == 1) {
+                    final String name = names.get(0);
+                    final Type variableType = ValueExtractor.extractType(walker.find(name));
+                    final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
+                    walker.update(name, evaluated);
+                    if (sharedMutations.containsKey(name)) {
+                        sharedMutations.put(name, evaluated);
+                    }
+                } else {
+                    final Value evaluated = interpreter.evaluate(assign.expression(), null);
+                    for (int i = 0; i < names.size(); i++) {
+                        final String name = names.get(i);
+                        final Value deconstructed = ValueExtractor.deconstruct(walker, evaluated, i);
+                        walker.update(name, deconstructed);
+                        if (sharedMutations.containsKey(name)) {
+                            sharedMutations.put(name, deconstructed);
+                        }
+                    }
                 }
                 yield null;
             }
