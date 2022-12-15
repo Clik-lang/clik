@@ -285,6 +285,26 @@ public final class IntegrationTest {
                         update_point :: (point: Point) Point -> {point.x + 1, point.y};
                         Point :: struct {x: i32, y: i32}
                         """);
+
+        assertProgram(new Value.Constant(Type.STRING, "test"),
+                """
+                        Player :: struct {name: string, point: Point}
+                        Point :: struct {x: i32, y: i32}
+                        main :: () string {
+                            player :: Player {"test", {1, 2}};
+                            return player.name;
+                        }
+                        """);
+
+        assertProgram(TWO,
+                """
+                        Player :: struct {name: string, point: Point}
+                        Point :: struct {x: i32, y: i32}
+                        main :: () i32 {
+                            player :: Player {"test", {1, 2}};
+                            return player.point.y;
+                        }
+                        """);
     }
 
     @Test

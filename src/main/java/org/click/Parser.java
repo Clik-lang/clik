@@ -211,7 +211,12 @@ public final class Parser {
                 // Field
                 final Expression expression = new Expression.Variable(identifier.input());
                 final Token field = consume(IDENTIFIER, "Expected field name.");
-                return new Expression.Field(expression, field.input());
+                Expression recursiveField = new Expression.Field(expression, field.input());
+                while (match(DOT)) {
+                    final Token nextField = consume(IDENTIFIER, "Expected field name.");
+                    recursiveField = new Expression.Field(recursiveField, nextField.input());
+                }
+                return recursiveField;
             } else if (match(LEFT_BRACKET)) {
                 // Array
                 final Expression index = nextExpression();
