@@ -11,7 +11,7 @@ public final class Interpreter {
     private final ScopeWalker<Value> walker = new ScopeWalker<>();
 
     private final ValueSerializer valueSerializer = new ValueSerializer(walker);
-    private final InterpreterLoop interpreterLoop = new InterpreterLoop(walker);
+    private final InterpreterLoop interpreterLoop = new InterpreterLoop(this, walker);
 
     private Value.FunctionDecl currentFunction = null;
 
@@ -110,7 +110,7 @@ public final class Interpreter {
                         }
                     }
                 } else {
-                    this.interpreterLoop.interpret(this, loop);
+                    this.interpreterLoop.interpret(loop);
                 }
             }
             case Statement.Block block -> {
