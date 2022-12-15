@@ -5,14 +5,13 @@ import org.click.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public final class ValueMerger {
     public static void update(ScopeWalker<Value> walker, ScopeWalker<Value> updated) {
         for (Map.Entry<String, Value> entry : updated.currentScope().tracked.entrySet()) {
             final String name = entry.getKey();
             final Value value = entry.getValue();
-            walker.update(name, value);
+            if (walker.find(name) != null) walker.update(name, value);
         }
     }
 
@@ -24,7 +23,7 @@ public final class ValueMerger {
                 final String name = entry.getKey();
                 final Value value = entry.getValue();
                 final Value initial = initials.get(name);
-                if (!Objects.equals(initial, value)) {
+                if (initial != null && !initial.equals(value)) {
                     final Value current = changes.computeIfAbsent(name, s -> initial);
                     final Value merged = ValueMerger.merge(current, value);
                     changes.put(name, merged);

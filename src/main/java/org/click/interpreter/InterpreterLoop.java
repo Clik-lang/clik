@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Phaser;
 
-public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker) {
+public record InterpreterLoop(ExecutorStatement executor, ScopeWalker<Value> walker) {
     void interpret(Statement.Loop loop) {
         final Context context = new Context(loop, new Phaser(), new ArrayList<>());
-        final Value iterable = interpreter.evaluate(loop.iterable(), null);
+        final Value iterable = executor.evaluate(loop.iterable(), null);
         switch (iterable) {
             case Value.Range range -> rangeLoop(context, range);
             case Value.Array array -> rangeArray(context, array);
@@ -29,13 +29,13 @@ public record InterpreterLoop(Interpreter interpreter, ScopeWalker<Value> walker
         final List<Statement> body = loop.body();
         if (!loop.fork()) {
             // Single thread
-            for (Statement statement : body) interpreter.execute(statement);
+            for (Statement statement : body) executor.interpret(statement);
         } else {
             // Virtual threads
             final ScopeWalker<Value> copy = walker.flattenedCopy();
             context.walkers().add(copy);
             context.phaser().register();
-            final ExecutorStatement executor = new ExecutorStatement(interpreter, copy);
+            final ExecutorStatement executor = new ExecutorStatement(copy);
             Thread.startVirtualThread(() -> {
                 for (Statement statement : body) executor.interpret(statement);
                 context.phaser().arriveAndDeregister();

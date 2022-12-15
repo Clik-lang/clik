@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 public final class ExecutorExpression {
-    private final Interpreter interpreter;
+    private final ExecutorStatement executor;
     private final ScopeWalker<Value> walker;
 
     private final Operator operator;
     private final ValueSerializer valueSerializer;
 
-    public ExecutorExpression(Interpreter interpreter, ScopeWalker<Value> walker) {
-        this.interpreter = interpreter;
+    public ExecutorExpression(ExecutorStatement executor, ScopeWalker<Value> walker) {
+        this.executor = executor;
         this.walker = walker;
 
         this.operator = new Operator();
@@ -111,7 +111,7 @@ public final class ExecutorExpression {
                     }
                     System.out.println(builder);
                 } else {
-                    yield interpreter.interpret(name, evaluated);
+                    yield executor.interpret(name, evaluated);
                 }
                 yield null;
             }

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-public record InterpreterSelect(Interpreter interpreter, ScopeWalker<Value> walker) {
+public record InterpreterSelect(ExecutorStatement executor, ScopeWalker<Value> walker) {
     void interpret(Statement.Select select) {
         final Map<Statement, Statement.Block> cases = select.cases();
         // Run every statement in a virtual thread and start the block of the first one that finishes
@@ -14,8 +14,9 @@ public record InterpreterSelect(Interpreter interpreter, ScopeWalker<Value> walk
         CountDownLatch latch = new CountDownLatch(1);
         for (Statement stmt : cases.keySet()) {
             final ScopeWalker<Value> copy = walker.flattenedCopy();
-            final ExecutorStatement executor = new ExecutorStatement(interpreter, copy);
+            final ExecutorStatement executor = new ExecutorStatement(copy);
             Thread.startVirtualThread(() -> {
+                if (finishedRef.get() != null) return;
                 executor.interpret(stmt);
                 final FinishedCase finishedCase = new FinishedCase(stmt, copy);
                 if (finishedRef.compareAndSet(null, finishedCase)) {
@@ -29,10 +30,11 @@ public record InterpreterSelect(Interpreter interpreter, ScopeWalker<Value> walk
             throw new RuntimeException(e);
         }
         final FinishedCase finished = finishedRef.get();
+        assert finished != null;
         final Statement statement = finished.statement();
         final Statement.Block block = cases.get(statement);
         ValueMerger.update(walker, finished.walker());
-        interpreter.execute(block);
+        executor.interpret(block);
     }
 
     record FinishedCase(Statement statement, ScopeWalker<Value> walker) {

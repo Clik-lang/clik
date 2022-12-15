@@ -46,10 +46,8 @@ public final class ScopeWalker<T> {
     public ScopeWalker<T> flattenedCopy() {
         final ScopeWalker<T> copy = new ScopeWalker<>();
         copy.enterBlock();
-        for (Scope scope : scopes) {
-            for (Map.Entry<String, T> entry : scope.tracked.entrySet()) {
-                copy.register(entry.getKey(), entry.getValue());
-            }
+        for (Map.Entry<String, T> entry : currentScope().tracked.entrySet()) {
+            copy.register(entry.getKey(), entry.getValue());
         }
         return copy;
     }

@@ -450,6 +450,16 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+        assertProgram(new Value.Constant(Type.I32, 10),
+                """
+                        main :: () i32 {
+                          value :~ 0;
+                          fork 0..10 {
+                            {value = value + 1;}
+                          }
+                          return value;
+                        }
+                        """);
     }
 
     @Test
@@ -472,6 +482,31 @@ public final class IntegrationTest {
                           select {
                             value = 10; {value = 15;}
                             #sleep(3000); {}
+                          }
+                          return value;
+                        }
+                        """);
+
+        assertProgram(new Value.Constant(Type.I32, 10),
+                """
+                        main :: () i32 {
+                          value :~ 0;
+                          fork 0..10 {
+                            select {
+                              test :: 10; -> value = value + 1;
+                            }
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.Constant(Type.I32, 110),
+                """
+                        main :: () i32 {
+                          value :~ 0;
+                          fork 0..10 {
+                            select {
+                              value = 10; -> value = value + 1;
+                            }
                           }
                           return value;
                         }
