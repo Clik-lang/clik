@@ -77,7 +77,26 @@ public final class Evaluator {
                     default -> throw new RuntimeException("Expected struct, got: " + expression);
                 };
             }
-            case Expression.VariableAwait variableAwait -> throw new RuntimeException("Await not supported");
+            case Expression.VariableAwait variableAwait -> {
+                final String name = variableAwait.name();
+                final Value value = walker.find(name);
+                if (value == null) {
+                    throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked.keySet());
+                }
+                final Map<String, Value> sharedMap = executor.sharedMutations();
+                if (!sharedMap.containsKey(name)) {
+                    throw new RuntimeException("Variable not shared: " + name);
+                }
+                Value result;
+                while ((result = sharedMap.get(name)).equals(value)) {
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                yield result;
+            }
             case Expression.ArrayAccess arrayAccess -> {
                 final Value array = evaluate(arrayAccess.array(), null);
                 yield switch (array) {

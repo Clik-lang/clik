@@ -3,10 +3,11 @@ package org.click.interpreter;
 import org.click.Statement;
 
 import java.util.List;
+import java.util.Map;
 
 public final class VM {
     private final ScopeWalker<Value> walker = new ScopeWalker<>();
-    private final Executor executor = new Executor(walker, false);
+    private final Executor executor = new Executor(walker, false, Map.of());
 
     public VM(List<Statement> statements) {
         this.walker.enterBlock();

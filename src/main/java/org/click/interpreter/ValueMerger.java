@@ -11,7 +11,11 @@ public final class ValueMerger {
         for (Map.Entry<String, Value> entry : updated.currentScope().tracked.entrySet()) {
             final String name = entry.getKey();
             final Value value = entry.getValue();
-            if (walker.find(name) != null) walker.update(name, value);
+            if (walker.find(name) == null) {
+                walker.register(name, value);
+            } else {
+                walker.update(name, value);
+            }
         }
     }
 

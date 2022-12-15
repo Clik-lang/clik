@@ -469,6 +469,16 @@ public final class IntegrationTest {
                         main :: () i32 {
                           value := 5;
                           select {
+                            test :: 10; -> value = test;
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.Constant(Type.I32, 10),
+                """
+                        main :: () i32 {
+                          value := 5;
+                          select {
                             value = 10; {}
                             #sleep(3000); {}
                           }

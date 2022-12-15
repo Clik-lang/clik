@@ -5,11 +5,14 @@ import org.click.Type;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Phaser;
 
 public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     void interpret(Statement.Loop loop) {
-        final Context context = new Context(loop, new Phaser(), new ArrayList<>());
+        final Context context = new Context(loop, new Phaser(), new ArrayList<>(),
+                new ConcurrentHashMap<>(walker.currentScope().tracked));
         final Value iterable = executor.evaluate(loop.iterable(), null);
         switch (iterable) {
             case Value.Range range -> rangeLoop(context, range);
@@ -22,7 +25,8 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         ValueMerger.merge(walker, walkers);
     }
 
-    record Context(Statement.Loop loop, Phaser phaser, List<Executor> executors) {
+    record Context(Statement.Loop loop, Phaser phaser, List<Executor> executors,
+                   Map<String, Value> sharedMutations) {
     }
 
     private void iterate(Context context) {
@@ -33,7 +37,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             iterateBody(executor, body);
         } else {
             // Virtual threads
-            final Executor executor = executor().fork(true);
+            final Executor executor = executor().forkLoop(true, context.sharedMutations());
             context.executors().add(executor);
             context.phaser().register();
             Thread.startVirtualThread(() -> {

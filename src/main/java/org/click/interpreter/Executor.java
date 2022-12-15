@@ -3,10 +3,12 @@ package org.click.interpreter;
 import org.click.*;
 
 import java.util.List;
+import java.util.Map;
 
 public final class Executor {
     private final ScopeWalker<Value> walker;
     private final boolean insideLoop;
+    private final Map<String, Value> sharedMutations;
 
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
@@ -14,9 +16,10 @@ public final class Executor {
 
     private Value.FunctionDecl currentFunction = null;
 
-    public Executor(ScopeWalker<Value> walker, boolean insideLoop) {
+    public Executor(ScopeWalker<Value> walker, boolean insideLoop, Map<String, Value> sharedMutations) {
         this.walker = walker;
         this.insideLoop = insideLoop;
+        this.sharedMutations = sharedMutations;
 
         this.interpreter = new Evaluator(this, walker);
 
@@ -28,9 +31,17 @@ public final class Executor {
         return walker;
     }
 
-    public Executor fork(boolean insideLoop) {
+    public Map<String, Value> sharedMutations() {
+        return sharedMutations;
+    }
+
+    public Executor forkLoop(boolean insideLoop, Map<String, Value> sharedMutations) {
         final ScopeWalker<Value> copy = walker.flattenedCopy();
-        return new Executor(copy, insideLoop);
+        return new Executor(copy, insideLoop, sharedMutations);
+    }
+
+    public Executor fork() {
+        return forkLoop(false, sharedMutations);
     }
 
     public Value interpret(String function, List<Value> parameters) {
@@ -74,9 +85,13 @@ public final class Executor {
                 yield null;
             }
             case Statement.Assign assign -> {
-                final Type variableType = ValueTypeExtractor.extractType(walker.find(assign.name()));
+                final String name = assign.name();
+                final Type variableType = ValueTypeExtractor.extractType(walker.find(name));
                 final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
-                walker.update(assign.name(), evaluated);
+                walker.update(name, evaluated);
+                if (sharedMutations.containsKey(name)) {
+                    sharedMutations.put(name, evaluated);
+                }
                 yield null;
             }
             case Statement.Call call -> interpreter.evaluate(new Expression.Call(call.name(), call.arguments()), null);
