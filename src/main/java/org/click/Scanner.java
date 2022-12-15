@@ -151,7 +151,24 @@ public final class Scanner {
         }
         advance();
         final String value = input.substring(start, index - 1);
-        return new Token.Literal(Type.STRING, value);
+        // Escape string
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < value.length(); i++) {
+            if (value.charAt(i) == '\\') {
+                i++;
+                if (value.charAt(i) == 'n') sb.append('\n');
+                else if (value.charAt(i) == 't') sb.append('\t');
+                else if (value.charAt(i) == 'r') sb.append('\r');
+                else if (value.charAt(i) == '0') sb.append('\0');
+                else if (value.charAt(i) == '\'') sb.append('\'');
+                else if (value.charAt(i) == '\"') sb.append('\"');
+                else if (value.charAt(i) == '\\') sb.append('\\');
+                else throw new RuntimeException("Unexpected character: " + value.charAt(i));
+            } else {
+                sb.append(value.charAt(i));
+            }
+        }
+        return new Token.Literal(Type.STRING, sb.toString());
     }
 
     char advance() {
