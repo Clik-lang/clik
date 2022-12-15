@@ -53,6 +53,7 @@ public final class Scanner {
         else if (c == ';') type = Token.Type.SEMICOLON;
         else if (c == '*') type = Token.Type.STAR;
         else if (c == '/') type = Token.Type.SLASH;
+        else if (c == '$') type = Token.Type.DOLLAR;
         else if (c == '=') {
             if (peek() == '=') {
                 advance();

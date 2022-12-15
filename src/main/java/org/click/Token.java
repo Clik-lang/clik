@@ -17,6 +17,7 @@ public record Token(Type type, int line, String input,
         LEFT_BRACE, RIGHT_BRACE,
         LEFT_BRACKET, RIGHT_BRACKET,
         COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
+        DOLLAR,
 
         // Boolean operators
         AND, OR, EQUAL_EQUAL, NOT_EQUAL,
