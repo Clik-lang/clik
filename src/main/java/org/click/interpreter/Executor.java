@@ -64,22 +64,22 @@ public final class Executor {
     }
 
     Value interpret(Statement statement) {
-        switch (statement) {
+        return switch (statement) {
             case Statement.Declare declare -> {
                 final String name = declare.name();
                 final Expression initializer = declare.initializer();
                 final Value evaluated = interpreter.evaluate(initializer, declare.explicitType());
                 assert evaluated != null;
                 walker.register(name, evaluated);
+                yield null;
             }
             case Statement.Assign assign -> {
                 final Type variableType = ValueTypeExtractor.extractType(walker.find(assign.name()));
                 final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
                 walker.update(assign.name(), evaluated);
+                yield null;
             }
-            case Statement.Call call -> {
-                return interpreter.evaluate(new Expression.Call(call.name(), call.arguments()), null);
-            }
+            case Statement.Call call -> interpreter.evaluate(new Expression.Call(call.name(), call.arguments()), null);
             case Statement.Branch branch -> {
                 final Value condition = interpreter.evaluate(branch.condition(), null);
                 assert condition != null;
@@ -87,17 +87,18 @@ public final class Executor {
                     if ((boolean) constant.value()) {
                         for (Statement thenBranch : branch.thenBranch()) {
                             final Value value = interpret(thenBranch);
-                            if (value != null) return value;
+                            if (value != null) yield value;
                         }
                     } else if (branch.elseBranch() != null) {
                         for (Statement elseBranch : branch.elseBranch()) {
                             final Value value = interpret(elseBranch);
-                            if (value != null) return value;
+                            if (value != null) yield value;
                         }
                     }
                 } else {
                     throw new RuntimeException("Condition must be a boolean");
                 }
+                yield null;
             }
             case Statement.Loop loop -> {
                 if (loop.iterable() == null) {
@@ -108,24 +109,30 @@ public final class Executor {
                 } else {
                     this.interpreterLoop.interpret(loop);
                 }
+                yield null;
             }
             case Statement.Break ignored -> {
                 if (!insideLoop) throw new RuntimeException("Break statement outside of loop");
-                return new Value.Break();
+                yield new Value.Break();
             }
-            case Statement.Select select -> interpreterSelect.interpret(select);
+            case Statement.Select select -> {
+                interpreterSelect.interpret(select);
+                yield null;
+            }
             case Statement.Block block -> {
                 this.walker.enterBlock();
                 for (Statement inner : block.statements()) interpret(inner);
                 this.walker.exitBlock();
+                yield null;
             }
             case Statement.Return returnStatement -> {
                 final Expression expression = returnStatement.expression();
                 if (expression != null) {
                     assert currentFunction != null : "Return outside of function";
                     final Type returnType = currentFunction.returnType();
-                    return interpreter.evaluate(expression, returnType);
+                    yield interpreter.evaluate(expression, returnType);
                 }
+                yield null;
             }
             case Statement.Directive directive -> {
                 switch (directive.directive()) {
@@ -140,8 +147,8 @@ public final class Executor {
                         }
                     }
                 }
+                yield null;
             }
-        }
-        return null;
+        };
     }
 }
