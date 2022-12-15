@@ -9,7 +9,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        final String input = Files.readString(Path.of("samples", "web_server.cl"));
+        final String input = Files.readString(Path.of("samples", "mc_proxy.cl"));
         var tokens = new Scanner(input).scanTokens();
         System.out.println("Tokens:");
         for (var token : tokens) System.out.println(token);

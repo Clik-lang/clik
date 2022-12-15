@@ -2,6 +2,7 @@ package org.click.interpreter;
 
 import org.click.Expression;
 import org.click.Parameter;
+import org.click.Type;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -21,6 +22,7 @@ public final class EvaluatorFunction {
             entry("print", this::print),
             entry("open_server", this::openServer),
             entry("accept_client", this::acceptClient),
+            entry("recv", this::recv),
             entry("send", this::send),
             entry("close", this::close)
     );
@@ -71,6 +73,26 @@ public final class EvaluatorFunction {
         }
     }
 
+    public Value recv(List<Value> evaluated) {
+        if (evaluated.size() != 2) throw new RuntimeException("Expected 2 argument, got " + evaluated.size());
+        final Value value = evaluated.get(0);
+        if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
+            throw new RuntimeException("Expected socket, got " + value);
+        }
+        final Value sizeValue = evaluated.get(1);
+        if (!(sizeValue instanceof Value.Constant constant && constant.value() instanceof Integer size)) {
+            throw new RuntimeException("Expected constant, got " + sizeValue);
+        }
+        try {
+            final byte[] buffer = new byte[size];
+            final int length = socket.getInputStream().read(buffer);
+            final String string = new String(buffer, 0, length, StandardCharsets.UTF_8);
+            return new Value.Constant(Type.STRING, string);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Value send(List<Value> evaluated) {
         if (evaluated.size() != 2) throw new RuntimeException("Expected 2 arguments, got " + evaluated.size());
         final Value value = evaluated.get(0);
@@ -115,6 +137,7 @@ public final class EvaluatorFunction {
             return builtin.apply(evaluated);
         } else {
             final Value.FunctionDecl functionDecl = (Value.FunctionDecl) executor.walker().find(name);
+            assert functionDecl != null : "Function " + name + " not found";
             final List<Parameter> params = functionDecl.parameters();
             final List<Expression> expressions = call.arguments().expressions();
             List<Value> evaluated = new ArrayList<>();
