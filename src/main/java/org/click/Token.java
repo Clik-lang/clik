@@ -29,7 +29,7 @@ public record Token(Type type, int line, String input,
         IDENTIFIER, LITERAL,
 
         // Keywords
-        RETURN, IF, ELSE, TRUE, FALSE, FOR, MAP, STRUCT, ENUM, UNION,
+        RETURN, IF, ELSE, TRUE, FALSE, FOR, SELECT, MAP, STRUCT, ENUM, UNION,
 
         // End of file
         EOF,
