@@ -1,6 +1,4 @@
  main :: () {
   value :: 5;
-  spawn {
-    print(value);
-  }
- }
+  defer print(value);
+}

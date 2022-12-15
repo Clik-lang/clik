@@ -68,7 +68,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final int start = (int) ((Value.Constant) range.start()).value();
         final int end = (int) ((Value.Constant) range.end()).value();
         final int step = (int) ((Value.Constant) range.step()).value();
-        walker.enterBlock();
+        walker.enterBlock(executor);
         if (!declarations.isEmpty()) {
             assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
             // Index declared
@@ -91,7 +91,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final Statement.Loop loop = context.loop();
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
-        walker.enterBlock();
+        walker.enterBlock(executor);
         final List<Value> values = array.values();
         if (!declarations.isEmpty()) {
             final Type arrayType = array.type();

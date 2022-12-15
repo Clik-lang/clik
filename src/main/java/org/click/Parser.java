@@ -78,6 +78,9 @@ public final class Parser {
             statement = nextSelect();
         } else if (check(SPAWN)) {
             statement = nextSpawn();
+        } else if (match(DEFER)) {
+            final Statement deferred = nextStatement();
+            statement = new Statement.Defer(deferred);
         } else if (check(LEFT_BRACE)) {
             if (checkNext(DOT) || checkNext(LITERAL)) {
                 // Inline block return

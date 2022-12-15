@@ -38,9 +38,14 @@ public final class Executor {
     }
 
     public Executor forkLoop(boolean insideLoop, Map<String, Value> sharedMutations) {
-        final ScopeWalker<Value> copy = walker.flattenedCopy();
+        final ScopeWalker<Value> copy = new ScopeWalker<>();
         final VM.Context context = new VM.Context(copy, this.context.phaser());
-        return new Executor(context, insideLoop, sharedMutations);
+        final Executor executor = new Executor(context, insideLoop, sharedMutations);
+        copy.enterBlock(executor);
+        for (Map.Entry<String, Value> entry : this.walker.currentScope().tracked.entrySet()) {
+            copy.register(entry.getKey(), entry.getValue());
+        }
+        return executor;
     }
 
     public Executor fork() {
@@ -53,7 +58,7 @@ public final class Executor {
             throw new RuntimeException("Function not found: " + call + " " + function);
         }
 
-        walker.enterBlock();
+        walker.enterBlock(this);
         for (int i = 0; i < parameters.size(); i++) {
             final Parameter parameter = functionDeclaration.parameters().get(i);
             final Value value = parameters.get(i);
@@ -153,8 +158,13 @@ public final class Executor {
                 });
                 yield null;
             }
+            case Statement.Defer defer -> {
+                ScopeWalker<Value>.Scope currentScope = walker.currentScope();
+                currentScope.deferred.add(defer.statement());
+                yield null;
+            }
             case Statement.Block block -> {
-                this.walker.enterBlock();
+                this.walker.enterBlock(this);
                 for (Statement inner : block.statements()) interpret(inner);
                 this.walker.exitBlock();
                 yield null;

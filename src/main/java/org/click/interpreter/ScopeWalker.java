@@ -1,27 +1,29 @@
 package org.click.interpreter;
 
+import org.click.Statement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public final class ScopeWalker<T> {
     final ArrayDeque<Scope> scopes = new ArrayDeque<>();
 
-    public void enterBlock() {
+    public void enterBlock(Executor executor) {
         final Scope currentScope = scopes.peek();
         if (currentScope == null) {
-            this.scopes.push(new Scope(new HashMap<>()));
+            this.scopes.push(new Scope(executor, new HashMap<>()));
         } else {
-            this.scopes.push(new Scope(currentScope));
+            this.scopes.push(new Scope(executor, currentScope));
         }
     }
 
     public void exitBlock() {
+        final Scope scope = this.scopes.getFirst();
+        for (Statement deferred : scope.deferred) {
+            scope.executor.interpret(deferred);
+        }
         this.scopes.pop();
     }
 
@@ -43,25 +45,20 @@ public final class ScopeWalker<T> {
         return currentScope;
     }
 
-    public ScopeWalker<T> flattenedCopy() {
-        final ScopeWalker<T> copy = new ScopeWalker<>();
-        copy.enterBlock();
-        for (Map.Entry<String, T> entry : currentScope().tracked.entrySet()) {
-            copy.register(entry.getKey(), entry.getValue());
-        }
-        return copy;
-    }
-
     public final class Scope {
+        final Executor executor;
+        final List<Statement> deferred = new ArrayList<>();
         final @Nullable Scope parent;
         final @NotNull Map<String, T> tracked;
 
-        public Scope(@NotNull Map<String, T> tracked) {
+        public Scope(Executor executor, @NotNull Map<String, T> tracked) {
+            this.executor = executor;
             this.parent = null;
             this.tracked = tracked;
         }
 
-        Scope(Scope scope) {
+        Scope(Executor executor, Scope scope) {
+            this.executor = executor;
             this.parent = scope;
             this.tracked = new HashMap<>(scope.tracked);
         }

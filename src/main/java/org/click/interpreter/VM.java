@@ -14,7 +14,7 @@ public final class VM {
     }
 
     public VM(List<Statement> statements) {
-        this.context.walker.enterBlock();
+        this.context.walker.enterBlock(executor);
         // Global scope
         for (Statement statement : statements) {
             if (statement instanceof Statement.Declare declare) {
