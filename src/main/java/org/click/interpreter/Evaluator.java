@@ -74,9 +74,10 @@ public final class Evaluator {
                         if (value == null) throw new RuntimeException("Enum entry not found: " + field.name());
                         yield value;
                     }
-                    case null, default -> throw new RuntimeException("Expected struct, got: " + expression);
+                    default -> throw new RuntimeException("Expected struct, got: " + expression);
                 };
             }
+            case Expression.VariableAwait variableAwait -> throw new RuntimeException("Await not supported");
             case Expression.ArrayAccess arrayAccess -> {
                 final Value array = evaluate(arrayAccess.array(), null);
                 yield switch (array) {
@@ -96,7 +97,7 @@ public final class Evaluator {
                         if (result == null) throw new RuntimeException("Key not found: " + index);
                         yield result;
                     }
-                    case null, default -> throw new RuntimeException("Expected array/map, got: " + array);
+                    default -> throw new RuntimeException("Expected array/map, got: " + array);
                 };
             }
             case Expression.Call call -> {
@@ -110,10 +111,10 @@ public final class Evaluator {
                         builder.append(serialized);
                     }
                     System.out.println(builder);
+                    yield null;
                 } else {
                     yield executor.interpret(name, evaluated);
                 }
-                yield null;
             }
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());

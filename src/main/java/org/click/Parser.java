@@ -193,6 +193,10 @@ public final class Parser {
             } else {
                 return new Expression.Variable(identifier.input());
             }
+        } else if (match(DOLLAR)) {
+            // Variable await
+            final Token identifier = consume(IDENTIFIER, "Expected variable name.");
+            return new Expression.VariableAwait(identifier.input());
         } else if (check(LEFT_BRACKET)) {
             // Array
             consume(LEFT_BRACKET, "Expected '[' after array.");

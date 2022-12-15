@@ -30,6 +30,9 @@ public sealed interface Expression {
     record Field(Expression object, String name) implements Expression {
     }
 
+    record VariableAwait(String name) implements Expression {
+    }
+
     record ArrayAccess(Expression array, Expression index) implements Expression {
     }
 
