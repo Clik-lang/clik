@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Phaser;
 
-public record InterpreterLoop(ExecutorStatement executor, ScopeWalker<Value> walker) {
+public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     void interpret(Statement.Loop loop) {
         final Context context = new Context(loop, new Phaser(), new ArrayList<>());
         final Value iterable = executor.evaluate(loop.iterable(), null);
@@ -18,10 +18,11 @@ public record InterpreterLoop(ExecutorStatement executor, ScopeWalker<Value> wal
         }
         context.phaser().register();
         context.phaser().arriveAndAwaitAdvance();
-        ValueMerger.merge(walker, context.walkers());
+        final List<ScopeWalker<Value>> walkers = context.executors().stream().map(Executor::walker).toList();
+        ValueMerger.merge(walker, walkers);
     }
 
-    record Context(Statement.Loop loop, Phaser phaser, List<ScopeWalker<Value>> walkers) {
+    record Context(Statement.Loop loop, Phaser phaser, List<Executor> executors) {
     }
 
     private void iterate(Context context) {
@@ -32,10 +33,9 @@ public record InterpreterLoop(ExecutorStatement executor, ScopeWalker<Value> wal
             for (Statement statement : body) executor.interpret(statement);
         } else {
             // Virtual threads
-            final ScopeWalker<Value> copy = walker.flattenedCopy();
-            context.walkers().add(copy);
+            final Executor executor = executor().fork();
+            context.executors().add(executor);
             context.phaser().register();
-            final ExecutorStatement executor = new ExecutorStatement(copy);
             Thread.startVirtualThread(() -> {
                 for (Statement statement : body) executor.interpret(statement);
                 context.phaser().arriveAndDeregister();

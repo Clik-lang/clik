@@ -8,14 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class ExecutorExpression {
-    private final ExecutorStatement executor;
+public final class Evaluator {
+    private final Executor executor;
     private final ScopeWalker<Value> walker;
 
     private final Operator operator;
     private final ValueSerializer valueSerializer;
 
-    public ExecutorExpression(ExecutorStatement executor, ScopeWalker<Value> walker) {
+    public Evaluator(Executor executor, ScopeWalker<Value> walker) {
         this.executor = executor;
         this.walker = walker;
 

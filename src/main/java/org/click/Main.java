@@ -1,6 +1,6 @@
 package org.click;
 
-import org.click.interpreter.Interpreter;
+import org.click.interpreter.VM;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +18,7 @@ public class Main {
         System.out.println("Statements:");
         for (var statement : statements) System.out.println(statement);
 
-        var interpreter = new Interpreter(statements);
+        var interpreter = new VM(statements);
         interpreter.interpret("main", List.of());
         interpreter.stop();
     }

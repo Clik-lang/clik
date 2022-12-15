@@ -1,6 +1,6 @@
 package org.click;
 
-import org.click.interpreter.Interpreter;
+import org.click.interpreter.VM;
 import org.click.interpreter.Value;
 import org.junit.jupiter.api.Test;
 
@@ -557,7 +557,7 @@ public final class IntegrationTest {
     private static void assertProgram(Value expected, String name, String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
-        var interpreter = new Interpreter(statements);
+        var interpreter = new VM(statements);
         var actual = interpreter.interpret(name, List.of());
         interpreter.stop();
         assertEquals(expected, actual);

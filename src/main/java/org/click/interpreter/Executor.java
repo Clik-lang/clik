@@ -4,22 +4,31 @@ import org.click.*;
 
 import java.util.List;
 
-public final class ExecutorStatement {
+public final class Executor {
     private final ScopeWalker<Value> walker;
 
-    private final ExecutorExpression interpreter;
-    private final InterpreterLoop interpreterLoop;
-    private final InterpreterSelect interpreterSelect;
+    private final Evaluator interpreter;
+    private final ExecutorLoop interpreterLoop;
+    private final ExecutorSelect interpreterSelect;
 
     private Value.FunctionDecl currentFunction = null;
 
-    public ExecutorStatement(ScopeWalker<Value> walker) {
+    public Executor(ScopeWalker<Value> walker) {
         this.walker = walker;
 
-        this.interpreter = new ExecutorExpression(this, walker);
+        this.interpreter = new Evaluator(this, walker);
 
-        this.interpreterLoop = new InterpreterLoop(this, walker);
-        this.interpreterSelect = new InterpreterSelect(this, walker);
+        this.interpreterLoop = new ExecutorLoop(this, walker);
+        this.interpreterSelect = new ExecutorSelect(this, walker);
+    }
+
+    public ScopeWalker<Value> walker() {
+        return walker;
+    }
+
+    public Executor fork() {
+        final ScopeWalker<Value> copy = walker.flattenedCopy();
+        return new Executor(copy);
     }
 
     public Value interpret(String function, List<Value> parameters) {

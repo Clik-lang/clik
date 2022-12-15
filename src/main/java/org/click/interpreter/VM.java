@@ -4,11 +4,11 @@ import org.click.Statement;
 
 import java.util.List;
 
-public final class Interpreter {
+public final class VM {
     private final ScopeWalker<Value> walker = new ScopeWalker<>();
-    private final ExecutorStatement executor = new ExecutorStatement(walker);
+    private final Executor executor = new Executor(walker);
 
-    public Interpreter(List<Statement> statements) {
+    public VM(List<Statement> statements) {
         this.walker.enterBlock();
         // Global scope
         for (Statement statement : statements) {
