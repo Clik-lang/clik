@@ -29,6 +29,9 @@ public sealed interface Statement {
     record Block(List<Statement> statements) implements Statement {
     }
 
+    record Directive(org.click.Directive.Statement directive) implements Statement {
+    }
+
     record Return(@Nullable Expression expression) implements Statement {
     }
 

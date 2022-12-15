@@ -200,7 +200,19 @@ public final class Interpreter {
                     return evaluate(expression, returnType);
                 }
             }
-            case null, default -> {
+            case Statement.Directive directive -> {
+                switch (directive.directive()) {
+                    case Directive.Statement.Sleep sleep -> {
+                        final Value time = evaluate(sleep.expression(), null);
+                        assert time != null;
+                        final int millis = (int) ((Value.Constant) time).value();
+                        try {
+                            Thread.sleep(millis);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
             }
         }
         return null;

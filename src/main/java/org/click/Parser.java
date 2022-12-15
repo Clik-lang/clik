@@ -79,6 +79,10 @@ public final class Parser {
             } else {
                 statement = new Statement.Block(nextBlock());
             }
+        } else if (check(HASH)) {
+            // Directive
+            final Directive.Statement directive = nextDirectiveStatement();
+            statement = new Statement.Directive(directive);
         } else {
             // Implicit return
             final Expression expression = nextExpression();
@@ -409,6 +413,20 @@ public final class Parser {
             return List.of(statement);
         }
         throw error(peek(), "Expect '{' or '->'.");
+    }
+
+    Directive.Statement nextDirectiveStatement() {
+        consume(HASH, "Expect '#'.");
+        final Token directive = consume(IDENTIFIER, "Expect directive name.");
+        final String name = directive.input();
+        if (name.equals("sleep")) {
+            consume(LEFT_PAREN, "Expect '('.");
+            final Expression expression = nextExpression();
+            consume(RIGHT_PAREN, "Expect ')'.");
+            return new Directive.Statement.Sleep(expression);
+        } else {
+            throw error(directive, "Unknown directive.");
+        }
     }
 
     Token consume(Token.Type type, String message) {
