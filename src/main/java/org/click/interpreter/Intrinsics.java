@@ -1,12 +1,14 @@
 package org.click.interpreter;
 
+import org.click.Type;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 
 import static java.util.Map.entry;
 
@@ -15,6 +17,7 @@ public final class Intrinsics {
             entry("print", Intrinsics::print),
             entry("sleep", Intrinsics::sleep),
             entry("open_server", Intrinsics::openServer),
+            entry("connect_server", Intrinsics::connectServer),
             entry("accept_client", Intrinsics::acceptClient),
             entry("recv", Intrinsics::recv),
             entry("send", Intrinsics::send),
@@ -38,13 +41,9 @@ public final class Intrinsics {
     }
 
     public static Value sleep(Executor executor, List<Value> evaluated) {
-        if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
-        final Value value = evaluated.get(0);
-        if (!(value instanceof Value.IntegerLiteral integerLiteral)) {
-            throw new RuntimeException("Expected integer, got " + value);
-        }
         try {
-            Thread.sleep(integerLiteral.value());
+            final int millis = getInteger(evaluated, 0);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -52,14 +51,9 @@ public final class Intrinsics {
     }
 
     public static Value openServer(Executor executor, List<Value> evaluated) {
-        if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
-        final Value value = evaluated.get(0);
-        if (!(value instanceof Value.IntegerLiteral integerLiteral)) {
-            throw new RuntimeException("Expected integer, got " + value);
-        }
         // Open http server
         try {
-            final long port = integerLiteral.value();
+            final long port = getInteger(evaluated, 0);
             ServerSocket serverSocket = new ServerSocket((int) port);
             return new Value.JavaObject(serverSocket);
         } catch (IOException e) {
@@ -67,8 +61,19 @@ public final class Intrinsics {
         }
     }
 
+    public static Value connectServer(Executor executor, List<Value> evaluated) {
+        // Connect to http server
+        try {
+            final String host = getString(evaluated, 0);
+            final int port = getInteger(evaluated, 1);
+            Socket socket = new Socket(host, port);
+            return new Value.JavaObject(socket);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static Value acceptClient(Executor executor, List<Value> evaluated) {
-        if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof ServerSocket serverSocket)) {
             throw new RuntimeException("Expected server, got " + value);
@@ -82,37 +87,31 @@ public final class Intrinsics {
     }
 
     public static Value recv(Executor executor, List<Value> evaluated) {
-        if (evaluated.size() != 2) throw new RuntimeException("Expected 2 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
             throw new RuntimeException("Expected socket, got " + value);
         }
-        final Value sizeValue = evaluated.get(1);
-        if (!(sizeValue instanceof Value.IntegerLiteral integerLiteral)) {
-            throw new RuntimeException("Expected integer, got " + sizeValue);
-        }
         try {
-            final byte[] buffer = new byte[(int) integerLiteral.value()];
+            final byte[] buffer = new byte[25_000];
             final int length = socket.getInputStream().read(buffer);
-            final String string = new String(buffer, 0, length, StandardCharsets.UTF_8);
-            return new Value.StringLiteral(string);
+            final List<Value> values = IntStream.range(0, length).mapToObj(i -> (Value) new Value.IntegerLiteral(Type.I8, buffer[i])).toList();
+            return new Value.Array(Type.I8, values);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static Value send(Executor executor, List<Value> evaluated) {
-        if (evaluated.size() != 2) throw new RuntimeException("Expected 2 arguments, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
             throw new RuntimeException("Expected client, got " + value);
         }
-        final Value message = evaluated.get(1);
-        if (!(message instanceof Value.StringLiteral stringLiteral)) {
-            throw new RuntimeException("Expected string, got " + message);
+        final Value.Array array = (Value.Array) evaluated.get(1);
+        byte[] bytes = new byte[array.values().size()];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) ((Value.IntegerLiteral) array.values().get(i)).value();
         }
         try {
-            final byte[] bytes = stringLiteral.value().getBytes(StandardCharsets.UTF_8);
             socket.getOutputStream().write(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -133,5 +132,15 @@ public final class Intrinsics {
             throw new RuntimeException(e);
         }
         return null;
+    }
+
+    private static String getString(List<Value> evaluated, int index) {
+        final Value value = evaluated.get(index);
+        return ((Value.StringLiteral) value).value();
+    }
+
+    private static int getInteger(List<Value> evaluated, int index) {
+        final Value value = evaluated.get(index);
+        return (int) ((Value.IntegerLiteral) value).value();
     }
 }
