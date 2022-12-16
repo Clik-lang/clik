@@ -687,7 +687,7 @@ public final class IntegrationTest {
     private static void assertProgram(Value expected, String name, String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
-        var interpreter = new VM(statements);
+        var interpreter = new VM(null, statements);
         var actual = interpreter.interpret(name, List.of());
         interpreter.stop();
         assertEquals(expected, actual);

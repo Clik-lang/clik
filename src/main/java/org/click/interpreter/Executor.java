@@ -100,6 +100,23 @@ public final class Executor {
         }
     }
 
+    void interpretGlobal(List<Statement> statements) {
+        for (Statement statement : statements) {
+            if (statement instanceof Statement.Declare declare) {
+                final Value value = evaluate(declare.initializer(), declare.explicitType());
+                registerMulti(declare.names(), value);
+            } else if (statement instanceof Statement.Directive directive) {
+                if (directive.directive() instanceof Directive.Statement.Load) {
+                    interpret(directive);
+                } else {
+                    throw new RuntimeException("Directive not supported as global: " + directive);
+                }
+            } else {
+                throw new RuntimeException("Unexpected global declaration: " + statement);
+            }
+        }
+    }
+
     Value interpret(Statement statement) {
         return switch (statement) {
             case Statement.Declare declare -> {
@@ -222,7 +239,7 @@ public final class Executor {
                         }
                         final List<Token> tokens = new Scanner(source).scanTokens();
                         final List<Statement> statements = new Parser(tokens).parse();
-                        for (Statement statement1 : statements) interpret(statement1);
+                        interpretGlobal(statements);
                     }
                     case Directive.Statement.Sleep sleep -> {
                         final Value time = interpreter.evaluate(sleep.expression(), null);

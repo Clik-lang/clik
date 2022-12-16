@@ -1,6 +1,5 @@
 package org.click.interpreter;
 
-                   import org.click.Directive;
 import org.click.Statement;
 
 import java.nio.file.Path;
@@ -19,21 +18,7 @@ public final class VM {
         this.context = new Context(directory, new ScopeWalker<>(), new Phaser(1));
         this.executor = new Executor(context, false, Map.of());
         this.context.walker.enterBlock(executor);
-        // Global scope
-        for (Statement statement : statements) {
-            if (statement instanceof Statement.Declare declare) {
-                final Value value = executor.evaluate(declare.initializer(), declare.explicitType());
-                this.executor.registerMulti(declare.names(), value);
-            } else if (statement instanceof Statement.Directive directive) {
-                if (directive.directive() instanceof Directive.Statement.Load) {
-                    this.executor.interpret(directive);
-                } else {
-                    throw new RuntimeException("Directive not supported as global: " + directive);
-                }
-            } else {
-                throw new RuntimeException("Unexpected global declaration: " + statement);
-            }
-        }
+        this.executor.interpretGlobal(statements);
     }
 
     public Value interpret(String function, List<Value> parameters) {
