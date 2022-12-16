@@ -123,6 +123,7 @@ public final class Evaluator {
                 assert functionDecl != null : "Function " + name + " not found";
                 final List<Parameter> params = functionDecl.parameters();
                 final List<Expression> expressions = call.arguments().expressions();
+                assert params.size() == expressions.size() : name + ": Expected " + params.size() + " arguments, got " + expressions.size();
                 List<Value> evaluated = new ArrayList<>();
                 for (int i = 0; i < call.arguments().expressions().size(); i++) {
                     final Parameter param = params.get(i);
