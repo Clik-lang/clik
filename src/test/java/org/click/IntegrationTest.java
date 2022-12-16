@@ -487,6 +487,16 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           value := 0;
+                          for {
+                            break;
+                          }
+                          return 1;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          value := 0;
                           for 0..10 {
                             value = value + 1;
                             break;
@@ -605,6 +615,20 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          value :~ 0;
+                          fork i: 0..2 {
+                            if i == 1 {
+                              continue;
+                            }
+                            value = value + 1;
+                          }
+                          return value;
+                        }
+                        """);
     }
 
     @Test
@@ -644,18 +668,15 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-
         assertProgram(ONE,
                 """
                         main :: () int {
-                          value :~ 0;
-                          fork i: 0..2 {
-                            if i == 1 {
-                              continue;
+                          for {
+                            select {
+                              test :: 10; -> break;
                             }
-                            value = value + 1;
                           }
-                          return value;
+                          return 1;
                         }
                         """);
     }

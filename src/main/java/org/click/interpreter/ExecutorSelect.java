@@ -7,7 +7,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 public record ExecutorSelect(Executor executor, ScopeWalker<Value> walker) {
-    void interpret(Statement.Select select) {
+    Value interpret(Statement.Select select) {
         final Map<Statement, Statement.Block> cases = select.cases();
         // Run every statement in a virtual thread and start the block of the first one that finishes
         AtomicReference<FinishedCase> finishedRef = new AtomicReference<>();
@@ -33,7 +33,7 @@ public record ExecutorSelect(Executor executor, ScopeWalker<Value> walker) {
         final Statement statement = finished.statement();
         final Statement.Block block = cases.get(statement);
         ValueMerger.update(walker, finished.executor().walker());
-        executor.interpret(block);
+        return executor.interpret(block);
     }
 
     record FinishedCase(Statement statement, Executor executor) {

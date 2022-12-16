@@ -182,14 +182,7 @@ public final class Executor {
                 yield null;
             }
             case Statement.Loop loop -> {
-                if (loop.iterable() == null) {
-                    // Infinite loop
-                    while (true) {
-                        for (Statement body : loop.body()) interpret(body);
-                    }
-                } else {
-                    this.interpreterLoop.interpret(loop);
-                }
+                this.interpreterLoop.interpret(loop);
                 yield null;
             }
             case Statement.Break ignored -> {
@@ -200,10 +193,7 @@ public final class Executor {
                 if (!insideLoop) throw new RuntimeException("Continue statement outside of loop");
                 yield new Value.Continue();
             }
-            case Statement.Select select -> {
-                interpreterSelect.interpret(select);
-                yield null;
-            }
+            case Statement.Select select -> interpreterSelect.interpret(select);
             case Statement.Spawn spawn -> {
                 this.interpreterSpawn.interpret(spawn);
                 yield null;
@@ -215,9 +205,13 @@ public final class Executor {
             }
             case Statement.Block block -> {
                 this.walker.enterBlock(this);
-                for (Statement inner : block.statements()) interpret(inner);
+                Value result = null;
+                for (Statement inner : block.statements()) {
+                    result = interpret(inner);
+                    if (result != null) break;
+                }
                 this.walker.exitBlock();
-                yield null;
+                yield result;
             }
             case Statement.Return returnStatement -> {
                 final Expression expression = returnStatement.expression();

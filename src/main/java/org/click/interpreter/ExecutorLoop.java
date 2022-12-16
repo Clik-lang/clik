@@ -10,6 +10,13 @@ import java.util.concurrent.Phaser;
 public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     void interpret(Statement.Loop loop) {
         final Context context = new Context(loop, new Phaser(), new ArrayList<>());
+        if (loop.iterable() == null) {
+            // Infinite loop
+            while (true) {
+                if (!iterate(context)) break;
+            }
+            return;
+        }
         final Value iterable = executor.evaluate(loop.iterable(), null);
         switch (iterable) {
             case Value.Range range -> rangeLoop(context, range);
