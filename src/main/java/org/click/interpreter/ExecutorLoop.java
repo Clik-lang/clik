@@ -12,6 +12,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final Context context = new Context(loop, new Phaser(), new ArrayList<>());
         if (loop.iterable() == null) {
             // Infinite loop
+            assert !loop.fork() : "Forking infinite loops is not supported";
             while (true) {
                 if (!iterate(context)) break;
             }
