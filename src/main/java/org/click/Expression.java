@@ -1,6 +1,5 @@
 package org.click;
 
-import org.click.interpreter.Value;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -64,8 +63,7 @@ public sealed interface Expression {
     record ArrayValue(Type.Array type, Parameter.Passed parameters) implements Expression {
     }
 
-    record MapValue(Type keyType, Type valueType,
-                    Map<Expression, Expression> entries) implements Expression {
+    record MapValue(Type.Map type, Map<Expression, Expression> entries) implements Expression {
     }
 
     record InitializationBlock(Parameter.Passed parameters) implements Expression {

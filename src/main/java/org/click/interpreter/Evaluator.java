@@ -109,7 +109,7 @@ public final class Evaluator {
                         yield content.get(integer);
                     }
                     case Value.Map mapValue -> {
-                        final Value index = evaluate(arrayAccess.index(), mapValue.keyType());
+                        final Value index = evaluate(arrayAccess.index(), mapValue.type().key());
                         final Value result = mapValue.entries().get(index);
                         if (result == null) throw new RuntimeException("Key not found: " + index);
                         yield result;
@@ -152,13 +152,14 @@ public final class Evaluator {
                 yield new Value.Array(arrayValue.type(), evaluated);
             }
             case Expression.MapValue mapValue -> {
+                final Type.Map type = mapValue.type();
                 Map<Value, Value> evaluatedEntries = new HashMap<>();
                 for (var entry : mapValue.entries().entrySet()) {
-                    final Value key = evaluate(entry.getKey(), mapValue.keyType());
-                    final Value value = evaluate(entry.getValue(), mapValue.valueType());
+                    final Value key = evaluate(entry.getKey(), type.key());
+                    final Value value = evaluate(entry.getValue(), type.value());
                     evaluatedEntries.put(key, value);
                 }
-                yield new Value.Map(mapValue.keyType(), mapValue.valueType(), evaluatedEntries);
+                yield new Value.Map(type, evaluatedEntries);
             }
             case Expression.InitializationBlock initializationBlock -> {
                 // Retrieve explicit type from context

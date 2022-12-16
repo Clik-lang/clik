@@ -95,7 +95,7 @@ public final class Intrinsics {
             final byte[] buffer = new byte[25_000];
             final int length = socket.getInputStream().read(buffer);
             final List<Value> values = IntStream.range(0, length).mapToObj(i -> (Value) new Value.IntegerLiteral(Type.I8, buffer[i])).toList();
-            return new Value.Array(Type.I8, values);
+            return new Value.Array(new Type.Array(Type.I8), values);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -40,6 +40,18 @@ public interface Type {
         }
     }
 
+    record Map(Type key, Type value) implements Type {
+        @Override
+        public String name() {
+            return "map[" + key.name() + "]" + value.name();
+        }
+
+        @Override
+        public boolean primitive() {
+            return false;
+        }
+    }
+
     record Primitive(String name) implements Type {
         public boolean primitive() {
             return true;

@@ -64,10 +64,10 @@ public sealed interface Value {
     record Union(String name, Value value) implements Value {
     }
 
-    record Array(Type type, List<Value> values) implements Value {
+    record Array(Type.Array type, List<Value> values) implements Value {
     }
 
-    record Map(Type keyType, Type valueType, java.util.Map<Value, Value> entries) implements Value {
+    record Map(Type.Map type, java.util.Map<Value, Value> entries) implements Value {
     }
 
     record Range(Value start, Value end, Value step) implements Value {

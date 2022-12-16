@@ -259,7 +259,8 @@ public final class Parser {
                 }
                 consume(RIGHT_BRACE, "Expected '}' after map.");
             }
-            return new Expression.MapValue(keyType, valueType, entries);
+            final Type.Map type = new Type.Map(keyType, valueType);
+            return new Expression.MapValue(type, entries);
         } else if (check(LEFT_BRACE)) {
             // Inline block
             final Parameter.Passed passed = nextPassedParameters();
