@@ -359,7 +359,7 @@ public final class Parser {
                 final Type type = nextType();
                 final Parameter parameter = new Parameter(identifier.input(), type);
                 fields.add(parameter);
-            } while (match(COMMA));
+            } while (match(COMMA) && !check(RIGHT_BRACE));
         }
         consume(RIGHT_BRACE, "Expect '}'.");
         return new Expression.Struct(fields);

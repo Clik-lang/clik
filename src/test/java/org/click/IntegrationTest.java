@@ -680,6 +680,11 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
+                        Point :: struct {x: int, y: int,}
+                        main :: () Point { return {1, 2} }
+                        """);
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
+                """
                         Point :: struct {x: int, y: int}
                         main :: () Point -> {.x: 1, .y: 2}
                         """);
