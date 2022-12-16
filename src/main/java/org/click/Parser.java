@@ -31,11 +31,7 @@ public final class Parser {
                 statement = new Statement.Assign(names, expression);
             } else if (match(COLON)) {
                 // Declare
-                Type explicitType = null;
-                if (check(IDENTIFIER)) {
-                    explicitType = nextType();
-                }
-
+                final Type explicitType = nextType();
                 Statement.DeclarationType declarationType;
                 if (match(COLON)) {
                     declarationType = Statement.DeclarationType.CONSTANT;
@@ -46,7 +42,6 @@ public final class Parser {
                 } else {
                     throw error(peek(), "Expected declaration type");
                 }
-
                 final Expression initializer = nextExpression();
                 statement = new Statement.Declare(names, declarationType, initializer, explicitType);
             } else if (match(LEFT_PAREN) && names.size() == 1) {
@@ -317,6 +312,13 @@ public final class Parser {
     }
 
     Type nextType() {
+        if (!(check(IDENTIFIER) || check(LEFT_BRACKET))) return null;
+        if (match(LEFT_BRACKET)) {
+            // Array
+            consume(RIGHT_BRACKET, "Expected ']' after array.");
+            final Type arrayType = nextType();
+            return new Type.Array(arrayType);
+        }
         final Token identifier = consume(IDENTIFIER, "Expected type name.");
         return Type.of(identifier.input());
     }

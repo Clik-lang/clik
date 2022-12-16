@@ -90,8 +90,6 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         walker.enterBlock(executor);
         final List<Value> values = array.values();
         if (!declarations.isEmpty()) {
-            final Type arrayType = array.type();
-            final Value tracked = walker.find(arrayType.name());
             if (declarations.size() == 1 && !declarations.get(0).ref()) {
                 // for-each loop
                 final String variableName = declarations.get(0).name();
@@ -114,6 +112,10 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 }
             } else {
                 // Ref loop
+                final Type arrayType = array.type();
+                if (!(arrayType instanceof Type.Identifier identifier))
+                    throw new RuntimeException("Expected array of structures, got: " + arrayType);
+                final Value tracked = walker.find(identifier.name());
                 assert declarations.stream().allMatch(Statement.Loop.Declaration::ref) : "Invalid loop declaration: " + declarations;
                 List<String> refs = declarations.stream().map(Statement.Loop.Declaration::name).toList();
                 for (Statement.Loop.Declaration declaration : declarations) {

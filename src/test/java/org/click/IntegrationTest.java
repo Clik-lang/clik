@@ -201,6 +201,13 @@ public final class IntegrationTest {
                           return array[0];
                         }
                         """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          array :[]int: []int {1, 2, 3, 4, 5,};
+                          return array[0];
+                        }
+                        """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}

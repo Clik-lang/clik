@@ -162,9 +162,9 @@ public final class Evaluator {
             case Expression.InitializationBlock initializationBlock -> {
                 // Retrieve explicit type from context
                 if (explicitType == null) throw new RuntimeException("Expected explicit type for initialization block");
-                if (!explicitType.primitive()) {
+                if (explicitType instanceof Type.Identifier identifier) {
                     // Struct
-                    yield evaluate(new Expression.StructValue(explicitType.name(), initializationBlock.parameters()), null);
+                    yield evaluate(new Expression.StructValue(identifier.name(), initializationBlock.parameters()), null);
                 }
                 throw new RuntimeException("Expected struct, got: " + explicitType);
             }
@@ -187,12 +187,15 @@ public final class Evaluator {
             // TODO: downcast
             return rawValue;
         }
-        final Value trackedType = walker.find(explicitType.name());
-        if (trackedType instanceof Value.UnionDecl unionDecl && rawValue instanceof Value.Struct struct) {
-            // Put struct in union wrapper
-            final String unionName = explicitType.name();
-            assert unionDecl.entries().containsKey(struct.name()) : "Struct not found in union: " + struct.name();
-            return new Value.Union(unionName, rawValue);
+
+        if (explicitType instanceof Type.Identifier identifier) {
+            final String unionName = identifier.name();
+            final Value trackedType = walker.find(unionName);
+            if (trackedType instanceof Value.UnionDecl unionDecl && rawValue instanceof Value.Struct struct) {
+                // Put struct in union wrapper
+                assert unionDecl.entries().containsKey(struct.name()) : "Struct not found in union: " + struct.name();
+                return new Value.Union(unionName, rawValue);
+            }
         }
         // Valid type, no conversion needed
         return rawValue;
