@@ -19,6 +19,11 @@ public final class IntegrationTest {
 
     @Test
     public void functionBlock() {
+        assertProgram(null,
+                """
+                        main :: () {
+                        }
+                        """);
         assertProgram(ZERO,
                 """
                         main :: () int {

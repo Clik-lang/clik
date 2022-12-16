@@ -1,9 +1,6 @@
 package org.click;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.click.Token.Type.*;
 
@@ -339,10 +336,7 @@ public final class Parser {
             } while (match(COMMA));
         }
         consume(RIGHT_PAREN, "Expect ')'.");
-        Type returnType = Type.VOID;
-        if (check(IDENTIFIER)) {
-            returnType = nextType();
-        }
+        final Type returnType = Objects.requireNonNullElse(nextType(), Type.VOID);
         final List<Statement> body = nextBlock();
         return new Expression.Function(parameters, returnType, body);
     }
