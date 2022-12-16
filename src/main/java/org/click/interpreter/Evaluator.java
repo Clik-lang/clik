@@ -13,13 +13,9 @@ public final class Evaluator {
     private final Executor executor;
     private final ScopeWalker<Value> walker;
 
-    private final Operator operator;
-
     public Evaluator(Executor executor, ScopeWalker<Value> walker) {
         this.executor = executor;
         this.walker = walker;
-
-        this.operator = new Operator();
     }
 
     public Value evaluate(Expression argument, Type explicitType) {
@@ -175,7 +171,7 @@ public final class Evaluator {
             case Expression.Binary binary -> {
                 final Value left = evaluate(binary.left(), explicitType);
                 final Value right = evaluate(binary.right(), explicitType);
-                yield operator.operate(binary.operator(), left, right);
+                yield ValueOperator.operate(binary.operator(), left, right);
             }
         };
 
