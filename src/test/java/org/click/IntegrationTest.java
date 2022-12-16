@@ -649,6 +649,29 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void spawn() {
+        assertProgram(ZERO,
+                """
+                        main :: () int {
+                          spawn {
+                          }
+                          return 0;
+                        }
+                        """);
+        assertProgram(ZERO,
+                """
+                        main :: () int {
+                          stop :~ false;
+                          spawn {
+                            stop = true;
+                          }
+                          stop = $stop;
+                          return 0;
+                        }
+                        """);
+    }
+
+    @Test
     public void explicitType() {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """

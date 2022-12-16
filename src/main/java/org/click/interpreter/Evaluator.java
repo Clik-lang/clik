@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class Evaluator {
     private final Executor executor;
@@ -83,17 +84,13 @@ public final class Evaluator {
                 if (value == null) {
                     throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked.keySet());
                 }
-                final Map<String, Value> sharedMap = executor.sharedMutations();
-                if (!sharedMap.containsKey(name)) {
+                final AtomicReference<Value> sharedRef = executor.sharedMutations().get(name);
+                if (sharedRef == null) {
                     throw new RuntimeException("Variable not shared: " + name);
                 }
                 Value result;
-                while ((result = sharedMap.get(name)).equals(value)) {
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                while ((result = sharedRef.get()).equals(value)) {
+                    Thread.yield();
                 }
                 yield result;
             }

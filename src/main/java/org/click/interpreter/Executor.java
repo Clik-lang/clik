@@ -5,14 +5,16 @@ import org.click.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class Executor {
     private final VM.Context context;
     private final ScopeWalker<Value> walker;
     boolean insideLoop;
-    private final Map<String, Value> sharedMutations;
+    private final Map<String, AtomicReference<Value>> sharedMutations;
 
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
@@ -25,11 +27,11 @@ public final class Executor {
                            List<Value> evaluatedParameters) {
     }
 
-    public Executor(VM.Context context, boolean insideLoop, Map<String, Value> sharedMutations) {
+    public Executor(VM.Context context, boolean insideLoop, Map<String, AtomicReference<Value>> sharedMutations) {
         this.context = context;
         this.walker = context.walker();
         this.insideLoop = insideLoop;
-        this.sharedMutations = sharedMutations;
+        this.sharedMutations = new HashMap<>(sharedMutations);
 
         this.interpreter = new Evaluator(this, walker);
 
@@ -46,11 +48,11 @@ public final class Executor {
         return walker;
     }
 
-    public Map<String, Value> sharedMutations() {
+    public Map<String, AtomicReference<Value>> sharedMutations() {
         return sharedMutations;
     }
 
-    public Executor forkLoop(boolean insideLoop, Map<String, Value> sharedMutations) {
+    public Executor fork(boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
         final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.phaser());
         final Executor executor = new Executor(context, insideLoop, sharedMutations);
@@ -59,10 +61,6 @@ public final class Executor {
             copy.register(entry.getKey(), entry.getValue());
         }
         return executor;
-    }
-
-    public Executor fork() {
-        return forkLoop(false, sharedMutations);
     }
 
     public Value interpret(String function, List<Value> parameters) {
@@ -96,17 +94,20 @@ public final class Executor {
         return interpreter.evaluate(expression, explicitType);
     }
 
-    public void registerMulti(List<String> names, Value value) {
+    public void registerMulti(List<String> names, Statement.DeclarationType declarationType, Value value) {
+        final boolean isShared = declarationType == Statement.DeclarationType.SHARED;
         if (names.size() == 1) {
             // Single return
             final String name = names.get(0);
             walker.register(name, value);
+            if (isShared) sharedMutations.put(name, new AtomicReference<>(value));
         } else {
             // Multiple return
             for (int i = 0; i < names.size(); i++) {
                 final String name = names.get(i);
                 final Value deconstructed = ValueExtractor.deconstruct(walker, value, i);
                 walker.register(name, deconstructed);
+                if (isShared) sharedMutations.put(name, new AtomicReference<>(deconstructed));
             }
         }
     }
@@ -115,7 +116,7 @@ public final class Executor {
         for (Statement statement : statements) {
             if (statement instanceof Statement.Declare declare) {
                 final Value value = evaluate(declare.initializer(), declare.explicitType());
-                registerMulti(declare.names(), value);
+                registerMulti(declare.names(), declare.type(), value);
             } else if (statement instanceof Statement.Directive directive) {
                 if (directive.directive() instanceof Directive.Statement.Load) {
                     interpret(directive);
@@ -135,7 +136,7 @@ public final class Executor {
                 final Expression initializer = declare.initializer();
                 final Value evaluated = interpreter.evaluate(initializer, declare.explicitType());
                 assert evaluated != null;
-                registerMulti(names, evaluated);
+                registerMulti(names, declare.type(), evaluated);
                 yield null;
             }
             case Statement.Assign assign -> {
@@ -145,18 +146,16 @@ public final class Executor {
                     final Type variableType = ValueExtractor.extractType(walker.find(name));
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
                     walker.update(name, evaluated);
-                    if (sharedMutations.containsKey(name)) {
-                        sharedMutations.put(name, evaluated);
-                    }
+                    var ref = sharedMutations.get(name);
+                    if (ref != null) ref.set(evaluated);
                 } else {
                     final Value evaluated = interpreter.evaluate(assign.expression(), null);
                     for (int i = 0; i < names.size(); i++) {
                         final String name = names.get(i);
                         final Value deconstructed = ValueExtractor.deconstruct(walker, evaluated, i);
                         walker.update(name, deconstructed);
-                        if (sharedMutations.containsKey(name)) {
-                            sharedMutations.put(name, deconstructed);
-                        }
+                        var ref = sharedMutations.get(name);
+                        if (ref != null) ref.set(deconstructed);
                     }
                 }
                 yield null;
