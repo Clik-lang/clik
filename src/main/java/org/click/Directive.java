@@ -7,8 +7,5 @@ public sealed interface Directive {
 
         record Intrinsic() implements Statement {
         }
-
-        record Sleep(Expression expression) implements Statement {
-        }
     }
 }

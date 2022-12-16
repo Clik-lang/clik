@@ -490,11 +490,6 @@ public final class Parser {
             return new Directive.Statement.Load(path);
         } else if (name.equals("intrinsic")) {
             return new Directive.Statement.Intrinsic();
-        } else if (name.equals("sleep")) {
-            consume(LEFT_PAREN, "Expect '('.");
-            final Expression expression = nextExpression();
-            consume(RIGHT_PAREN, "Expect ')'.");
-            return new Directive.Statement.Sleep(expression);
         } else {
             throw error(directive, "Unknown directive.");
         }

@@ -251,16 +251,6 @@ public final class Executor {
                         assert currentFunction != null : "Intrinsic outside of function";
                         yield Intrinsics.evaluate(this, currentFunction.name(), currentFunction.evaluatedParameters());
                     }
-                    case Directive.Statement.Sleep sleep -> {
-                        final Value time = interpreter.evaluate(sleep.expression(), null);
-                        assert time != null;
-                        final int millis = (int) ((Value.Constant) time).value();
-                        try {
-                            Thread.sleep(millis);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
                 }
                 yield null;
             }

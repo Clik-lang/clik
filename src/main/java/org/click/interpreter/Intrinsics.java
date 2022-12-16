@@ -15,6 +15,7 @@ import static java.util.Map.entry;
 public final class Intrinsics {
     private static final Map<String, BiFunction<Executor, List<Value>, Value>> FUNCTIONS = Map.ofEntries(
             entry("print", Intrinsics::print),
+            entry("sleep", Intrinsics::sleep),
             entry("open_server", Intrinsics::openServer),
             entry("accept_client", Intrinsics::acceptClient),
             entry("recv", Intrinsics::recv),
@@ -35,6 +36,23 @@ public final class Intrinsics {
             builder.append(serialized);
         }
         System.out.println(builder);
+        return null;
+    }
+
+    public static Value sleep(Executor executor, List<Value> evaluated) {
+        if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
+        final Value value = evaluated.get(0);
+        if (!(value instanceof Value.Constant constant)) {
+            throw new RuntimeException("Expected constant, got " + value);
+        }
+        if (!(constant.value() instanceof Integer millis)) {
+            throw new RuntimeException("Expected integer, got " + constant.type());
+        }
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return null;
     }
 
