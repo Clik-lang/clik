@@ -61,7 +61,7 @@ public sealed interface Expression {
     record StructValue(String name, Parameter.Passed fields) implements Expression {
     }
 
-    record ArrayValue(Type type, Parameter.Passed parameters) implements Expression {
+    record ArrayValue(Type.Array type, Parameter.Passed parameters) implements Expression {
     }
 
     record MapValue(Type keyType, Type valueType,

@@ -121,9 +121,9 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             } else {
                 // Ref loop
                 final Type arrayType = array.type();
-                if (!(arrayType instanceof Type.Identifier identifier))
+                if (!(arrayType instanceof Type.Array typeArray))
                     throw new RuntimeException("Expected array of structures, got: " + arrayType);
-                final Value tracked = walker.find(identifier.name());
+                final Value tracked = walker.find(typeArray.type().name());
                 assert declarations.stream().allMatch(Statement.Loop.Declaration::ref) : "Invalid loop declaration: " + declarations;
                 List<String> refs = declarations.stream().map(Statement.Loop.Declaration::name).toList();
                 for (Statement.Loop.Declaration declaration : declarations) {

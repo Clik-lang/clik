@@ -17,6 +17,8 @@ public interface Type {
     Type UINT = new Primitive("uint");
     Type STRING = new Primitive("string");
 
+    String name();
+
     boolean primitive();
 
     record Identifier(String name) implements Type {
@@ -27,6 +29,11 @@ public interface Type {
     }
 
     record Array(Type type) implements Type {
+        @Override
+        public String name() {
+            return "[]" + type.name();
+        }
+
         @Override
         public boolean primitive() {
             return false;

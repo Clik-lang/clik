@@ -166,6 +166,8 @@ public final class Evaluator {
                 if (explicitType instanceof Type.Identifier identifier) {
                     // Struct
                     yield evaluate(new Expression.StructValue(identifier.name(), initializationBlock.parameters()), null);
+                } else if (explicitType instanceof Type.Array array) {
+                    yield evaluate(new Expression.StructValue(array.type().name(), initializationBlock.parameters()), null);
                 }
                 throw new RuntimeException("Expected struct, got: " + explicitType);
             }

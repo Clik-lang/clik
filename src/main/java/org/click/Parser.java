@@ -235,9 +235,7 @@ public final class Parser {
             return new Expression.VariableAwait(identifier.input());
         } else if (check(LEFT_BRACKET)) {
             // Array
-            consume(LEFT_BRACKET, "Expected '[' after array.");
-            consume(RIGHT_BRACKET, "Expected ']' after array.");
-            final Type arrayType = nextType();
+            final Type.Array arrayType = (Type.Array) nextType();
             final Parameter.Passed passed = nextPassedParameters();
             return new Expression.ArrayValue(arrayType, passed);
         } else if (check(MAP)) {
