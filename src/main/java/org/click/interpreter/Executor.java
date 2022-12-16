@@ -17,6 +17,7 @@ public final class Executor {
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
     private final ExecutorSelect interpreterSelect;
+    private final ExecutorSpawn interpreterSpawn;
 
     private CurrentFunction currentFunction = null;
 
@@ -34,6 +35,11 @@ public final class Executor {
 
         this.interpreterLoop = new ExecutorLoop(this, walker);
         this.interpreterSelect = new ExecutorSelect(this, walker);
+        this.interpreterSpawn = new ExecutorSpawn(this, walker);
+    }
+
+    public VM.Context context() {
+        return context;
     }
 
     public ScopeWalker<Value> walker() {
@@ -200,15 +206,7 @@ public final class Executor {
                 yield null;
             }
             case Statement.Spawn spawn -> {
-                final List<Statement> statements = spawn.statements();
-                final Executor executor = fork();
-                this.context.phaser().register();
-                Thread.startVirtualThread(() -> {
-                    for (Statement stmt : statements) {
-                        executor.interpret(stmt);
-                    }
-                    this.context.phaser().arriveAndDeregister();
-                });
+                this.interpreterSpawn.interpret(spawn);
                 yield null;
             }
             case Statement.Defer defer -> {
