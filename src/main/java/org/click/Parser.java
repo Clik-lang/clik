@@ -148,7 +148,7 @@ public final class Parser {
 
     private Expression nextPrimary() {
         // Range
-        if (check(LITERAL) && checkNext(RANGE)) {
+        if (check(INTEGER_LITERAL) && checkNext(RANGE)) {
             final Token.Literal startLiteral = advance().literal();
             final Expression start = new Expression.IntegerLiteral(startLiteral.type(), (Long) startLiteral.value());
             consume(RANGE, "Expected '..' after start of range.");
@@ -180,17 +180,18 @@ public final class Parser {
             return nextEnum();
         } else if (check(UNION)) {
             return nextUnion();
-        } else if (match(LITERAL)) {
+        } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
-            final Type type = literal.literal().type();
             final Object value = literal.literal().value();
-            if (type == Type.STRING) {
-                return new Expression.StringLiteral((String) value);
-            } else if (type == Type.F32 || type == Type.F64) {
-                return new Expression.FloatLiteral(type, (Double) value);
-            } else {
-                return new Expression.IntegerLiteral(type, (Long) value);
-            }
+            return new Expression.StringLiteral((String) value);
+        } else if (match(INTEGER_LITERAL)) {
+            final var literal = previous().literal();
+            final Object value = literal.value();
+            return new Expression.IntegerLiteral(literal.type(), (Long) value);
+        } else if (match(FLOAT_LITERAL)) {
+            final var literal = previous().literal();
+            final Object value = literal.value();
+            return new Expression.FloatLiteral(literal.type(), (Double) value);
         } else if (match(TRUE)) {
             return new Expression.BooleanLiteral(true);
         } else if (match(FALSE)) {
@@ -491,7 +492,7 @@ public final class Parser {
         final Token directive = consume(IDENTIFIER, "Expect directive name.");
         final String name = directive.input();
         if (name.equals("load")) {
-            final Token literal = consume(LITERAL, "Expect string literal.");
+            final Token literal = consume(STRING_LITERAL, "Expect string literal.");
             final String path = (String) literal.literal().value();
             return new Directive.Statement.Load(path);
         } else if (name.equals("intrinsic")) {

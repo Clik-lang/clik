@@ -108,11 +108,11 @@ public final class Scanner {
                 throw new RuntimeException("Unexpected character: " + c);
             }
         } else if (c == '\"') {
-            type = Token.Type.LITERAL;
+            type = Token.Type.STRING_LITERAL;
             literal = nextString();
         } else if (Character.isDigit(c)) {
-            type = Token.Type.LITERAL;
             literal = nextNumber();
+            type = literal.value() instanceof Long ? Token.Type.INTEGER_LITERAL : Token.Type.FLOAT_LITERAL;
         } else if (Character.isLetter(c)) {
             final String value = nextIdentifier();
             type = KEYWORDS.getOrDefault(value, Token.Type.IDENTIFIER);
