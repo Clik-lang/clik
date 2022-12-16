@@ -65,22 +65,22 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final Statement.Loop loop = context.loop();
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
-        final int start = (int) ((Value.Constant) range.start()).value();
-        final int end = (int) ((Value.Constant) range.end()).value();
-        final int step = (int) ((Value.Constant) range.step()).value();
+        final long start = ((Value.IntegerLiteral) range.start()).value();
+        final long end = ((Value.IntegerLiteral) range.end()).value();
+        final long step = ((Value.IntegerLiteral) range.step()).value();
         walker.enterBlock(executor);
         if (!declarations.isEmpty()) {
             assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
             // Index declared
             final String variableName = declarations.get(0).name();
-            walker.register(variableName, new Value.Constant(Type.INT, start));
-            for (int i = start; i < end; i += step) {
-                walker.update(variableName, new Value.Constant(Type.INT, i));
+            walker.register(variableName, new Value.IntegerLiteral(Type.INT, start));
+            for (long i = start; i < end; i += step) {
+                walker.update(variableName, new Value.IntegerLiteral(Type.INT, i));
                 if (!iterate(context)) break;
             }
         } else {
             // No declaration
-            for (int i = start; i < end; i += step) {
+            for (long i = start; i < end; i += step) {
                 if (!iterate(context)) break;
             }
         }
@@ -112,7 +112,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (int i = 0; i < values.size(); i++) {
                     final Value value = values.get(i);
-                    walker.update(indexName, new Value.Constant(Type.INT, i));
+                    walker.update(indexName, new Value.IntegerLiteral(Type.INT, i));
                     walker.update(variableName, value);
                     if (!iterate(context)) break;
                 }
@@ -126,7 +126,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                         case Value.StructDecl structDecl -> structDecl.get(name);
                         default -> throw new RuntimeException("Unknown type: " + tracked);
                     };
-                    walker.register(name, new Value.Constant(referenceType, 0));
+                    walker.register(name, new Value.IntegerLiteral(referenceType, 0));
                 }
                 for (Value value : values) {
                     for (String refName : refs) {

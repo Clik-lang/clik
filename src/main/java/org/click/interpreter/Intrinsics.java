@@ -1,7 +1,5 @@
 package org.click.interpreter;
 
-import org.click.Type;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -42,14 +40,11 @@ public final class Intrinsics {
     public static Value sleep(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
-        if (!(value instanceof Value.Constant constant)) {
-            throw new RuntimeException("Expected constant, got " + value);
-        }
-        if (!(constant.value() instanceof Integer millis)) {
-            throw new RuntimeException("Expected integer, got " + constant.type());
+        if (!(value instanceof Value.IntegerLiteral integerLiteral)) {
+            throw new RuntimeException("Expected integer, got " + value);
         }
         try {
-            Thread.sleep(millis);
+            Thread.sleep(integerLiteral.value());
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -59,15 +54,13 @@ public final class Intrinsics {
     public static Value openServer(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
-        if (!(value instanceof Value.Constant constant)) {
-            throw new RuntimeException("Expected constant, got " + value);
-        }
-        if (!(constant.value() instanceof Integer port)) {
-            throw new RuntimeException("Expected integer, got " + constant.type());
+        if (!(value instanceof Value.IntegerLiteral integerLiteral)) {
+            throw new RuntimeException("Expected integer, got " + value);
         }
         // Open http server
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
+            final long port = integerLiteral.value();
+            ServerSocket serverSocket = new ServerSocket((int) port);
             return new Value.JavaObject(serverSocket);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -95,14 +88,14 @@ public final class Intrinsics {
             throw new RuntimeException("Expected socket, got " + value);
         }
         final Value sizeValue = evaluated.get(1);
-        if (!(sizeValue instanceof Value.Constant constant && constant.value() instanceof Integer size)) {
-            throw new RuntimeException("Expected constant, got " + sizeValue);
+        if (!(sizeValue instanceof Value.IntegerLiteral integerLiteral)) {
+            throw new RuntimeException("Expected integer, got " + sizeValue);
         }
         try {
-            final byte[] buffer = new byte[size];
+            final byte[] buffer = new byte[(int) integerLiteral.value()];
             final int length = socket.getInputStream().read(buffer);
             final String string = new String(buffer, 0, length, StandardCharsets.UTF_8);
-            return new Value.Constant(Type.STRING, string);
+            return new Value.StringLiteral(string);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -115,11 +108,11 @@ public final class Intrinsics {
             throw new RuntimeException("Expected client, got " + value);
         }
         final Value message = evaluated.get(1);
-        if (!(message instanceof Value.Constant c && c.value() instanceof String messageString)) {
+        if (!(message instanceof Value.StringLiteral stringLiteral)) {
             throw new RuntimeException("Expected string, got " + message);
         }
         try {
-            final byte[] bytes = messageString.getBytes(StandardCharsets.UTF_8);
+            final byte[] bytes = stringLiteral.value().getBytes(StandardCharsets.UTF_8);
             socket.getOutputStream().write(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);

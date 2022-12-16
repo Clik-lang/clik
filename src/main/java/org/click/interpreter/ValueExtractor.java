@@ -5,12 +5,10 @@ import org.click.Type;
 public final class ValueExtractor {
     public static Type extractType(Value expression) {
         return switch (expression) {
-            case Value.Constant constant -> {
-                final Object value = constant.value();
-                if (value instanceof String) yield Type.STRING;
-                if (value instanceof Integer) yield Type.INT;
-                throw new RuntimeException("Unknown constant type: " + value);
-            }
+            case Value.IntegerLiteral integerLiteral -> integerLiteral.type();
+            case Value.FloatLiteral floatLiteral -> floatLiteral.type();
+            case Value.BooleanLiteral ignored -> Type.BOOL;
+            case Value.StringLiteral ignored -> Type.STRING;
             case Value.Struct struct -> Type.of(struct.name());
             default -> throw new RuntimeException("Unknown type: " + expression);
         };

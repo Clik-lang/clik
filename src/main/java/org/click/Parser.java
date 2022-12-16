@@ -150,16 +150,16 @@ public final class Parser {
         // Range
         if (check(LITERAL) && checkNext(RANGE)) {
             final Token.Literal startLiteral = advance().literal();
-            final Expression start = new Expression.Constant(startLiteral.type(), startLiteral.value());
+            final Expression start = new Expression.IntegerLiteral(startLiteral.type(), (Long) startLiteral.value());
             consume(RANGE, "Expected '..' after start of range.");
             final Token.Literal endLiteral = advance().literal();
-            final Expression end = new Expression.Constant(endLiteral.type(), endLiteral.value());
+            final Expression end = new Expression.IntegerLiteral(endLiteral.type(), (Long) endLiteral.value());
             final Expression step;
             if (match(RANGE)) {
                 final Token.Literal stepLiteral = advance().literal();
-                step = new Expression.Constant(stepLiteral.type(), stepLiteral.value());
+                step = new Expression.IntegerLiteral(stepLiteral.type(), (Long) stepLiteral.value());
             } else {
-                step = new Expression.Constant(Type.INT, 1);
+                step = new Expression.IntegerLiteral(Type.INT, 1);
             }
             return new Expression.Range(start, end, step);
         }
@@ -184,11 +184,17 @@ public final class Parser {
             final Token literal = previous();
             final Type type = literal.literal().type();
             final Object value = literal.literal().value();
-            return new Expression.Constant(type, value);
+            if (type == Type.STRING) {
+                return new Expression.StringLiteral((String) value);
+            } else if (type == Type.F32 || type == Type.F64) {
+                return new Expression.FloatLiteral(type, (Double) value);
+            } else {
+                return new Expression.IntegerLiteral(type, (Long) value);
+            }
         } else if (match(TRUE)) {
-            return new Expression.Constant(Type.BOOL, true);
+            return new Expression.BooleanLiteral(true);
         } else if (match(FALSE)) {
-            return new Expression.Constant(Type.BOOL, false);
+            return new Expression.BooleanLiteral(false);
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
@@ -376,7 +382,7 @@ public final class Parser {
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
-                    value = new Expression.Constant(Type.INT, index++);
+                    value = new Expression.IntegerLiteral(Type.INT, index++);
                 }
                 entries.put(identifier.input(), value);
             } while (match(COMMA) && !check(RIGHT_BRACE));

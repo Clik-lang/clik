@@ -50,7 +50,12 @@ public final class Evaluator {
                 }
                 yield new Value.UnionDecl(entries);
             }
-            case Expression.Constant constant -> new Value.Constant(constant.type(), constant.value());
+            case Expression.IntegerLiteral integerLiteral ->
+                    new Value.IntegerLiteral(integerLiteral.type(), integerLiteral.value());
+            case Expression.FloatLiteral floatLiteral ->
+                    new Value.FloatLiteral(floatLiteral.type(), floatLiteral.value());
+            case Expression.BooleanLiteral booleanLiteral -> new Value.BooleanLiteral(booleanLiteral.value());
+            case Expression.StringLiteral stringLiteral -> new Value.StringLiteral(stringLiteral.value());
             case Expression.Variable variable -> {
                 final String name = variable.name();
                 final Value value = walker.find(name);
@@ -97,9 +102,10 @@ public final class Evaluator {
                 yield switch (array) {
                     case Value.Array arrayValue -> {
                         final Value index = evaluate(arrayAccess.index(), null);
-                        if (!(index instanceof Value.Constant constant) || !(constant.value() instanceof Integer integer)) {
+                        if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
                             throw new RuntimeException("Expected constant, got: " + index);
                         }
+                        final int integer = (int) integerLiteral.value();
                         final List<Value> content = arrayValue.values();
                         if (integer < 0 || integer >= content.size())
                             throw new RuntimeException("Index out of bounds: " + integer + " in " + content);

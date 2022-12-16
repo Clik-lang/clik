@@ -5,58 +5,56 @@ import org.click.Type;
 
 public final class ValueOperator {
     public static Value operate(Token operator, Value left, Value right) {
-        if (left instanceof Value.Constant leftConstant && right instanceof Value.Constant rightConstant) {
-            return operateConstant(operator, leftConstant, rightConstant);
+        if (left instanceof Value.IntegerLiteral leftLiteral && right instanceof Value.IntegerLiteral rightLiteral) {
+            assert leftLiteral.type().equals(rightLiteral.type()) : "leftLiteral.type() = " + leftLiteral.type() + ", rightLiteral.type() = " + rightLiteral.type();
+
+            return operateInteger(operator, leftLiteral.type(), leftLiteral.value(), rightLiteral.value());
+        } else if (left instanceof Value.BooleanLiteral leftLiteral && right instanceof Value.BooleanLiteral rightLiteral) {
+            return operateBoolean(operator, leftLiteral.value(), rightLiteral.value());
         } else {
             throw new RuntimeException("Unknown types: " + left + " and " + right);
         }
     }
 
-    private static Value operateConstant(Token operator, Value.Constant left, Value.Constant right) {
-        assert left.type().equals(right.type()) : "Left type: " + left.type() + ", right type: " + right.type();
-        final Type type = left.type();
-        final Object leftValue = left.value();
-        final Object rightValue = right.value();
-        if (leftValue instanceof Integer leftInt && rightValue instanceof Integer rightInt) {
-            boolean isComparison = false;
-            final int result = switch (operator.type()) {
-                case PLUS -> leftInt + rightInt;
-                case MINUS -> leftInt - rightInt;
-                case STAR -> leftInt * rightInt;
-                case SLASH -> leftInt / rightInt;
-                case EQUAL_EQUAL -> {
-                    isComparison = true;
-                    yield leftInt.equals(rightInt) ? 1 : 0;
-                }
-                case GREATER -> {
-                    isComparison = true;
-                    yield leftInt > rightInt ? 1 : 0;
-                }
-                case GREATER_EQUAL -> {
-                    isComparison = true;
-                    yield leftInt >= rightInt ? 1 : 0;
-                }
-                case LESS -> {
-                    isComparison = true;
-                    yield leftInt < rightInt ? 1 : 0;
-                }
-                case LESS_EQUAL -> {
-                    isComparison = true;
-                    yield leftInt <= rightInt ? 1 : 0;
-                }
-                default -> throw new RuntimeException("Unknown operator: " + operator);
-            };
-            return isComparison ? new Value.Constant(Type.BOOL, result == 1) : new Value.Constant(type, result);
-        } else if (leftValue instanceof Boolean leftBool && rightValue instanceof Boolean rightBool) {
-            final boolean result = switch (operator.type()) {
-                case OR -> leftBool || rightBool;
-                case AND -> leftBool && rightBool;
-                case EQUAL_EQUAL -> leftBool.equals(rightBool);
-                default -> throw new RuntimeException("Unknown operator: " + operator);
-            };
-            return new Value.Constant(Type.BOOL, result);
-        } else {
-            throw new RuntimeException("Unknown types: " + leftValue.getClass() + " and " + rightValue.getClass());
-        }
+    private static Value operateBoolean(Token operator, boolean left, boolean right) {
+        final boolean result = switch (operator.type()) {
+            case OR -> left || right;
+            case AND -> left && right;
+            case EQUAL_EQUAL -> left == right;
+            default -> throw new RuntimeException("Unknown operator: " + operator);
+        };
+        return new Value.BooleanLiteral(result);
+    }
+
+    private static Value operateInteger(Token operator, Type type, long left, long right) {
+        boolean isComparison = false;
+        final long result = switch (operator.type()) {
+            case PLUS -> left + right;
+            case MINUS -> left - right;
+            case STAR -> left * right;
+            case SLASH -> left / right;
+            case EQUAL_EQUAL -> {
+                isComparison = true;
+                yield left == right ? 1 : 0;
+            }
+            case GREATER -> {
+                isComparison = true;
+                yield left > right ? 1 : 0;
+            }
+            case GREATER_EQUAL -> {
+                isComparison = true;
+                yield left >= right ? 1 : 0;
+            }
+            case LESS -> {
+                isComparison = true;
+                yield left < right ? 1 : 0;
+            }
+            case LESS_EQUAL -> {
+                isComparison = true;
+                yield left <= right ? 1 : 0;
+            }
+            default -> throw new RuntimeException("Unknown operator: " + operator);
+        };
+        return isComparison ? new Value.BooleanLiteral(result == 1) : new Value.IntegerLiteral(type, result);
     }
 }

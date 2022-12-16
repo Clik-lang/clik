@@ -139,7 +139,7 @@ public final class Scanner {
         while (Character.isDigit(peek())) advance();
         if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer
-            final int value = Integer.parseInt(input.substring(start, index));
+            final long value = Long.parseLong(input.substring(start, index));
             final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
             return new Token.Literal(type, value);
         }

@@ -7,7 +7,10 @@ import java.util.List;
 public final class ValueSerializer {
     public static String serialize(ScopeWalker<Value> walker, Value expression) {
         return switch (expression) {
-            case Value.Constant constant -> constant.value().toString();
+            case Value.IntegerLiteral integerLiteral -> String.valueOf(integerLiteral.value());
+            case Value.FloatLiteral floatLiteral -> String.valueOf(floatLiteral.value());
+            case Value.BooleanLiteral booleanLiteral -> String.valueOf(booleanLiteral.value());
+            case Value.StringLiteral stringLiteral -> stringLiteral.value();
             case Value.Struct struct -> {
                 if (!(walker.find(struct.name()) instanceof Value.StructDecl structDeclaration)) {
                     throw new RuntimeException("Struct not found: " + struct.name());

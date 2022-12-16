@@ -10,12 +10,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class IntegrationTest {
-    private static final Value TRUE = new Value.Constant(Type.BOOL, true);
-    private static final Value FALSE = new Value.Constant(Type.BOOL, false);
+    private static final Value TRUE = new Value.BooleanLiteral(true);
+    private static final Value FALSE = new Value.BooleanLiteral(false);
 
-    private static final Value ZERO = new Value.Constant(Type.INT, 0);
-    private static final Value ONE = new Value.Constant(Type.INT, 1);
-    private static final Value TWO = new Value.Constant(Type.INT, 2);
+    private static final Value ZERO = new Value.IntegerLiteral(Type.INT, 0);
+    private static final Value ONE = new Value.IntegerLiteral(Type.INT, 1);
+    private static final Value TWO = new Value.IntegerLiteral(Type.INT, 2);
 
     @Test
     public void functionBlock() {
@@ -92,24 +92,24 @@ public final class IntegrationTest {
                 """
                         main :: () int -> 1;
                         """);
-        assertProgram(new Value.Constant(Type.I32, 1),
+        assertProgram(new Value.IntegerLiteral(Type.I32, 1),
                 """
                         main :: () i32 -> 1i32;
                         """);
-        assertProgram(new Value.Constant(Type.U8, 1),
+        assertProgram(new Value.IntegerLiteral(Type.U8, 1),
                 """
                         main :: () u8 -> 1u8;
                         """);
 
-        assertProgram(new Value.Constant(Type.F64, 5.5),
+        assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
                 """
                         main :: () f64 -> 5.5;
                         """);
-        assertProgram(new Value.Constant(Type.F64, 5.5),
+        assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
                 """
                         main :: () f64 -> 5.5f64;
                         """);
-        assertProgram(new Value.Constant(Type.F32, 5.5),
+        assertProgram(new Value.FloatLiteral(Type.F32, 5.5),
                 """
                         main :: () f32 -> 5.5f32;
                         """);
@@ -135,11 +135,11 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(Type.INT, 14),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 14),
                 """
                         main :: () int -> 2 + 3 * 4;
                         """);
-        assertProgram(new Value.Constant(Type.INT, 20),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 20),
                 """
                         main :: () int -> (2 + 3) * 4;
                         """);
@@ -223,14 +223,14 @@ public final class IntegrationTest {
 
     @Test
     public void map() {
-        assertProgram(new Value.Constant(Type.INT, 5),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 5),
                 """
                         main :: () int {
                           values :: map[string]int {"test": 5};
                           return values["test"];
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 5),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 5),
                 """
                         Point :: struct {x: int, y: int}
                         main :: () int {
@@ -326,7 +326,7 @@ public final class IntegrationTest {
                         Point :: struct {x: int, y: int}
                         """);
 
-        assertProgram(new Value.Constant(Type.STRING, "test"),
+        assertProgram(new Value.StringLiteral("test"),
                 """
                         Player :: struct {name: string, point: Point}
                         Point :: struct {x: int, y: int}
@@ -446,7 +446,7 @@ public final class IntegrationTest {
 
     @Test
     public void loop() {
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 0;
@@ -454,7 +454,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 0;
@@ -462,7 +462,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 45),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 45),
                 """
                         main :: () int {
                           value := 0;
@@ -482,7 +482,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 0;
@@ -494,7 +494,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
@@ -506,7 +506,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(Type.INT, 9),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -516,7 +516,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 12),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 12),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -527,7 +527,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(Type.INT, 9),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -538,7 +538,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(Type.INT, 9),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -548,7 +548,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 21),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 21),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -559,7 +559,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(Type.INT, 9),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -573,7 +573,7 @@ public final class IntegrationTest {
 
     @Test
     public void fork() {
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
@@ -583,7 +583,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
@@ -597,7 +597,7 @@ public final class IntegrationTest {
 
     @Test
     public void select() {
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 5;
@@ -608,7 +608,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.Constant(Type.INT, 10),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
@@ -620,7 +620,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.Constant(Type.INT, 110),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 110),
                 """
                         main :: () int {
                           value :~ 0;
@@ -674,7 +674,7 @@ public final class IntegrationTest {
                         }
                         """);
         assertProgram(new Value.Struct("Point", Map.of(
-                        "x", new Value.Constant(Type.INT, 3), "y", new Value.Constant(Type.INT, 4))),
+                        "x", new Value.IntegerLiteral(Type.INT, 3), "y", new Value.IntegerLiteral(Type.INT, 4))),
                 """
                         Point :: struct {x: int, y: int}
                         main :: () Point {
@@ -687,7 +687,7 @@ public final class IntegrationTest {
 
     @Test
     public void multiReturn() {
-        assertProgram(new Value.Constant(Type.INT, 3),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 3),
                 """
                         Point :: struct {x: int, y: int}
                         main :: () int {

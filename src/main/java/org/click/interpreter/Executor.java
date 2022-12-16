@@ -159,8 +159,8 @@ public final class Executor {
             case Statement.Branch branch -> {
                 final Value condition = interpreter.evaluate(branch.condition(), null);
                 assert condition != null;
-                if (condition instanceof Value.Constant constant) {
-                    if ((boolean) constant.value()) {
+                if (condition instanceof Value.BooleanLiteral booleanLiteral) {
+                    if (booleanLiteral.value()) {
                         for (Statement thenBranch : branch.thenBranch()) {
                             final Value value = interpret(thenBranch);
                             if (value != null) yield value;

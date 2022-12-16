@@ -1,7 +1,5 @@
 package org.click.interpreter;
 
-import org.click.Type;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,16 +40,12 @@ public final class ValueMerger {
     }
 
     public static Value merge(Value initial, Value next) {
-        if (initial instanceof Value.Constant initialConstant && next instanceof Value.Constant nextConstant) {
-            final Object initialValue = initialConstant.value();
-            final Object nextValue = nextConstant.value();
-            if (initialValue instanceof Integer initialInt && nextValue instanceof Integer nextInt) {
-                return new Value.Constant(Type.INT, initialInt + nextInt);
-            } else if (initialValue instanceof Boolean initialBool && nextValue instanceof Boolean nextBool) {
-                return new Value.Constant(Type.BOOL, initialBool && nextBool);
-            } else {
-                throw new RuntimeException("Unknown types: " + initialValue.getClass() + " and " + nextValue.getClass());
-            }
+        if (initial instanceof Value.IntegerLiteral initialConstant && next instanceof Value.IntegerLiteral nextConstant) {
+            final long value = initialConstant.value() + nextConstant.value();
+            return new Value.IntegerLiteral(initialConstant.type(), value);
+        } else if (initial instanceof Value.BooleanLiteral initialConstant && next instanceof Value.BooleanLiteral nextConstant) {
+            final boolean value = initialConstant.value() && nextConstant.value();
+            return new Value.BooleanLiteral(value);
         } else {
             throw new RuntimeException("Unknown types: " + initial + " and " + next);
         }
