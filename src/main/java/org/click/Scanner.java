@@ -1,5 +1,7 @@
 package org.click;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -133,19 +135,42 @@ public final class Scanner {
     }
 
     private Token.Literal nextNumber() {
-        var start = index - 1;
+        final int start = index - 1;
         while (Character.isDigit(peek())) advance();
         if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer
             final int value = Integer.parseInt(input.substring(start, index));
-            return new Token.Literal(Type.INT, value);
+            final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
+            return new Token.Literal(type, value);
         }
         // Float
         advance();
         while (Character.isDigit(peek())) advance();
         final String text = input.substring(start, index);
         final double value = Double.parseDouble(text);
-        return new Token.Literal(Type.F64, value);
+        final Type type = nextNumberSuffix(Type.F64, 'f');
+        return new Token.Literal(type, value);
+    }
+
+    private @Nullable Type nextNumberSuffix(Type defaultType, char... allowedSuffixes) {
+        if (Character.isLetter(peek())) {
+            final char suffix = advance();
+            boolean found = false;
+            for (char allowedSuffix : allowedSuffixes) {
+                if (suffix == allowedSuffix) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) throw new RuntimeException("Unexpected number suffix: " + suffix);
+            StringBuilder builder = new StringBuilder("" + suffix);
+            while (Character.isLetterOrDigit(peek())) {
+                builder.append(advance());
+            }
+            final String name = builder.toString();
+            return Type.of(name);
+        }
+        return defaultType;
     }
 
     private Token.Literal nextString() {

@@ -87,6 +87,35 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void numberLiterals() {
+        assertProgram(ONE,
+                """
+                        main :: () int -> 1;
+                        """);
+        assertProgram(new Value.Constant(Type.I32, 1),
+                """
+                        main :: () i32 -> 1i32;
+                        """);
+        assertProgram(new Value.Constant(Type.U8, 1),
+                """
+                        main :: () u8 -> 1u8;
+                        """);
+
+        assertProgram(new Value.Constant(Type.F64, 5.5),
+                """
+                        main :: () f64 -> 5.5;
+                        """);
+        assertProgram(new Value.Constant(Type.F64, 5.5),
+                """
+                        main :: () f64 -> 5.5f64;
+                        """);
+        assertProgram(new Value.Constant(Type.F32, 5.5),
+                """
+                        main :: () f32 -> 5.5f32;
+                        """);
+    }
+
+    @Test
     public void mathInteger() {
         assertProgram(ONE,
                 """
