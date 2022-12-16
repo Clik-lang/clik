@@ -484,7 +484,11 @@ public final class Parser {
         consume(HASH, "Expect '#'.");
         final Token directive = consume(IDENTIFIER, "Expect directive name.");
         final String name = directive.input();
-        if (name.equals("sleep")) {
+        if (name.equals("load")) {
+            final Token literal = consume(LITERAL, "Expect string literal.");
+            final String path = (String) literal.literal().value();
+            return new Directive.Statement.Load(path);
+        } else if (name.equals("sleep")) {
             consume(LEFT_PAREN, "Expect '('.");
             final Expression expression = nextExpression();
             consume(RIGHT_PAREN, "Expect ')'.");

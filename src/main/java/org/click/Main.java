@@ -9,7 +9,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        final String input = Files.readString(Path.of("samples", "mc_proxy.cl"));
+        final String input = Files.readString(Path.of("samples", "hello.cl"));
         var tokens = new Scanner(input).scanTokens();
         System.out.println("Tokens:");
         for (var token : tokens) System.out.println(token);
@@ -18,7 +18,7 @@ public class Main {
         System.out.println("Statements:");
         for (var statement : statements) System.out.println(statement);
 
-        var interpreter = new VM(statements);
+        var interpreter = new VM(Path.of("samples"), statements);
         interpreter.interpret("main", List.of());
         interpreter.stop();
     }

@@ -1,4 +1,5 @@
+#load "api.cl";
+
  main :: () {
-  value :: 5;
-  defer print(value);
+  print(CONSTANT);
 }

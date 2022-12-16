@@ -2,6 +2,9 @@ package org.click.interpreter;
 
 import org.click.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +42,7 @@ public final class Executor {
 
     public Executor forkLoop(boolean insideLoop, Map<String, Value> sharedMutations) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
-        final VM.Context context = new VM.Context(copy, this.context.phaser());
+        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.phaser());
         final Executor executor = new Executor(context, insideLoop, sharedMutations);
         copy.enterBlock(executor);
         for (Map.Entry<String, Value> entry : this.walker.currentScope().tracked.entrySet()) {
@@ -208,6 +211,19 @@ public final class Executor {
             }
             case Statement.Directive directive -> {
                 switch (directive.directive()) {
+                    case Directive.Statement.Load load -> {
+                        final String filePath = load.path();
+                        final String source;
+                        try {
+                            final Path path = this.context.directory().resolve(filePath);
+                            source = Files.readString(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        final List<Token> tokens = new Scanner(source).scanTokens();
+                        final List<Statement> statements = new Parser(tokens).parse();
+                        for (Statement statement1 : statements) interpret(statement1);
+                    }
                     case Directive.Statement.Sleep sleep -> {
                         final Value time = interpreter.evaluate(sleep.expression(), null);
                         assert time != null;
