@@ -7,7 +7,7 @@ main :: () {
   id := 0;
   for {
     client :: accept_client(server);
-    id := id + 1;
+    id = id + 1;
     print("Client connected ");
     spawn {
       print("Handling client ");
@@ -36,6 +36,7 @@ main :: () {
         stop = true;
       }
       stop = $stop; // Wait for the fibers to stop
+      print("Client disconnected ");
       close(client);
     }
   }
