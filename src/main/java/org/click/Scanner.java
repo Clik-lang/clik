@@ -38,12 +38,17 @@ public final class Scanner {
         while (Character.isWhitespace(peek())) advance();
     }
 
+    void skipComment() {
+        if (peek() == '/' && peekNext() == '/') {
+            while (peek() != '\n' && !isAtEnd()) advance();
+        }
+    }
+
     Token nextToken() {
-        if (index >= input.length())
-            return null;
+        if (isAtEnd()) return null;
         skipWhitespace();
-        if (index >= input.length())
-            return null;
+        if (isAtEnd()) return null;
+        skipComment();
         final int startIndex = index;
 
         Token.Type type;
@@ -180,8 +185,12 @@ public final class Scanner {
     }
 
     char peek() {
-        if (index >= input.length()) return '\0';
+        if (isAtEnd()) return '\0';
         return input.charAt(index);
+    }
+
+    private boolean isAtEnd() {
+        return index >= input.length();
     }
 
     public List<Token> scanTokens() {

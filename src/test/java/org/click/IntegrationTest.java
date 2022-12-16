@@ -45,6 +45,17 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void comment() {
+        assertProgram(ZERO,
+                """
+                        main :: () i32 {
+                            // This is a comment
+                            return 0;
+                        }
+                        """);
+    }
+
+    @Test
     public void param() {
         assertProgram(ONE,
                 """
@@ -563,28 +574,6 @@ public final class IntegrationTest {
                           value := 5;
                           select {
                             test :: 10; -> value = test;
-                          }
-                          return value;
-                        }
-                        """);
-        assertProgram(new Value.Constant(Type.I32, 10),
-                """
-                        main :: () i32 {
-                          value := 5;
-                          select {
-                            value = 10; {}
-                            #sleep(3000); {}
-                          }
-                          return value;
-                        }
-                        """);
-        assertProgram(new Value.Constant(Type.I32, 15),
-                """
-                        main :: () i32 {
-                          value := 5;
-                          select {
-                            value = 10; {value = 15;}
-                            #sleep(3000); {}
                           }
                           return value;
                         }
