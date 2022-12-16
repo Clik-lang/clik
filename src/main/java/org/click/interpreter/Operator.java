@@ -37,7 +37,7 @@ public final class Operator {
                     }
                     default -> throw new RuntimeException("Unknown operator: " + operator);
                 };
-                return isComparison ? new Value.Constant(Type.BOOL, result == 1) : new Value.Constant(Type.I32, result);
+                return isComparison ? new Value.Constant(Type.BOOL, result == 1) : new Value.Constant(Type.INT, result);
             } else if (leftValue instanceof Boolean leftBool && rightValue instanceof Boolean rightBool) {
                 final boolean result = switch (operator.type()) {
                     case OR -> leftBool || rightBool;

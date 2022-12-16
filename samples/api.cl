@@ -4,6 +4,6 @@ print :: (msg: string) {
   #intrinsic;
 }
 
-sleep :: (millis: i32) {
+sleep :: (millis: int) {
   #intrinsic;
 }

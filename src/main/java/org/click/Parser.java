@@ -159,7 +159,7 @@ public final class Parser {
                 final Token.Literal stepLiteral = advance().literal();
                 step = new Expression.Constant(stepLiteral.type(), stepLiteral.value());
             } else {
-                step = new Expression.Constant(Type.I32, 1);
+                step = new Expression.Constant(Type.INT, 1);
             }
             return new Expression.Range(start, end, step);
         }
@@ -376,7 +376,7 @@ public final class Parser {
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
-                    value = new Expression.Constant(Type.I32, index++);
+                    value = new Expression.Constant(Type.INT, index++);
                 }
                 entries.put(identifier.input(), value);
             } while (match(COMMA) && !check(RIGHT_BRACE));

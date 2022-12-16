@@ -13,6 +13,8 @@ public record Type(String name, boolean primitive) {
     public static final Type U64 = new Type("u64", true);
     public static final Type F32 = new Type("f32", true);
     public static final Type F64 = new Type("f64", true);
+    public static final Type INT = new Type("int", true);
+    public static final Type UINT = new Type("uint", true);
     public static final Type STRING = new Type("string", true);
 
     public static Type of(String name) {
@@ -29,6 +31,8 @@ public record Type(String name, boolean primitive) {
             case "u64" -> U64;
             case "f32" -> F32;
             case "f64" -> F64;
+            case "int" -> INT;
+            case "uint" -> UINT;
             case "string" -> STRING;
             default -> new Type(name, false);
         };

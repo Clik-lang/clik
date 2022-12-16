@@ -73,9 +73,9 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
             // Index declared
             final String variableName = declarations.get(0).name();
-            walker.register(variableName, new Value.Constant(Type.I32, start));
+            walker.register(variableName, new Value.Constant(Type.INT, start));
             for (int i = start; i < end; i += step) {
-                walker.update(variableName, new Value.Constant(Type.I32, i));
+                walker.update(variableName, new Value.Constant(Type.INT, i));
                 if (!iterate(context)) break;
             }
         } else {
@@ -112,7 +112,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (int i = 0; i < values.size(); i++) {
                     final Value value = values.get(i);
-                    walker.update(indexName, new Value.Constant(Type.I32, i));
+                    walker.update(indexName, new Value.Constant(Type.INT, i));
                     walker.update(variableName, value);
                     if (!iterate(context)) break;
                 }

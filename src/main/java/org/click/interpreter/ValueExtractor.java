@@ -8,7 +8,7 @@ public final class ValueExtractor {
             case Value.Constant constant -> {
                 final Object value = constant.value();
                 if (value instanceof String) yield Type.STRING;
-                if (value instanceof Integer) yield Type.I32;
+                if (value instanceof Integer) yield Type.INT;
                 throw new RuntimeException("Unknown constant type: " + value);
             }
             case Value.Struct struct -> Type.of(struct.name());

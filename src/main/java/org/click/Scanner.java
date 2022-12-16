@@ -138,7 +138,7 @@ public final class Scanner {
         if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer
             final int value = Integer.parseInt(input.substring(start, index));
-            return new Token.Literal(Type.I32, value);
+            return new Token.Literal(Type.INT, value);
         }
         // Float
         advance();

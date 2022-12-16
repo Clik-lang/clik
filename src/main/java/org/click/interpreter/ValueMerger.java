@@ -46,7 +46,7 @@ public final class ValueMerger {
             final Object initialValue = initialConstant.value();
             final Object nextValue = nextConstant.value();
             if (initialValue instanceof Integer initialInt && nextValue instanceof Integer nextInt) {
-                return new Value.Constant(Type.I32, initialInt + nextInt);
+                return new Value.Constant(Type.INT, initialInt + nextInt);
             } else if (initialValue instanceof Boolean initialBool && nextValue instanceof Boolean nextBool) {
                 return new Value.Constant(Type.BOOL, initialBool && nextBool);
             } else {
