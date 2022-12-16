@@ -18,7 +18,11 @@ public final class Executor {
     private final ExecutorLoop interpreterLoop;
     private final ExecutorSelect interpreterSelect;
 
-    private Value.FunctionDecl currentFunction = null;
+    private CurrentFunction currentFunction = null;
+
+    record CurrentFunction(String name, List<Parameter> parameters, Type returnType,
+                           List<Value> evaluatedParameters) {
+    }
 
     public Executor(VM.Context context, boolean insideLoop, Map<String, Value> sharedMutations) {
         this.context = context;
@@ -70,7 +74,8 @@ public final class Executor {
         }
 
         var previousFunction = currentFunction;
-        currentFunction = functionDeclaration;
+        currentFunction = new CurrentFunction(function, functionDeclaration.parameters(),
+                functionDeclaration.returnType(), parameters);
         Value result = null;
         for (Statement statement : functionDeclaration.body()) {
             result = interpret(statement);
@@ -240,6 +245,11 @@ public final class Executor {
                         final List<Token> tokens = new Scanner(source).scanTokens();
                         final List<Statement> statements = new Parser(tokens).parse();
                         interpretGlobal(statements);
+                    }
+                    case Directive.Statement.Intrinsic ignored -> {
+                        final CurrentFunction currentFunction = this.currentFunction;
+                        assert currentFunction != null : "Intrinsic outside of function";
+                        yield Intrinsics.evaluate(this, currentFunction.name(), currentFunction.evaluatedParameters());
                     }
                     case Directive.Statement.Sleep sleep -> {
                         final Value time = interpreter.evaluate(sleep.expression(), null);

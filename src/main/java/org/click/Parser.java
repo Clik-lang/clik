@@ -488,6 +488,8 @@ public final class Parser {
             final Token literal = consume(LITERAL, "Expect string literal.");
             final String path = (String) literal.literal().value();
             return new Directive.Statement.Load(path);
+        } else if (name.equals("intrinsic")) {
+            return new Directive.Statement.Intrinsic();
         } else if (name.equals("sleep")) {
             consume(LEFT_PAREN, "Expect '('.");
             final Expression expression = nextExpression();

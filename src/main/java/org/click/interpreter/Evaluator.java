@@ -4,6 +4,7 @@ import org.click.Expression;
 import org.click.Parameter;
 import org.click.Type;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,14 +14,12 @@ public final class Evaluator {
     private final ScopeWalker<Value> walker;
 
     private final Operator operator;
-    private final EvaluatorFunction evaluatorFunction;
 
     public Evaluator(Executor executor, ScopeWalker<Value> walker) {
         this.executor = executor;
         this.walker = walker;
 
         this.operator = new Operator();
-        this.evaluatorFunction = new EvaluatorFunction(executor);
     }
 
     public Value evaluate(Expression argument, Type explicitType) {
@@ -119,7 +118,21 @@ public final class Evaluator {
                     default -> throw new RuntimeException("Expected array/map, got: " + array);
                 };
             }
-            case Expression.Call call -> evaluatorFunction.evaluate(call);
+            case Expression.Call call -> {
+                final String name = call.name();
+                final Value.FunctionDecl functionDecl = (Value.FunctionDecl) executor.walker().find(name);
+                assert functionDecl != null : "Function " + name + " not found";
+                final List<Parameter> params = functionDecl.parameters();
+                final List<Expression> expressions = call.arguments().expressions();
+                List<Value> evaluated = new ArrayList<>();
+                for (int i = 0; i < call.arguments().expressions().size(); i++) {
+                    final Parameter param = params.get(i);
+                    final Expression expression = expressions.get(i);
+                    final Value value = executor.evaluate(expression, param.type());
+                    evaluated.add(value);
+                }
+                yield executor.interpret(name, evaluated);
+            }
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());
                 final List<Parameter> parameters = struct.parameters();

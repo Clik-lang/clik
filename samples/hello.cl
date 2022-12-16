@@ -1,5 +1,5 @@
 #load "api.cl";
 
  main :: () {
-  print(CONSTANT);
+  print("test");
 }

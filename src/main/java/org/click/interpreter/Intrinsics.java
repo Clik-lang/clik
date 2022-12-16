@@ -1,37 +1,34 @@
 package org.click.interpreter;
 
-import org.click.Expression;
-import org.click.Parameter;
 import org.click.Type;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import static java.util.Map.entry;
 
-public final class EvaluatorFunction {
-    private final Executor executor;
-
-    private final Map<String, Function<List<Value>, Value>> functions = Map.ofEntries(
-            entry("print", this::print),
-            entry("open_server", this::openServer),
-            entry("accept_client", this::acceptClient),
-            entry("recv", this::recv),
-            entry("send", this::send),
-            entry("close", this::close)
+public final class Intrinsics {
+    private static final Map<String, BiFunction<Executor, List<Value>, Value>> FUNCTIONS = Map.ofEntries(
+            entry("print", Intrinsics::print),
+            entry("open_server", Intrinsics::openServer),
+            entry("accept_client", Intrinsics::acceptClient),
+            entry("recv", Intrinsics::recv),
+            entry("send", Intrinsics::send),
+            entry("close", Intrinsics::close)
     );
 
-    public EvaluatorFunction(Executor executor) {
-        this.executor = executor;
+    public static Value evaluate(Executor executor, String name, List<Value> evaluated) {
+        final BiFunction<Executor, List<Value>, Value> builtin = FUNCTIONS.get(name);
+        if (builtin == null) throw new RuntimeException("Function not found: " + name);
+        return builtin.apply(executor, evaluated);
     }
 
-    public Value print(List<Value> evaluated) {
+    public static Value print(Executor executor, List<Value> evaluated) {
         StringBuilder builder = new StringBuilder();
         for (Value value : evaluated) {
             final String serialized = ValueSerializer.serialize(executor.walker(), value);
@@ -41,7 +38,7 @@ public final class EvaluatorFunction {
         return null;
     }
 
-    public Value openServer(List<Value> evaluated) {
+    public static Value openServer(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.Constant constant)) {
@@ -59,7 +56,7 @@ public final class EvaluatorFunction {
         }
     }
 
-    public Value acceptClient(List<Value> evaluated) {
+    public static Value acceptClient(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof ServerSocket serverSocket)) {
@@ -73,7 +70,7 @@ public final class EvaluatorFunction {
         }
     }
 
-    public Value recv(List<Value> evaluated) {
+    public static Value recv(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 2) throw new RuntimeException("Expected 2 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
@@ -93,7 +90,7 @@ public final class EvaluatorFunction {
         }
     }
 
-    public Value send(List<Value> evaluated) {
+    public static Value send(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 2) throw new RuntimeException("Expected 2 arguments, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
@@ -112,7 +109,7 @@ public final class EvaluatorFunction {
         return null;
     }
 
-    public Value close(List<Value> evaluated) {
+    public static Value close(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
         if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
@@ -125,29 +122,5 @@ public final class EvaluatorFunction {
             throw new RuntimeException(e);
         }
         return null;
-    }
-
-    public Value evaluate(Expression.Call call) {
-        final String name = call.name();
-        final Function<List<Value>, Value> builtin = functions.get(name);
-        if (builtin != null) {
-            // TODO: explicit type for builtin functions
-            final List<Value> evaluated = call.arguments().expressions().stream()
-                    .map(expression -> executor.evaluate(expression, null)).toList();
-            return builtin.apply(evaluated);
-        } else {
-            final Value.FunctionDecl functionDecl = (Value.FunctionDecl) executor.walker().find(name);
-            assert functionDecl != null : "Function " + name + " not found";
-            final List<Parameter> params = functionDecl.parameters();
-            final List<Expression> expressions = call.arguments().expressions();
-            List<Value> evaluated = new ArrayList<>();
-            for (int i = 0; i < call.arguments().expressions().size(); i++) {
-                final Parameter param = params.get(i);
-                final Expression expression = expressions.get(i);
-                final Value value = executor.evaluate(expression, param.type());
-                evaluated.add(value);
-            }
-            return executor.interpret(name, evaluated);
-        }
     }
 }
