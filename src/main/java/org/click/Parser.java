@@ -244,12 +244,7 @@ public final class Parser {
             }
             return new Expression.ArrayValue(type, expressions);
         } else if (check(MAP)) {
-            // Map
-            consume(MAP, "Expected 'map' after '['.");
-            consume(LEFT_BRACKET, "Expected '[' after map.");
-            final Type keyType = nextType();
-            consume(RIGHT_BRACKET, "Expected ']' after key type.");
-            final Type valueType = nextType();
+            final Type.Map type = (Type.Map) nextType();
             Map<Expression, Expression> entries = new HashMap<>();
             if (check(LEFT_BRACE)) {
                 consume(LEFT_BRACE, "Expected '{' after map.");
@@ -264,7 +259,6 @@ public final class Parser {
                 }
                 consume(RIGHT_BRACE, "Expected '}' after map.");
             }
-            final Type.Map type = new Type.Map(keyType, valueType);
             return new Expression.MapValue(type, entries);
         } else if (check(LEFT_BRACE)) {
             // Inline block
@@ -313,7 +307,7 @@ public final class Parser {
     }
 
     Type nextType() {
-        if (!(check(IDENTIFIER) || check(LEFT_BRACKET))) return null;
+        if (!(check(IDENTIFIER) || check(LEFT_BRACKET) || check(MAP))) return null;
         if (match(LEFT_BRACKET)) {
             // Array
             final Token lengthLiteral = consume(INTEGER_LITERAL, "Expected integer literal for array length.");
@@ -321,6 +315,14 @@ public final class Parser {
             consume(RIGHT_BRACKET, "Expected ']' after array.");
             final Type arrayType = nextType();
             return new Type.Array(arrayType, length);
+        }
+        if (match(MAP)) {
+            // Map
+            consume(LEFT_BRACKET, "Expected '[' after map.");
+            final Type keyType = nextType();
+            consume(RIGHT_BRACKET, "Expected ']' after key type.");
+            final Type valueType = nextType();
+            return new Type.Map(keyType, valueType);
         }
         final Token identifier = consume(IDENTIFIER, "Expected type name.");
         return Type.of(identifier.input());
