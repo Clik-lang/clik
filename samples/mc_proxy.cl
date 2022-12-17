@@ -1,6 +1,6 @@
 #load "api.cl";
 
-main :: () {
+main :: fn() {
   port :: 25577;
   server :: open_server(port);
   print("Server started on port ");
@@ -13,28 +13,18 @@ main :: () {
       print("Handling client ");
       backend :: connect_server("localhost", 25565);
       stop :~ false;
-      // Handle client
-      spawn {
+      forward :: spawn(receiver: Socket, sender: Socket) {
         for {
           select {
-            {data :: recv(client); send(backend, data);} {}
+            {data :: recv(receiver); send(sender, data);} {}
             stop = $stop; {break;}
             sleep(30000); {break;}
           }
         }
         stop = true;
       }
-      // Handle backend
-      spawn {
-        for {
-          select {
-            {data :: recv(backend); send(client, data);} {}
-            stop = $stop; {break;}
-            sleep(30000); {break;}
-          }
-        }
-        stop = true;
-      }
+      forward(client, backend);
+      forward(backend, client);
       stop = $stop; // Wait for the fibers to stop
       print("Client disconnected ");
       close(client);
