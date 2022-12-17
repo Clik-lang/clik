@@ -795,6 +795,17 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         main :: fn() int {
+                          number :~ 0;
+                          something :: spawn() {
+                            number = 1;
+                          }
+                          something();
+                          return number;
+                        }
+                        """);
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
                           stop :~ false;
                           something :: spawn() {
                             stop = $stop;
