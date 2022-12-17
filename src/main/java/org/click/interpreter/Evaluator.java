@@ -2,6 +2,7 @@ package org.click.interpreter;
 
 import org.click.Expression;
 import org.click.Parameter;
+import org.click.Statement;
 import org.click.Type;
 
 import java.util.*;
@@ -25,8 +26,14 @@ public final class Evaluator {
                     // Local function
                     lambdaExecutor = this.executor.fork(this.executor.insideLoop);
                 }
-                yield new Value.FunctionDecl(functionDeclaration.parameters(), functionDeclaration.returnType(), functionDeclaration.body(),
-                        lambdaExecutor);
+                List<Statement> body = functionDeclaration.body();
+                if (functionDeclaration.async()) {
+                    // Async functions simply wrap their body in a spawn statement
+                    Statement asyncStatement = new Statement.Spawn(body);
+                    body = List.of(asyncStatement);
+                }
+                yield new Value.FunctionDecl(functionDeclaration.parameters(), functionDeclaration.returnType(),
+                        body, lambdaExecutor);
             }
             case Expression.Struct structDeclaration -> new Value.StructDecl(structDeclaration.parameters());
             case Expression.Enum enumDeclaration -> {

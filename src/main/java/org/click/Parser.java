@@ -161,7 +161,7 @@ public final class Parser {
             final Expression expression = nextExpression();
             consume(RIGHT_PAREN, "Expected ')' after expression.");
             return new Expression.Group(expression);
-        } else if (check(FN)) {
+        } else if (check(FN) || check(SPAWN)) {
             return nextFunction();
         } else if (check(STRUCT)) {
             return nextStruct();
@@ -330,7 +330,8 @@ public final class Parser {
     }
 
     Expression.Function nextFunction() {
-        consume(FN, "Expected 'fn'.");
+        final boolean async = match(SPAWN);
+        if (!async) consume(FN, "Expected 'fn' or 'spawn'.");
         consume(LEFT_PAREN, "Expect '('.");
         final List<Parameter> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
@@ -348,7 +349,7 @@ public final class Parser {
         consume(RIGHT_PAREN, "Expect ')'.");
         final Type returnType = Objects.requireNonNullElse(nextType(), Type.VOID);
         final List<Statement> body = nextBlock();
-        return new Expression.Function(parameters, returnType, body);
+        return new Expression.Function(async, parameters, returnType, body);
     }
 
     private Expression.Struct nextStruct() {

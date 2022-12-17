@@ -774,6 +774,43 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         main :: fn() int {
+                          something();
+                          return 0;
+                        }
+                        something :: spawn() {
+                        }
+                        """);
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
+                          stop :~ false;
+                          something :: spawn() {
+                            stop = true;
+                          }
+                          something();
+                          stop = $stop;
+                          return 0;
+                        }
+                        """);
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
+                          stop :~ false;
+                          something :: spawn() {
+                            stop = $stop;
+                          }
+                          something();
+                          stop = true;
+                          return 0;
+                        }
+                        """);
+    }
+
+    @Test
+    public void spawnInline() {
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
                           spawn {
                           }
                           return 0;

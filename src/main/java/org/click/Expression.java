@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 public sealed interface Expression {
-    record Function(List<Parameter> parameters, Type returnType, List<Statement> body) implements Expression {
+    record Function(boolean async, List<Parameter> parameters, Type returnType,
+                    List<Statement> body) implements Expression {
     }
 
     record Struct(List<Parameter> parameters) implements Expression {
