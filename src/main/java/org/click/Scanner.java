@@ -15,6 +15,7 @@ public final class Scanner {
     private int line;
 
     private static final Map<String, Token.Type> KEYWORDS = Map.ofEntries(
+            entry("fn", Token.Type.FN),
             entry("return", Token.Type.RETURN),
             entry("if", Token.Type.IF),
             entry("else", Token.Type.ELSE),

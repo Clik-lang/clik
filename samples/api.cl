@@ -1,10 +1,10 @@
 CONSTANT :: 5;
 
-print :: (msg: string) {
+print :: fn(msg: string) {
   #intrinsic;
 }
 
-sleep :: (millis: int) {
+sleep :: fn(millis: int) {
   #intrinsic;
 }
 
@@ -13,18 +13,18 @@ sleep :: (millis: int) {
 ServerSocket :: struct {fd: int,}
 Socket :: struct {fd: int,}
 
-open_server :: (port: int) ServerSocket {
+open_server :: fn(port: int) ServerSocket {
   #intrinsic;
 }
-accept_client :: (server: ServerSocket) Socket {
+accept_client :: fn(server: ServerSocket) Socket {
   #intrinsic;
 }
-connect_server :: (host: string, port: int) Socket {
+connect_server :: fn(host: string, port: int) Socket {
   #intrinsic;
 }
-send :: (socket: Socket, data: []i8) bool {
+send :: fn(socket: Socket, data: []i8) bool {
   #intrinsic;
 }
-recv :: (socket: Socket) []i8 {
+recv :: fn(socket: Socket) []i8 {
   #intrinsic;
 }

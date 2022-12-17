@@ -1,7 +1,7 @@
 #load "api.cl";
 
-main :: () {
-  function :: () int -> 1;
+main :: fn() {
+  function :: fn() int -> 1;
   value :: function();
   print(value);
 }

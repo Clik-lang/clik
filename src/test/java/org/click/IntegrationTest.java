@@ -21,29 +21,29 @@ public final class IntegrationTest {
     public void functionBlock() {
         assertProgram(null,
                 """
-                        main :: () {
+                        main :: fn() {
                         }
                         """);
         assertProgram(ZERO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             return 0;
                         }
                         """);
         assertProgram(ZERO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             0;
                         }
                         """);
         assertProgram(ZERO,
                 """
-                        main :: () int -> 0;
+                        main :: fn() int -> 0;
                         """);
 
         assertProgram(ZERO, "main_score",
                 """
-                        main_score :: () int {
+                        main_score :: fn() int {
                             return 0;
                         }
                         """);
@@ -53,7 +53,7 @@ public final class IntegrationTest {
     public void comment() {
         assertProgram(ZERO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             // This is a comment
                             return 0;
                         }
@@ -64,30 +64,30 @@ public final class IntegrationTest {
     public void param() {
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: fn() {
                             return get();
                         }
-                        get :: () -> 1;
+                        get :: fn() -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: fn() {
                             value :: get();
                             return value;
                         }
-                        get :: () -> 1;
+                        get :: fn() -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: fn() {
                             get();
                         }
-                        get :: () -> 1;
+                        get :: fn() -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () -> get();
-                        get :: () -> 1;
+                        main :: fn() -> get();
+                        get :: fn() -> 1;
                         """);
     }
 
@@ -95,54 +95,54 @@ public final class IntegrationTest {
     public void numberLiterals() {
         assertProgram(ONE,
                 """
-                        main :: () int -> 1;
+                        main :: fn() int -> 1;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.I32, 1),
                 """
-                        main :: () i32 -> 1i32;
+                        main :: fn() i32 -> 1i32;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.U8, 1),
                 """
-                        main :: () u8 -> 1u8;
+                        main :: fn() u8 -> 1u8;
                         """);
 
         assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
                 """
-                        main :: () f64 -> 5.5;
+                        main :: fn() f64 -> 5.5;
                         """);
         assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
                 """
-                        main :: () f64 -> 5.5f64;
+                        main :: fn() f64 -> 5.5f64;
                         """);
         assertProgram(new Value.FloatLiteral(Type.F32, 5.5),
                 """
-                        main :: () f32 -> 5.5f32;
+                        main :: fn() f32 -> 5.5f32;
                         """);
 
         assertProgram(ONE,
                 """
-                        main :: () int -> 0x1;
+                        main :: fn() int -> 0x1;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 255),
                 """
-                        main :: () int -> 0xFF;
+                        main :: fn() int -> 0xFF;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 255),
                 """
-                        main :: () int -> 0xfF;
+                        main :: fn() int -> 0xfF;
                         """);
 
         assertProgram(ONE,
                 """
-                        main :: () int -> 0b1;
+                        main :: fn() int -> 0b1;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 255),
                 """
-                        main :: () int -> 0b11111111;
+                        main :: fn() int -> 0b11111111;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 254),
                 """
-                        main :: () int -> 0b11111110;
+                        main :: fn() int -> 0b11111110;
                         """);
     }
 
@@ -150,41 +150,41 @@ public final class IntegrationTest {
     public void lambda() {
         assertProgram(ONE,
                 """
-                        main :: () int {
-                          function :: () int -> 1;
+                        main :: fn() int {
+                          function :: fn() int -> 1;
                           value :: function();
                           return value;
                         }
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           number :: 1;
-                          function :: () int -> number;
+                          function :: fn() int -> number;
                           value :: function();
                           return value;
                         }
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
-                          function :: (arg: int) int -> arg;
+                        main :: fn() int {
+                          function :: fn(arg: int) int -> arg;
                           return function(1);
                         }
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           constant :: 5;
-                          function :: (arg: int) int -> arg + 5;
+                          function :: fn(arg: int) int -> arg + 5;
                           return function(5);
                         }
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           number := 1;
-                          function :: () int -> number;
+                          function :: fn() int -> number;
                           number = 0;
                           value :: function();
                           return value;
@@ -192,9 +192,9 @@ public final class IntegrationTest {
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           number :~ 0;
-                          function :: () -> number = 1;
+                          function :: fn() -> number = 1;
                           function();
                           return $number;
                         }
@@ -205,16 +205,16 @@ public final class IntegrationTest {
     public void mathInteger() {
         assertProgram(ONE,
                 """
-                        main :: () int -> 1;
+                        main :: fn() int -> 1;
                         """);
         assertProgram(TWO,
                 """
-                        main :: () int -> 1 + 1;
+                        main :: fn() int -> 1 + 1;
                         """);
 
         assertProgram(TWO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             value := 1;
                             value = value + 1;
                             return value;
@@ -223,11 +223,11 @@ public final class IntegrationTest {
 
         assertProgram(new Value.IntegerLiteral(Type.INT, 14),
                 """
-                        main :: () int -> 2 + 3 * 4;
+                        main :: fn() int -> 2 + 3 * 4;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 20),
                 """
-                        main :: () int -> (2 + 3) * 4;
+                        main :: fn() int -> (2 + 3) * 4;
                         """);
     }
 
@@ -235,39 +235,39 @@ public final class IntegrationTest {
     public void mathBool() {
         assertProgram(TRUE,
                 """
-                        main :: () bool -> true;
+                        main :: fn() bool -> true;
                         """);
         assertProgram(FALSE,
                 """
-                        main :: () bool -> false;
+                        main :: fn() bool -> false;
                         """);
 
         assertProgram(TRUE,
                 """
-                        main :: () bool -> 1 == 1;
+                        main :: fn() bool -> 1 == 1;
                         """);
         assertProgram(TRUE,
                 """
-                        main :: () bool -> 1 + 1 == 2;
+                        main :: fn() bool -> 1 + 1 == 2;
                         """);
 
         assertProgram(TRUE,
                 """
-                        main :: () bool -> true && true;
+                        main :: fn() bool -> true && true;
                         """);
         assertProgram(TRUE,
                 """
-                        main :: () bool -> true || true;
-                        """);
-
-        assertProgram(FALSE,
-                """
-                        main :: () bool -> true && false;
+                        main :: fn() bool -> true || true;
                         """);
 
         assertProgram(FALSE,
                 """
-                        main :: () bool -> false || false;
+                        main :: fn() bool -> true && false;
+                        """);
+
+        assertProgram(FALSE,
+                """
+                        main :: fn() bool -> false || false;
                         """);
     }
 
@@ -275,28 +275,28 @@ public final class IntegrationTest {
     public void array() {
         assertProgram(ZERO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           array :: [1]int;
                           return array[0];
                         }
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           array :: [5]int {1, 2, 3, 4, 5};
                           return array[0];
                         }
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           array :: [5]int {1, 2, 3, 4, 5,};
                           return array[0];
                         }
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           array :[5]int: [5]int {1, 2, 3, 4, 5,};
                           return array[0];
                         }
@@ -304,7 +304,7 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: fn() int {
                           array :: [1]Point {
                             Point {.x: 1, .y: 2},
                           }
@@ -314,7 +314,7 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: fn() int {
                           array :: [1]Point {{1,2}}
                           return array[0];
                         }
@@ -325,7 +325,7 @@ public final class IntegrationTest {
     public void map() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 5),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           values :: map[string]int {"test": 5};
                           return values["test"];
                         }
@@ -333,7 +333,7 @@ public final class IntegrationTest {
         assertProgram(new Value.IntegerLiteral(Type.INT, 5),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: fn() int {
                           values :: map[Point]int {{1, 2}: 5};
                           return values[{1,2}];
                         }
@@ -345,28 +345,28 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point -> Point {1, 2};
+                        main :: fn() Point -> Point {1, 2};
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point { Point {1, 2} }
+                        main :: fn() Point { Point {1, 2} }
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point { return Point {1, 2} }
+                        main :: fn() Point { return Point {1, 2} }
                         """);
 
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point { return Point {.x:1, .y:2} }
+                        main :: fn() Point { return Point {.x:1, .y:2} }
                         """);
 
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
-                        main :: () Point {
+                        main :: fn() Point {
                             Point :: struct {x: int, y: int}
                             return Point {1, 2};
                         }
@@ -374,7 +374,7 @@ public final class IntegrationTest {
 
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             Point :: struct {x: int, y: int}
                             point :: Point {1, 2};
                             return point.x;
@@ -382,7 +382,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(TWO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             Point :: struct {x: int, y: int}
                             point :: Point {1, 2};
                             return point.y;
@@ -392,37 +392,37 @@ public final class IntegrationTest {
         assertProgram(TWO,
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: fn() int {
                             point :: get_point();
                             return point.y;
                         }
-                        get_point :: () Point -> Point {1, 2};
+                        get_point :: fn() Point -> Point {1, 2};
                         """);
         assertProgram(TWO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             point :: get_point();
                             return point.y;
                         }
-                        get_point :: () Point -> Point {1, 2};
+                        get_point :: fn() Point -> Point {1, 2};
                         Point :: struct {x: int, y: int}
                         """);
         assertProgram(TWO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             point :: update_point(Point{1, 2});
                             return point.x;
                         }
-                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
+                        update_point :: fn(point: Point) Point -> {point.x + 1, point.y};
                         Point :: struct {x: int, y: int}
                         """);
         assertProgram(TWO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                             point :: update_point({1, 2});
                             return point.x;
                         }
-                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
+                        update_point :: fn(point: Point) Point -> {point.x + 1, point.y};
                         Point :: struct {x: int, y: int}
                         """);
 
@@ -430,7 +430,7 @@ public final class IntegrationTest {
                 """
                         Player :: struct {name: string, point: Point}
                         Point :: struct {x: int, y: int}
-                        main :: () string {
+                        main :: fn() string {
                             player :: Player {"test", {1, 2}};
                             return player.name;
                         }
@@ -440,7 +440,7 @@ public final class IntegrationTest {
                 """
                         Player :: struct {name: string, point: Point}
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: fn() int {
                             player :: Player {"test", {1, 2}};
                             return player.point.y;
                         }
@@ -452,17 +452,17 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         Direction :: enum {North,South}
-                        main :: () int -> return Direction.North;
+                        main :: fn() int -> return Direction.North;
                         """);
         assertProgram(ONE,
                 """
                         Direction :: enum {North,South}
-                        main :: () int -> Direction.South;
+                        main :: fn() int -> Direction.South;
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point {
+                        main :: fn() Point {
                           Component :: enum Point {
                             Position :: {.x: 1, .y: 2},
                           }
@@ -476,7 +476,7 @@ public final class IntegrationTest {
         assertProgram(ONE,
                 """
                         Point :: struct {x: int, y: int};
-                        main :: () int {
+                        main :: fn() int {
                           Component :: union {
                             Point,
                             Velocity :: struct {x: int, y: int},
@@ -488,7 +488,7 @@ public final class IntegrationTest {
         assertProgram(ONE,
                 """
                         Point :: struct {x: int, y: int};
-                        main :: () int {
+                        main :: fn() int {
                           Component :: union {
                             Point,
                           }
@@ -498,7 +498,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           Component :: union {
                             Position :: struct {x: int, y: int},
                             Velocity :: struct {x: int, y: int},
@@ -514,7 +514,7 @@ public final class IntegrationTest {
                             Position :: struct {x: int, y: int},
                             Velocity :: struct {x: int, y: int},
                         }
-                        main :: () Component {
+                        main :: fn() Component {
                           value :Component: Position {1, 2};
                           return value;
                         }
@@ -526,7 +526,7 @@ public final class IntegrationTest {
                             Position :: struct {x: int, y: int},
                             Velocity :: struct {x: int, y: int},
                         }
-                        main :: () Component {
+                        main :: fn() Component {
                           return Position {1, 2};
                         }
                         """);
@@ -536,7 +536,7 @@ public final class IntegrationTest {
     public void branch() {
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 0;
                           if true -> value = 1;
                           return value;
@@ -548,7 +548,7 @@ public final class IntegrationTest {
     public void loop() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 0;
                           for 0..10 -> value = value + 1;
                           return value;
@@ -556,7 +556,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 0;
                           for i: 0..10 -> value = value + 1;
                           return value;
@@ -564,7 +564,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 45),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 0;
                           for i: 0..10 -> value = value + i;
                           return value;
@@ -573,7 +573,7 @@ public final class IntegrationTest {
 
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 0;
                           for {
                             break;
@@ -583,7 +583,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 0;
                           for 0..10 {
                             value = value + 1;
@@ -594,7 +594,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 0;
                           for 0..10 {
                             value = value + 1;
@@ -606,7 +606,7 @@ public final class IntegrationTest {
 
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value :~ 0;
                           for 0..10 {
                             value = value + 1;
@@ -618,7 +618,7 @@ public final class IntegrationTest {
 
         assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           Point :: struct {x: int, y: int}
                           array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
@@ -628,7 +628,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 12),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           Point :: struct {x: int, y: int}
                           array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
@@ -639,7 +639,7 @@ public final class IntegrationTest {
 
         assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           Point :: struct {x: int, y: int}
                           array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
@@ -650,7 +650,7 @@ public final class IntegrationTest {
 
         assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           Point :: struct {x: int, y: int}
                           array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
@@ -660,7 +660,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 21),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           Point :: struct {x: int, y: int}
                           array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
@@ -671,7 +671,7 @@ public final class IntegrationTest {
 
         assertProgram(new Value.IntegerLiteral(Type.INT, 9),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           Point :: struct {x: int, y: int}
                           array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
@@ -685,7 +685,7 @@ public final class IntegrationTest {
     public void fork() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value :~ 0;
                           fork 0..10 {
                             value = value + 1;
@@ -695,7 +695,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value :~ 0;
                           fork 0..10 {
                             {value = value + 1;}
@@ -706,7 +706,7 @@ public final class IntegrationTest {
 
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value :~ 0;
                           fork i: 0..2 {
                             if i == 1 {
@@ -723,7 +723,7 @@ public final class IntegrationTest {
     public void select() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value := 5;
                           select {
                             test :: 10; -> value = test;
@@ -734,7 +734,7 @@ public final class IntegrationTest {
 
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value :~ 0;
                           fork 0..10 {
                             select {
@@ -746,7 +746,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 110),
                 """
-                        main :: () int {
+                        main :: fn() int {
                           value :~ 0;
                           fork 0..10 {
                             select {
@@ -758,7 +758,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           for {
                             select {
                               test :: 10; -> break;
@@ -773,7 +773,7 @@ public final class IntegrationTest {
     public void spawn() {
         assertProgram(ZERO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           spawn {
                           }
                           return 0;
@@ -781,7 +781,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(ZERO,
                 """
-                        main :: () int {
+                        main :: fn() int {
                           stop :~ false;
                           spawn {
                             stop = true;
@@ -797,27 +797,27 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point { return {1, 2} }
+                        main :: fn() Point { return {1, 2} }
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int,}
-                        main :: () Point { return {1, 2} }
+                        main :: fn() Point { return {1, 2} }
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point -> {.x: 1, .y: 2}
+                        main :: fn() Point -> {.x: 1, .y: 2}
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point -> {1, 2}
+                        main :: fn() Point -> {1, 2}
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point {
+                        main :: fn() Point {
                             value :Point: {1, 2};
                             return value;
                         }
@@ -826,7 +826,7 @@ public final class IntegrationTest {
                         "x", new Value.IntegerLiteral(Type.INT, 3), "y", new Value.IntegerLiteral(Type.INT, 4))),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () Point {
+                        main :: fn() Point {
                           point :Point = {.x: 1, .y: 2}
                           point = {.x: 3, .y: 4}
                           return point;
@@ -839,11 +839,11 @@ public final class IntegrationTest {
         assertProgram(new Value.IntegerLiteral(Type.INT, 3),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: fn() int {
                             x, y :: get_point();
                             return x + y;
                         }
-                        get_point :: () Point { return {1, 2} }
+                        get_point :: fn() Point { return {1, 2} }
                         """);
     }
 
