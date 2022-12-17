@@ -32,7 +32,7 @@ public record ExecutorSelect(Executor executor, ScopeWalker<Value> walker) {
         assert finished != null;
         final Statement statement = finished.statement();
         final Statement.Block block = cases.get(statement);
-        ValueMerger.update(walker, finished.executor().walker());
+        ValueCompute.update(walker, finished.executor().walker());
         return executor.interpret(block);
     }
 

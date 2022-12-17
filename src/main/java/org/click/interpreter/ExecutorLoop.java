@@ -27,7 +27,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         context.phaser().register();
         context.phaser().arriveAndAwaitAdvance();
         final List<ScopeWalker<Value>> walkers = context.executors().stream().map(Executor::walker).toList();
-        ValueMerger.merge(walker, walkers);
+        ValueCompute.merge(walker, walkers);
     }
 
     record Context(Statement.Loop loop, Phaser phaser, List<Executor> executors) {

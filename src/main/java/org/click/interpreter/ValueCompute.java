@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class ValueMerger {
+public final class ValueCompute {
     public static void update(ScopeWalker<Value> walker, ScopeWalker<Value> updated) {
         for (Map.Entry<String, Value> entry : updated.currentScope().tracked.entrySet()) {
             final String name = entry.getKey();
@@ -29,7 +29,7 @@ public final class ValueMerger {
                 final Value initial = initials.get(name);
                 if (initial != null && !initial.equals(value)) {
                     final Value current = changes.computeIfAbsent(name, s -> initial);
-                    final Value merged = ValueMerger.merge(current, value);
+                    final Value merged = ValueCompute.merge(current, value);
                     changes.put(name, merged);
                 }
             }

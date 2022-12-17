@@ -158,7 +158,7 @@ public final class Evaluator {
                 } else if (arrayValue.parameters() == null) {
                     // Default value
                     assert length != -1 : "Expected length for uninitialized array";
-                    final Value defaultValue = ValueMerger.defaultValue(arrayValue.type().type());
+                    final Value defaultValue = ValueCompute.defaultValue(arrayValue.type().type());
                     evaluated = IntStream.range(0, length).mapToObj(i -> defaultValue).toList();
                 } else {
                     throw new RuntimeException("Invalid array parameters: " + arrayValue.parameters());
