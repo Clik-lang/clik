@@ -10,7 +10,10 @@ public sealed interface Statement {
                    @Nullable Type explicitType) implements Statement {
     }
 
-    record Assign(List<String> names, Expression expression) implements Statement {
+    record AssignTarget(String name, AccessPoint accessPoint) {
+    }
+
+    record Assign(List<AssignTarget> assignTargets, Expression expression) implements Statement {
     }
 
     record Call(String name, Parameter.Passed arguments) implements Statement {

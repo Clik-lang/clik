@@ -13,19 +13,23 @@ public final class Parser {
     }
 
     Statement nextStatement() {
+        final int startIndex = index;
         final Statement statement;
 
         if (check(IDENTIFIER)) {
-            List<String> names = new ArrayList<>();
+            List<Statement.AssignTarget> assignTargets = new ArrayList<>();
             // Read all identifiers separated by commas
             do {
                 final Token identifier = consume(IDENTIFIER, "Expected identifier");
-                names.add(identifier.input());
+                final String name = identifier.input();
+                final AccessPoint accessPoint = nextAccessPoint();
+                assignTargets.add(new Statement.AssignTarget(name, accessPoint));
             } while (match(COMMA));
+            final List<String> names = assignTargets.stream().map(Statement.AssignTarget::name).toList();
             if (match(EQUAL)) {
                 // Assign
                 final Expression expression = nextExpression();
-                statement = new Statement.Assign(names, expression);
+                statement = new Statement.Assign(assignTargets, expression);
             } else if (match(COLON)) {
                 // Declare
                 final Type explicitType = nextType();
@@ -54,7 +58,7 @@ public final class Parser {
                 statement = new Statement.Call(name, new Parameter.Passed.Positional(arguments));
             } else {
                 // Implicit return
-                index--;
+                index = startIndex;
                 final Expression expression = nextExpression();
                 assert expression != null;
                 statement = new Statement.Return(expression);
@@ -120,6 +124,15 @@ public final class Parser {
         }
         index = start;
         return false;
+    }
+
+    AccessPoint nextAccessPoint() {
+        if (!match(DOT)) return null;
+        List<String> components = new ArrayList<>();
+        do {
+            components.add(advance().input());
+        } while (match(DOT));
+        return new AccessPoint.Field(components);
     }
 
     Expression nextExpression() {
@@ -188,13 +201,9 @@ public final class Parser {
         } else if (check(IDENTIFIER) && checkNext(DOT)) {
             // Field
             final Token identifier = advance();
-            consume(DOT, "Expected '.' after identifier.");
             final Expression expression = new Expression.Variable(identifier.input());
-            List<String> components = new ArrayList<>();
-            do {
-                components.add(advance().input());
-            } while (match(DOT));
-            return new Expression.Field(expression, new AccessPoint.Field(components));
+            final AccessPoint.Field accessPoint = (AccessPoint.Field) nextAccessPoint();
+            return new Expression.Field(expression, accessPoint);
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();

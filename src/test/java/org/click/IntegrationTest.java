@@ -448,6 +448,49 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void structMutation() {
+        assertProgram(new Value.Struct("Point", Map.of("x", TWO, "y", TWO)),
+                """
+                        Point :: struct {x: int, y: int}
+                        main :: fn() Point {
+                            value := Point{1, 2};
+                            value.x = 2;
+                            return value;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        Point :: struct {x: int, y: int}
+                        main :: fn() Point {
+                            value := Point{1, 2};
+                            value2 := value;
+                            value.x = 2;
+                            return value2.x;
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        Point :: struct {x: int, y: int}
+                        main :: fn() Point {
+                            value := Point{1, 2};
+                            value2 := value;
+                            value.x = 2;
+                            return value.x;
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        Player :: struct {name: string, point: Point}
+                        Point :: struct {x: int, y: int}
+                        main :: fn() int {
+                            player :: Player {"test", {1, 2}};
+                            player.point.x = 2;
+                            return player.point.x;
+                        }
+                        """);
+    }
+
+    @Test
     public void enumDecl() {
         assertProgram(ZERO,
                 """

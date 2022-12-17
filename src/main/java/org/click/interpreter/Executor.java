@@ -145,22 +145,29 @@ public final class Executor {
                 yield null;
             }
             case Statement.Assign assign -> {
-                final List<String> names = assign.names();
-                if (names.size() == 1) {
-                    final String name = names.get(0);
-                    final Type variableType = ValueExtractor.extractType(walker.find(name));
+                final List<Statement.AssignTarget> assignTargets = assign.assignTargets();
+                final int count = assignTargets.size();
+                if (count == 1) {
+                    final Statement.AssignTarget assignTarget = assignTargets.get(0);
+                    final String name = assignTarget.name();
+                    final Value tracked = walker.find(name);
+                    final Type variableType = ValueExtractor.extractType(tracked);
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
-                    walker.update(name, evaluated);
+                    final Value updatedVariable = ValueExtractor.updateVariable(tracked, assignTarget.accessPoint(), evaluated);
+                    walker.update(name, updatedVariable);
                     var ref = sharedMutations.get(name);
-                    if (ref != null) ref.set(evaluated);
+                    if (ref != null) ref.set(updatedVariable);
                 } else {
                     final Value evaluated = interpreter.evaluate(assign.expression(), null);
-                    for (int i = 0; i < names.size(); i++) {
-                        final String name = names.get(i);
+                    for (int i = 0; i < count; i++) {
+                        final Statement.AssignTarget assignTarget = assignTargets.get(i);
+                        final String name = assignTarget.name();
+                        final Value tracked = walker.find(name);
                         final Value deconstructed = ValueExtractor.deconstruct(walker, evaluated, i);
-                        walker.update(name, deconstructed);
+                        final Value updatedVariable = ValueExtractor.updateVariable(tracked, assignTarget.accessPoint(), deconstructed);
+                        walker.update(name, updatedVariable);
                         var ref = sharedMutations.get(name);
-                        if (ref != null) ref.set(deconstructed);
+                        if (ref != null) ref.set(updatedVariable);
                     }
                 }
                 yield null;
