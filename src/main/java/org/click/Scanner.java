@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.HexFormat.isHexDigit;
 import static java.util.Map.entry;
 
 public final class Scanner {
@@ -136,6 +137,25 @@ public final class Scanner {
 
     private Token.Literal nextNumber() {
         final int start = index - 1;
+
+        if (peek() == 'x') {
+            // Hexadecimal integer
+            advance();
+            while (isHexDigit(peek())) advance();
+            final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
+            final long value = Long.parseLong(input.substring(start + 2, index), 16);
+            return new Token.Literal(type, value);
+        }
+
+        if (peek() == 'b') {
+            // Binary integer
+            advance();
+            while (peek() == '0' || peek() == '1') advance();
+            final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
+            final long value = Long.parseLong(input.substring(start + 2, index), 2);
+            return new Token.Literal(type, value);
+        }
+
         while (Character.isDigit(peek())) advance();
         if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer

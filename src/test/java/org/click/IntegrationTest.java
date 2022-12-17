@@ -118,6 +118,32 @@ public final class IntegrationTest {
                 """
                         main :: () f32 -> 5.5f32;
                         """);
+
+        assertProgram(ONE,
+                """
+                        main :: () int -> 0x1;
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+                """
+                        main :: () int -> 0xFF;
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+                """
+                        main :: () int -> 0xfF;
+                        """);
+
+        assertProgram(ONE,
+                """
+                        main :: () int -> 0b1;
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+                """
+                        main :: () int -> 0b11111111;
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 254),
+                """
+                        main :: () int -> 0b11111110;
+                        """);
     }
 
     @Test
