@@ -804,6 +804,18 @@ public final class IntegrationTest {
                           return 0;
                         }
                         """);
+
+        assertProgram(ONE,
+                """
+                        main :: fn() int {
+                          number :~ 0;
+                          something :: spawn(value: int) {
+                            number = value;
+                          }
+                          something(1);
+                          return $number;
+                        }
+                        """);
     }
 
     @Test
