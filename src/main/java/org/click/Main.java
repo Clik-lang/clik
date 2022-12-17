@@ -19,7 +19,8 @@ public class Main {
         for (var statement : statements) System.out.println(statement);
 
         var interpreter = new VM(Path.of("samples"), statements);
-        interpreter.interpret("main", List.of());
+        var result = interpreter.interpret("main", List.of());
+        System.out.println("Result: " + result);
         interpreter.stop();
     }
 }
