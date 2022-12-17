@@ -548,6 +548,27 @@ public final class IntegrationTest {
                             return player.point.x;
                         }
                         """);
+
+        assertProgram(ONE,
+                """
+                        Player :: struct {test: map[string]int}
+                        main :: fn() Point {
+                            value := Player{map[string]int{"test": 1}};
+                            value2 := value;
+                            value.test["test"] = 2;
+                            return value2.test["test"];
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        Player :: struct {test: map[string]int}
+                        main :: fn() Point {
+                            value := Player{map[string]int{"test": 1}};
+                            value2 := value;
+                            value.test["test"] = 2;
+                            return value.test["test"];
+                        }
+                        """);
     }
 
     @Test
