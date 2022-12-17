@@ -80,15 +80,20 @@ public final class Evaluator {
             case Expression.Group group -> evaluate(group.expression(), explicitType);
             case Expression.Field field -> {
                 final Value expression = evaluate(field.object(), null);
-                yield switch (expression) {
-                    case Value.Struct struct -> struct.parameters().get(field.name());
-                    case Value.EnumDecl enumDecl -> {
-                        final Value value = enumDecl.entries().get(field.name());
-                        if (value == null) throw new RuntimeException("Enum entry not found: " + field.name());
-                        yield value;
-                    }
-                    default -> throw new RuntimeException("Expected struct, got: " + expression);
-                };
+                final List<String> components = field.field().components();
+                Value result = expression;
+                for (String component : components) {
+                    result = switch (result) {
+                        case Value.Struct struct -> struct.parameters().get(component);
+                        case Value.EnumDecl enumDecl -> {
+                            final Value value = enumDecl.entries().get(component);
+                            if (value == null) throw new RuntimeException("Enum entry not found: " + component);
+                            yield value;
+                        }
+                        default -> throw new RuntimeException("Expected struct, got: " + expression);
+                    };
+                }
+                yield result;
             }
             case Expression.VariableAwait variableAwait -> {
                 final String name = variableAwait.name();

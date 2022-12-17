@@ -185,6 +185,16 @@ public final class Parser {
             return new Expression.BooleanLiteral(true);
         } else if (match(FALSE)) {
             return new Expression.BooleanLiteral(false);
+        } else if (check(IDENTIFIER) && checkNext(DOT)) {
+            // Field
+            final Token identifier = advance();
+            consume(DOT, "Expected '.' after identifier.");
+            final Expression expression = new Expression.Variable(identifier.input());
+            List<String> components = new ArrayList<>();
+            do {
+                components.add(advance().input());
+            } while (match(DOT));
+            return new Expression.Field(expression, new AccessPoint.Field(components));
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
@@ -208,16 +218,6 @@ public final class Parser {
                 }
                 final Parameter.Passed passed = nextPassedParameters();
                 return new Expression.StructValue(identifier.input(), passed);
-            } else if (match(DOT)) {
-                // Field
-                final Expression expression = new Expression.Variable(identifier.input());
-                final Token field = consume(IDENTIFIER, "Expected field name.");
-                Expression recursiveField = new Expression.Field(expression, field.input());
-                while (match(DOT)) {
-                    final Token nextField = consume(IDENTIFIER, "Expected field name.");
-                    recursiveField = new Expression.Field(recursiveField, nextField.input());
-                }
-                return recursiveField;
             } else if (match(LEFT_BRACKET)) {
                 // Array
                 final Expression index = nextExpression();

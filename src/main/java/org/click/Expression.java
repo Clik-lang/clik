@@ -46,7 +46,7 @@ public sealed interface Expression {
     record Group(Expression expression) implements Expression {
     }
 
-    record Field(Expression object, String name) implements Expression {
+    record Field(Expression object, AccessPoint.Field field) implements Expression {
     }
 
     record VariableAwait(String name) implements Expression {
