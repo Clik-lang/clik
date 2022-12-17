@@ -127,21 +127,19 @@ public final class Parser {
     }
 
     AccessPoint nextAccessPoint() {
-        if (match(DOT)) {
-            // Field
-            List<String> components = new ArrayList<>();
-            do {
-                components.add(advance().input());
-            } while (match(DOT));
-            return new AccessPoint.Field(components);
-        } else if (match(LEFT_BRACKET)) {
-            // Index
-            final Expression expression = nextExpression();
-            consume(RIGHT_BRACKET, "Expected ']' after array index.");
-            return new AccessPoint.Index(expression);
-        } else {
-            return null;
+        List<AccessPoint.Access> accesses = new ArrayList<>();
+        while (check(DOT) || check(LEFT_BRACKET)) {
+            if (match(DOT)) {
+                // Field access
+                accesses.add(new AccessPoint.Field(advance().input()));
+            } else if (match(LEFT_BRACKET)) {
+                // Index access
+                final Expression expression = nextExpression();
+                consume(RIGHT_BRACKET, "Expected ']' after array index.");
+                accesses.add(new AccessPoint.Index(expression));
+            }
         }
+        return new AccessPoint(accesses);
     }
 
     Expression nextExpression() {
@@ -211,7 +209,7 @@ public final class Parser {
             // Field
             final Token identifier = advance();
             final Expression expression = new Expression.Variable(identifier.input());
-            final AccessPoint.Field accessPoint = (AccessPoint.Field) nextAccessPoint();
+            final AccessPoint accessPoint = nextAccessPoint();
             return new Expression.Field(expression, accessPoint);
         } else if (match(IDENTIFIER)) {
             // Variable

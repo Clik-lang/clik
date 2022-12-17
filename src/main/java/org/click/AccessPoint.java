@@ -2,10 +2,13 @@ package org.click;
 
 import java.util.List;
 
-public sealed interface AccessPoint {
-    record Field(List<String> components) implements AccessPoint {
+public record AccessPoint(List<Access> accesses) {
+    public sealed interface Access {
     }
 
-    record Index(Expression expression) implements AccessPoint {
+    public record Field(String component) implements Access {
+    }
+
+    public record Index(Expression expression) implements Access {
     }
 }

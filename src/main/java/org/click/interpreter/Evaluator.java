@@ -1,9 +1,6 @@
 package org.click.interpreter;
 
-import org.click.Expression;
-import org.click.Parameter;
-import org.click.Statement;
-import org.click.Type;
+import org.click.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -80,15 +77,39 @@ public final class Evaluator {
             case Expression.Group group -> evaluate(group.expression(), explicitType);
             case Expression.Field field -> {
                 final Value expression = evaluate(field.object(), null);
-                final List<String> components = field.field().components();
+                final AccessPoint accessPoint = field.accessPoint();
                 Value result = expression;
-                for (String component : components) {
+                for (AccessPoint.Access access : accessPoint.accesses()) {
                     result = switch (result) {
-                        case Value.Struct struct -> struct.parameters().get(component);
+                        case Value.Struct struct -> {
+                            if (!(access instanceof AccessPoint.Field fieldAccess)) {
+                                throw new RuntimeException("Invalid struct access: " + access);
+                            }
+                            final String name = fieldAccess.component();
+                            yield struct.parameters().get(name);
+                        }
                         case Value.EnumDecl enumDecl -> {
+                            if (!(access instanceof AccessPoint.Field fieldAccess)) {
+                                throw new RuntimeException("Invalid enum access: " + access);
+                            }
+                            final String component = fieldAccess.component();
                             final Value value = enumDecl.entries().get(component);
                             if (value == null) throw new RuntimeException("Enum entry not found: " + component);
                             yield value;
+                        }
+                        case Value.Array array -> {
+                            if (!(access instanceof AccessPoint.Index indexAccess)) {
+                                throw new RuntimeException("Invalid array access: " + access);
+                            }
+                            final int index = (int) ((Value.IntegerLiteral) evaluate(indexAccess.expression(), null)).value();
+                            yield array.elements().get(index);
+                        }
+                        case Value.Map map -> {
+                            if (!(access instanceof AccessPoint.Index indexAccess)) {
+                                throw new RuntimeException("Invalid map access: " + access);
+                            }
+                            final Value key = evaluate(indexAccess.expression(), map.type().key());
+                            yield map.entries().get(key);
                         }
                         default -> throw new RuntimeException("Expected struct, got: " + expression);
                     };
@@ -120,7 +141,7 @@ public final class Evaluator {
                             throw new RuntimeException("Expected constant, got: " + index);
                         }
                         final int integer = (int) integerLiteral.value();
-                        final List<Value> content = arrayValue.values();
+                        final List<Value> content = arrayValue.elements();
                         if (integer < 0 || integer >= content.size())
                             throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
                         yield content.get(integer);

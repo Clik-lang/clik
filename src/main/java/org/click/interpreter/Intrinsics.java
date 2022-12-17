@@ -107,9 +107,9 @@ public final class Intrinsics {
             throw new RuntimeException("Expected client, got " + value);
         }
         final Value.Array array = (Value.Array) evaluated.get(1);
-        byte[] bytes = new byte[array.values().size()];
+        byte[] bytes = new byte[array.elements().size()];
         for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = (byte) ((Value.IntegerLiteral) array.values().get(i)).value();
+            bytes[i] = (byte) ((Value.IntegerLiteral) array.elements().get(i)).value();
         }
         try {
             socket.getOutputStream().write(bytes);

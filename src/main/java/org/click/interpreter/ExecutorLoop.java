@@ -96,7 +96,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
         walker.enterBlock(executor);
-        final List<Value> values = array.values();
+        final List<Value> values = array.elements();
         if (!declarations.isEmpty()) {
             if (declarations.size() == 1 && !declarations.get(0).ref()) {
                 // for-each loop

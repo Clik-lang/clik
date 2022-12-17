@@ -34,20 +34,21 @@ public final class ValueExtractor {
     }
 
     public static Value updateVariable(Executor executor, Value variable, AccessPoint accessPoint, Value updated) {
-        if (accessPoint == null) return updated;
+        final List<AccessPoint.Access> accesses = accessPoint.accesses();
+        if (accesses.isEmpty()) return updated;
+        final AccessPoint.Access access = accesses.get(0);
         return switch (variable) {
             case Value.Struct struct -> {
-                if (accessPoint instanceof AccessPoint.Field field) {
-                    final List<String> components = field.components();
+                if (access instanceof AccessPoint.Field field) {
+                    final String component = field.component();
                     final HashMap<String, Value> newParams = new HashMap<>(struct.parameters());
-                    final String targetName = components.get(0);
-                    if (components.size() == 1) {
-                        newParams.put(targetName, updated);
+                    if (accesses.size() == 1) {
+                        newParams.put(component, updated);
                     } else {
-                        final Value prevValue = newParams.get(targetName);
-                        final AccessPoint.Field recursiveAccess = new AccessPoint.Field(components.subList(1, components.size()));
+                        final Value prevValue = newParams.get(component);
+                        final AccessPoint recursiveAccess = new AccessPoint(accesses.subList(1, accesses.size()));
                         final Value recursiveValue = updateVariable(executor, prevValue, recursiveAccess, updated);
-                        newParams.put(targetName, recursiveValue);
+                        newParams.put(component, recursiveValue);
                     }
                     yield new Value.Struct(struct.name(), newParams);
                 } else {
@@ -55,9 +56,9 @@ public final class ValueExtractor {
                 }
             }
             case Value.Array array -> {
-                if (accessPoint instanceof AccessPoint.Index indexAccess) {
+                if (access instanceof AccessPoint.Index indexAccess) {
                     final Expression indexExpression = indexAccess.expression();
-                    final List<Value> newParams = new ArrayList<>(array.values());
+                    final List<Value> newParams = new ArrayList<>(array.elements());
                     final Value index = executor.evaluate(indexExpression, null);
                     final int targetIndex = (int) ((Value.IntegerLiteral) index).value();
                     newParams.set(targetIndex, updated);
@@ -67,7 +68,7 @@ public final class ValueExtractor {
                 }
             }
             case Value.Map map -> {
-                if (accessPoint instanceof AccessPoint.Index indexAccess) {
+                if (access instanceof AccessPoint.Index indexAccess) {
                     final Expression indexExpression = indexAccess.expression();
                     final HashMap<Value, Value> newParams = new HashMap<>(map.entries());
                     final Value index = executor.evaluate(indexExpression, map.type().key());
