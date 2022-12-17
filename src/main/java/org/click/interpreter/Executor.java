@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class Executor {
@@ -66,32 +65,34 @@ public final class Executor {
         return executor;
     }
 
-    public Value interpret(String function, List<Value> parameters) {
-        final Value call = walker.find(function);
-        if (!(call instanceof Value.FunctionDecl functionDeclaration)) {
-            throw new RuntimeException("Function not found: " + call + " " + function + " -> " + walker.currentScope().tracked.keySet());
-        }
-
+    public Value interpret(String name, Value.FunctionDecl declaration, List<Value> parameters) {
         walker.enterBlock(this);
         for (int i = 0; i < parameters.size(); i++) {
-            final Parameter parameter = functionDeclaration.parameters().get(i);
+            final Parameter parameter = declaration.parameters().get(i);
             final Value value = parameters.get(i);
             assert value != null;
             walker.register(parameter.name(), value);
         }
 
-        final Executor callExecutor = Objects.requireNonNullElse(functionDeclaration.lambdaExecutor(), this);
-        var previousFunction = callExecutor.currentFunction;
-        callExecutor.currentFunction = new CurrentFunction(function, functionDeclaration.parameters(),
-                functionDeclaration.returnType(), parameters);
+        var previousFunction = currentFunction;
+        currentFunction = new CurrentFunction(name, declaration.parameters(),
+                declaration.returnType(), parameters);
         Value result = null;
-        for (Statement statement : functionDeclaration.body()) {
-            result = callExecutor.interpret(statement);
+        for (Statement statement : declaration.body()) {
+            result = interpret(statement);
             if (result != null) break;
         }
-        callExecutor.currentFunction = previousFunction;
+        currentFunction = previousFunction;
         walker.exitBlock();
         return result;
+    }
+
+    public Value interpret(String name, List<Value> parameters) {
+        final Value call = walker.find(name);
+        if (!(call instanceof Value.FunctionDecl declaration)) {
+            throw new RuntimeException("Function not found: " + call + " " + name + " -> " + walker.currentScope().tracked.keySet());
+        }
+        return interpret(name, declaration, parameters);
     }
 
     public Value evaluate(Expression expression, Type explicitType) {

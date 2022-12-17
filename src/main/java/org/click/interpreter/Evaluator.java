@@ -4,10 +4,7 @@ import org.click.Expression;
 import org.click.Parameter;
 import org.click.Type;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.LongStream;
 
@@ -139,7 +136,8 @@ public final class Evaluator {
                     final Value value = executor.evaluate(expression, param.type());
                     evaluated.add(value);
                 }
-                yield executor.interpret(name, evaluated);
+                final Executor callExecutor = Objects.requireNonNullElse(functionDecl.lambdaExecutor(), executor);
+                yield callExecutor.interpret(name, functionDecl, evaluated);
             }
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());

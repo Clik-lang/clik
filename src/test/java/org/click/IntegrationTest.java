@@ -168,6 +168,21 @@ public final class IntegrationTest {
         assertProgram(ONE,
                 """
                         main :: () int {
+                          function :: (arg: int) int -> arg;
+                          return function(1);
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          constant :: 5;
+                          function :: (arg: int) int -> arg + 5;
+                          return function(5);
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
                           number := 1;
                           function :: () int -> number;
                           number = 0;
