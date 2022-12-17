@@ -10,7 +10,8 @@ import java.util.List;
 public sealed interface Value {
     // DECLARATIONS
 
-    record FunctionDecl(List<Parameter> parameters, Type returnType, List<Statement> body) implements Value {
+    record FunctionDecl(List<Parameter> parameters, Type returnType, List<Statement> body,
+                        @Nullable Executor lambdaExecutor) implements Value {
     }
 
     record StructDecl(List<Parameter> parameters) implements Value {

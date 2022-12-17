@@ -22,8 +22,15 @@ public final class Evaluator {
 
     public Value evaluate(Expression argument, Type explicitType) {
         final Value rawValue = switch (argument) {
-            case Expression.Function functionDeclaration ->
-                    new Value.FunctionDecl(functionDeclaration.parameters(), functionDeclaration.returnType(), functionDeclaration.body());
+            case Expression.Function functionDeclaration -> {
+                Executor lambdaExecutor = null;
+                if (this.executor.currentFunction() != null) {
+                    // Local function
+                    lambdaExecutor = this.executor.fork(this.executor.insideLoop);
+                }
+                yield new Value.FunctionDecl(functionDeclaration.parameters(), functionDeclaration.returnType(), functionDeclaration.body(),
+                        lambdaExecutor);
+            }
             case Expression.Struct structDeclaration -> new Value.StructDecl(structDeclaration.parameters());
             case Expression.Enum enumDeclaration -> {
                 final Type type = enumDeclaration.type();

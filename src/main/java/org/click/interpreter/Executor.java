@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class Executor {
@@ -52,21 +53,23 @@ public final class Executor {
         return sharedMutations;
     }
 
+    public CurrentFunction currentFunction() {
+        return currentFunction;
+    }
+
     public Executor fork(boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
         final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.phaser());
         final Executor executor = new Executor(context, insideLoop, sharedMutations);
         copy.enterBlock(executor);
-        for (Map.Entry<String, Value> entry : this.walker.currentScope().tracked.entrySet()) {
-            copy.register(entry.getKey(), entry.getValue());
-        }
+        copy.currentScope().tracked.putAll(walker.currentScope().tracked);
         return executor;
     }
 
     public Value interpret(String function, List<Value> parameters) {
         final Value call = walker.find(function);
         if (!(call instanceof Value.FunctionDecl functionDeclaration)) {
-            throw new RuntimeException("Function not found: " + call + " " + function);
+            throw new RuntimeException("Function not found: " + call + " " + function + " -> " + walker.currentScope().tracked.keySet());
         }
 
         walker.enterBlock(this);
@@ -77,15 +80,16 @@ public final class Executor {
             walker.register(parameter.name(), value);
         }
 
-        var previousFunction = currentFunction;
-        currentFunction = new CurrentFunction(function, functionDeclaration.parameters(),
+        final Executor callExecutor = Objects.requireNonNullElse(functionDeclaration.lambdaExecutor(), this);
+        var previousFunction = callExecutor.currentFunction;
+        callExecutor.currentFunction = new CurrentFunction(function, functionDeclaration.parameters(),
                 functionDeclaration.returnType(), parameters);
         Value result = null;
         for (Statement statement : functionDeclaration.body()) {
-            result = interpret(statement);
+            result = callExecutor.interpret(statement);
             if (result != null) break;
         }
-        currentFunction = previousFunction;
+        callExecutor.currentFunction = previousFunction;
         walker.exitBlock();
         return result;
     }

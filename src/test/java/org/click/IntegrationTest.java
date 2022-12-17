@@ -147,6 +147,46 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void lambda() {
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          function :: () int -> 1;
+                          value :: function();
+                          return value;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          number :: 1;
+                          function :: () int -> number;
+                          value :: function();
+                          return value;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          number := 1;
+                          function :: () int -> number;
+                          number = 0;
+                          value :: function();
+                          return value;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          number :~ 0;
+                          function :: () -> number = 1;
+                          function();
+                          return $number;
+                        }
+                        """);
+    }
+
+    @Test
     public void mathInteger() {
         assertProgram(ONE,
                 """
