@@ -151,9 +151,9 @@ public final class Executor {
                     final Statement.AssignTarget assignTarget = assignTargets.get(0);
                     final String name = assignTarget.name();
                     final Value tracked = walker.find(name);
-                    final Type variableType = ValueExtractor.extractType(tracked);
+                    final Type variableType = ValueExtractor.extractAssignmentType(tracked);
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
-                    final Value updatedVariable = ValueExtractor.updateVariable(tracked, assignTarget.accessPoint(), evaluated);
+                    final Value updatedVariable = ValueExtractor.updateVariable(this, tracked, assignTarget.accessPoint(), evaluated);
                     walker.update(name, updatedVariable);
                     var ref = sharedMutations.get(name);
                     if (ref != null) ref.set(updatedVariable);
@@ -164,7 +164,7 @@ public final class Executor {
                         final String name = assignTarget.name();
                         final Value tracked = walker.find(name);
                         final Value deconstructed = ValueExtractor.deconstruct(walker, evaluated, i);
-                        final Value updatedVariable = ValueExtractor.updateVariable(tracked, assignTarget.accessPoint(), deconstructed);
+                        final Value updatedVariable = ValueExtractor.updateVariable(this, tracked, assignTarget.accessPoint(), deconstructed);
                         walker.update(name, updatedVariable);
                         var ref = sharedMutations.get(name);
                         if (ref != null) ref.set(updatedVariable);

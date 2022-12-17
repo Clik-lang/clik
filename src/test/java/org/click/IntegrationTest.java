@@ -322,6 +322,36 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void arrayMutation() {
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
+                          array := [5]int {1, 2, 3, 4, 5};
+                          array[0] = 0;
+                          return array[0];
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: fn() int {
+                          array := [5]int {1, 2, 3, 4, 5};
+                          array2 := array;
+                          array[0] = 0;
+                          return array2[0];
+                        }
+                        """);
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
+                          array := [5]int {1, 2, 3, 4, 5};
+                          array2 := array;
+                          array[0] = 0;
+                          return array[0];
+                        }
+                        """);
+    }
+
+    @Test
     public void map() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 5),
                 """
@@ -336,6 +366,36 @@ public final class IntegrationTest {
                         main :: fn() int {
                           values :: map[Point]int {{1, 2}: 5};
                           return values[{1,2}];
+                        }
+                        """);
+    }
+
+    @Test
+    public void mapMutation() {
+        assertProgram(ONE,
+                """
+                        main :: fn() int {
+                          values := map[string]int {"test": 5};
+                          values["test"] = 1;
+                          return values["test"];
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 5),
+                """
+                        main :: fn() int {
+                          values := map[string]int {"test": 5};
+                          values2 := values;
+                          values["test"] = 1;
+                          return values2["test"];
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: fn() int {
+                          values := map[string]int {"test": 5};
+                          values2 := values;
+                          values["test"] = 1;
+                          return values["test"];
                         }
                         """);
     }

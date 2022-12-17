@@ -127,12 +127,21 @@ public final class Parser {
     }
 
     AccessPoint nextAccessPoint() {
-        if (!match(DOT)) return null;
-        List<String> components = new ArrayList<>();
-        do {
-            components.add(advance().input());
-        } while (match(DOT));
-        return new AccessPoint.Field(components);
+        if (match(DOT)) {
+            // Field
+            List<String> components = new ArrayList<>();
+            do {
+                components.add(advance().input());
+            } while (match(DOT));
+            return new AccessPoint.Field(components);
+        } else if (match(LEFT_BRACKET)) {
+            // Index
+            final Expression expression = nextExpression();
+            consume(RIGHT_BRACKET, "Expected ']' after array index.");
+            return new AccessPoint.Index(expression);
+        } else {
+            return null;
+        }
     }
 
     Expression nextExpression() {
