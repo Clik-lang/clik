@@ -310,9 +310,13 @@ public final class Parser {
         if (!(check(IDENTIFIER) || check(LEFT_BRACKET) || check(MAP))) return null;
         if (match(LEFT_BRACKET)) {
             // Array
-            final Token lengthLiteral = consume(INTEGER_LITERAL, "Expected integer literal for array length.");
-            final long length = ((Long) lengthLiteral.literal().value()).longValue();
-            consume(RIGHT_BRACKET, "Expected ']' after array.");
+            long length = -1;
+            if (check(INTEGER_LITERAL)) {
+                // TODO: make mandatory, currently not possible because of function param
+                final Token lengthLiteral = consume(INTEGER_LITERAL, "Expected integer literal for array length.");
+                length = ((Long) lengthLiteral.literal().value()).longValue();
+            }
+            consume(RIGHT_BRACKET, "Expected ']'.");
             final Type arrayType = nextType();
             return new Type.Array(arrayType, length);
         }
