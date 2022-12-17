@@ -218,6 +218,13 @@ public final class IntegrationTest {
 
     @Test
     public void array() {
+        assertProgram(ZERO,
+                """
+                        main :: () int {
+                          array :: [1]int;
+                          return array[0];
+                        }
+                        """);
         assertProgram(ONE,
                 """
                         main :: () int {

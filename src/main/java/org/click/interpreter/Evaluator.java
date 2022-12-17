@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 public final class Evaluator {
     private final Executor executor;
@@ -145,10 +146,23 @@ public final class Evaluator {
                 yield new Value.Struct(structValue.name(), evaluated);
             }
             case Expression.ArrayValue arrayValue -> {
-                if (!(arrayValue.parameters() instanceof Parameter.Passed.Positional positional))
-                    throw new RuntimeException("Expected positional parameters");
-                final List<Value> evaluated = positional.expressions().stream()
-                        .map(expression -> evaluate(expression, arrayValue.type())).toList();
+                final Expression lengthExpression = arrayValue.length();
+                final int length = lengthExpression != null ?
+                        (int) ((Value.IntegerLiteral) evaluate(lengthExpression, null)).value() : -1;
+                final List<Value> evaluated;
+                if (arrayValue.parameters() instanceof Parameter.Passed.Positional positional) {
+                    assert length == -1 || length == positional.expressions().size() :
+                            "Expected " + length + " elements, got " + positional.expressions().size();
+                    evaluated = positional.expressions().stream()
+                            .map(expression -> evaluate(expression, arrayValue.type())).toList();
+                } else if (arrayValue.parameters() == null) {
+                    // Default value
+                    assert length != -1 : "Expected length for uninitialized array";
+                    final Value defaultValue = ValueMerger.defaultValue(arrayValue.type().type());
+                    evaluated = IntStream.range(0, length).mapToObj(i -> defaultValue).toList();
+                } else {
+                    throw new RuntimeException("Invalid array parameters: " + arrayValue.parameters());
+                }
                 yield new Value.Array(arrayValue.type(), evaluated);
             }
             case Expression.MapValue mapValue -> {

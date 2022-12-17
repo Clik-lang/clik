@@ -1,5 +1,7 @@
 package org.click.interpreter;
 
+import org.click.Type;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,5 +51,19 @@ public final class ValueMerger {
         } else {
             throw new RuntimeException("Unknown types: " + initial + " and " + next);
         }
+    }
+
+    public static Value defaultValue(Type type) {
+        if (type == Type.U8 || type == Type.U16 || type == Type.U32 || type == Type.U64 ||
+                type == Type.I8 || type == Type.I16 || type == Type.I32 || type == Type.I64 || type == Type.INT) {
+            return new Value.IntegerLiteral(type, 0);
+        }
+        if (type == Type.F32 || type == Type.F64) {
+            return new Value.FloatLiteral(type, 0);
+        }
+        if (type == Type.BOOL) {
+            return new Value.BooleanLiteral(false);
+        }
+        throw new RuntimeException("Unknown type: " + type);
     }
 }

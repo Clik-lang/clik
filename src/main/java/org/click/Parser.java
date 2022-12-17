@@ -234,10 +234,28 @@ public final class Parser {
             final Token identifier = consume(IDENTIFIER, "Expected variable name.");
             return new Expression.VariableAwait(identifier.input());
         } else if (check(LEFT_BRACKET)) {
+            consume(LEFT_BRACKET, "Expected '[' after expression.");
+            final long explicitLength;
+            if (check(INTEGER_LITERAL)) {
+                explicitLength = ((Long) advance().literal().value()).longValue();
+            } else {
+                explicitLength = -1;
+            }
+            consume(RIGHT_BRACKET, "Expected ']' after expression.");
+            final Type type = nextType();
             // Array
-            final Type.Array arrayType = (Type.Array) nextType();
-            final Parameter.Passed passed = nextPassedParameters();
-            return new Expression.ArrayValue(arrayType, passed);
+            final Type.Array arrayType = new Type.Array(type);
+            Expression length;
+            Parameter.Passed passed;
+            if (check(LEFT_BRACE)) {
+                passed = nextPassedParameters();
+                length = new Expression.IntegerLiteral(Type.INT, passed.expressions().size());
+            } else {
+                assert explicitLength != -1 : "Expected explicit length for uninitialized array.";
+                passed = null;
+                length = new Expression.IntegerLiteral(Type.INT, explicitLength);
+            }
+            return new Expression.ArrayValue(arrayType, length, passed);
         } else if (check(MAP)) {
             // Map
             consume(MAP, "Expected 'map' after '['.");

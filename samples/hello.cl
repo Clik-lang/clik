@@ -1,11 +1,6 @@
 #load "api.cl";
 
 main :: () {
-  print("start");
-  stop :~ false;
-  spawn {
-    stop = true;
-  }
-  stop = $stop;
-  print("end");
+  buffer := [1024]int;
+  print(buffer);
 }
