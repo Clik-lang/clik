@@ -28,7 +28,7 @@ public interface Type {
         }
     }
 
-    record Array(Type type) implements Type {
+    record Array(Type type, long length) implements Type {
         @Override
         public String name() {
             return "[]" + type.name();

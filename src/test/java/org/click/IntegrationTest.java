@@ -228,21 +228,21 @@ public final class IntegrationTest {
         assertProgram(ONE,
                 """
                         main :: () int {
-                          array :: []int {1, 2, 3, 4, 5};
+                          array :: [5]int {1, 2, 3, 4, 5};
                           return array[0];
                         }
                         """);
         assertProgram(ONE,
                 """
                         main :: () int {
-                          array :: []int {1, 2, 3, 4, 5,};
+                          array :: [5]int {1, 2, 3, 4, 5,};
                           return array[0];
                         }
                         """);
         assertProgram(ONE,
                 """
                         main :: () int {
-                          array :[]int: []int {1, 2, 3, 4, 5,};
+                          array :[5]int: [5]int {1, 2, 3, 4, 5,};
                           return array[0];
                         }
                         """);
@@ -250,7 +250,7 @@ public final class IntegrationTest {
                 """
                         Point :: struct {x: int, y: int}
                         main :: () int {
-                          array :: []Point {
+                          array :: [1]Point {
                             Point {.x: 1, .y: 2},
                           }
                           return array[0];
@@ -260,7 +260,7 @@ public final class IntegrationTest {
                 """
                         Point :: struct {x: int, y: int}
                         main :: () int {
-                          array :: []Point {{1,2}}
+                          array :: [1]Point {{1,2}}
                           return array[0];
                         }
                         """);
@@ -565,7 +565,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
-                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
                           for .x: array -> value = value + x;
                           return value;
@@ -575,7 +575,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
-                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
                           for .y: array -> value = value + y;
                           return value;
@@ -586,7 +586,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
-                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
                           for .x, .y: array -> value = value + x;
                           return value;
@@ -597,7 +597,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
-                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
                           for (.x, .y): array -> value = value + x;
                           return value;
@@ -607,7 +607,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
-                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
                           for (.x, .y): array -> value = value + x + y;
                           return value;
@@ -618,7 +618,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
-                          array :: []Point {{1,2}, {3,4}, {5,6}}
+                          array :: [3]Point {{1,2}, {3,4}, {5,6}}
                           value := 0;
                           for p: array -> value = value + p.x;
                           return value;

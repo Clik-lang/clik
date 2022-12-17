@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 public final class Evaluator {
     private final Executor executor;
@@ -146,24 +146,20 @@ public final class Evaluator {
                 yield new Value.Struct(structValue.name(), evaluated);
             }
             case Expression.ArrayValue arrayValue -> {
-                final Expression lengthExpression = arrayValue.length();
-                final int length = lengthExpression != null ?
-                        (int) ((Value.IntegerLiteral) evaluate(lengthExpression, null)).value() : -1;
+                final Type.Array arrayType = arrayValue.type();
+                final long length = arrayType.length();
+                final List<Expression> expressions = arrayValue.expressions();
                 final List<Value> evaluated;
-                if (arrayValue.parameters() instanceof Parameter.Passed.Positional positional) {
-                    assert length == -1 || length == positional.expressions().size() :
-                            "Expected " + length + " elements, got " + positional.expressions().size();
-                    evaluated = positional.expressions().stream()
-                            .map(expression -> evaluate(expression, arrayValue.type())).toList();
-                } else if (arrayValue.parameters() == null) {
-                    // Default value
-                    assert length != -1 : "Expected length for uninitialized array";
-                    final Value defaultValue = ValueCompute.defaultValue(arrayValue.type().type());
-                    evaluated = IntStream.range(0, length).mapToObj(i -> defaultValue).toList();
+                if (expressions != null) {
+                    // Initialized array
+                    evaluated = expressions.stream()
+                            .map(expression -> evaluate(expression, arrayType)).toList();
                 } else {
-                    throw new RuntimeException("Invalid array parameters: " + arrayValue.parameters());
+                    // Default value
+                    final Value defaultValue = ValueCompute.defaultValue(arrayType.type());
+                    evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
                 }
-                yield new Value.Array(arrayValue.type(), evaluated);
+                yield new Value.Array(arrayType, evaluated);
             }
             case Expression.MapValue mapValue -> {
                 final Type.Map type = mapValue.type();

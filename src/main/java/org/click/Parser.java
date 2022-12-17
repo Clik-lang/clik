@@ -234,28 +234,15 @@ public final class Parser {
             final Token identifier = consume(IDENTIFIER, "Expected variable name.");
             return new Expression.VariableAwait(identifier.input());
         } else if (check(LEFT_BRACKET)) {
-            consume(LEFT_BRACKET, "Expected '[' after expression.");
-            final long explicitLength;
-            if (check(INTEGER_LITERAL)) {
-                explicitLength = ((Long) advance().literal().value()).longValue();
-            } else {
-                explicitLength = -1;
-            }
-            consume(RIGHT_BRACKET, "Expected ']' after expression.");
-            final Type type = nextType();
-            // Array
-            final Type.Array arrayType = new Type.Array(type);
-            Expression length;
-            Parameter.Passed passed;
+            final Type.Array type = (Type.Array) nextType();
+            assert type != null;
+            List<Expression> expressions = null;
             if (check(LEFT_BRACE)) {
-                passed = nextPassedParameters();
-                length = new Expression.IntegerLiteral(Type.INT, passed.expressions().size());
-            } else {
-                assert explicitLength != -1 : "Expected explicit length for uninitialized array.";
-                passed = null;
-                length = new Expression.IntegerLiteral(Type.INT, explicitLength);
+                final Parameter.Passed.Positional passed = (Parameter.Passed.Positional) nextPassedParameters();
+                expressions = passed.expressions();
+                assert type.length() == passed.expressions().size() : "Array length does not match passed parameters.";
             }
-            return new Expression.ArrayValue(arrayType, length, passed);
+            return new Expression.ArrayValue(type, expressions);
         } else if (check(MAP)) {
             // Map
             consume(MAP, "Expected 'map' after '['.");
@@ -329,9 +316,11 @@ public final class Parser {
         if (!(check(IDENTIFIER) || check(LEFT_BRACKET))) return null;
         if (match(LEFT_BRACKET)) {
             // Array
+            final Token lengthLiteral = consume(INTEGER_LITERAL, "Expected integer literal for array length.");
+            final long length = ((Long) lengthLiteral.literal().value()).longValue();
             consume(RIGHT_BRACKET, "Expected ']' after array.");
             final Type arrayType = nextType();
-            return new Type.Array(arrayType);
+            return new Type.Array(arrayType, length);
         }
         final Token identifier = consume(IDENTIFIER, "Expected type name.");
         return Type.of(identifier.input());
