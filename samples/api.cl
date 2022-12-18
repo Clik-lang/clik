@@ -28,3 +28,6 @@ send :: (socket: Socket, data: []i8) bool {
 recv :: (socket: Socket) []i8 {
   #intrinsic;
 }
+close :: (socket: Socket) {
+  #intrinsic;
+}
