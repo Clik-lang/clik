@@ -92,6 +92,21 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void globalShared() {
+        assertProgram(ZERO,
+                """
+                        shared :~ 0;
+                        main :: () {
+                          compute();
+                          return shared;
+                        }
+                        compute :: () {
+                          shared = 1;
+                        }
+                        """);
+    }
+
+    @Test
     public void numberLiterals() {
         assertProgram(ONE,
                 """
@@ -190,11 +205,30 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+        assertProgram(ZERO,
+                """
+                        main :: () int {
+                          number :~ 0;
+                          function :: () -> number = 1;
+                          function();
+                          return number;
+                        }
+                        """);
         assertProgram(ONE,
                 """
                         main :: () int {
                           number :~ 0;
                           function :: () -> number = 1;
+                          function();
+                          return $number;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          number :~ 0;
+                          function :: () -> number = 1;
+                          function();
                           function();
                           return $number;
                         }
@@ -943,7 +977,7 @@ public final class IntegrationTest {
     }
 
     @Test
-    public void spawnInline() {
+    public void spawn() {
         assertProgram(ZERO,
                 """
                         main :: () int {
