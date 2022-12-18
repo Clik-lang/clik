@@ -1,6 +1,6 @@
 #load "api.cl";
 
-main :: fn() {
+main :: () {
   port :: 25577;
   server :: open_server(port);
   print("Server started on port ");
@@ -13,7 +13,7 @@ main :: fn() {
       print("Handling client ");
       backend :: connect_server("localhost", 25565);
       stop :~ false;
-      forward :: fn(receiver: Socket, sender: Socket) {
+      forward :: (receiver: Socket, sender: Socket) {
         for {
           select {
             {data :: recv(receiver); send(sender, data);} {}

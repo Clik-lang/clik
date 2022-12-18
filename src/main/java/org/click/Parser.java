@@ -179,12 +179,14 @@ public final class Parser {
         }
 
         if (check(LEFT_PAREN)) {
-            consume(LEFT_PAREN, "Expected '(' after expression.");
-            final Expression expression = nextExpression();
-            consume(RIGHT_PAREN, "Expected ')' after expression.");
-            return new Expression.Group(expression);
-        } else if (check(FN) || check(SPAWN)) {
-            return nextFunction();
+            if (checkNext(RIGHT_PAREN) || checkNext(IDENTIFIER) && checkNextNext(COLON)) {
+                return nextFunction();
+            } else {
+                consume(LEFT_PAREN, "Expected '(' after expression.");
+                final Expression expression = nextExpression();
+                consume(RIGHT_PAREN, "Expected ')' after expression.");
+                return new Expression.Group(expression);
+            }
         } else if (check(STRUCT)) {
             return nextStruct();
         } else if (check(ENUM)) {
@@ -348,8 +350,6 @@ public final class Parser {
     }
 
     Expression.Function nextFunction() {
-        final boolean async = match(SPAWN);
-        if (!async) consume(FN, "Expected 'fn' or 'spawn'.");
         consume(LEFT_PAREN, "Expect '('.");
         final List<Parameter> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
@@ -367,7 +367,7 @@ public final class Parser {
         consume(RIGHT_PAREN, "Expect ')'.");
         final Type returnType = Objects.requireNonNullElse(nextType(), Type.VOID);
         final List<Statement> body = nextBlock();
-        return new Expression.Function(async, parameters, returnType, body);
+        return new Expression.Function(parameters, returnType, body);
     }
 
     private Expression.Struct nextStruct() {

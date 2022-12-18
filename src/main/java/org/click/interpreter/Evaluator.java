@@ -23,14 +23,10 @@ public final class Evaluator {
                     // Local function
                     lambdaExecutor = this.executor.fork(this.executor.insideLoop);
                 }
-                List<Statement> body = functionDeclaration.body();
-                if (functionDeclaration.async()) {
-                    // Async functions simply wrap their body in a spawn statement
-                    Statement asyncStatement = new Statement.Spawn(body);
-                    body = List.of(asyncStatement);
-                }
-                yield new Value.FunctionDecl(functionDeclaration.parameters(), functionDeclaration.returnType(),
-                        body, lambdaExecutor);
+                final List<Parameter> params = functionDeclaration.parameters();
+                final Type returnType = functionDeclaration.returnType();
+                final List<Statement> body = functionDeclaration.body();
+                yield new Value.FunctionDecl(params, returnType, body, lambdaExecutor);
             }
             case Expression.Struct structDeclaration -> new Value.StructDecl(structDeclaration.parameters());
             case Expression.Enum enumDeclaration -> {

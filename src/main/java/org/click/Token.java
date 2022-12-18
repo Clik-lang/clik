@@ -30,7 +30,6 @@ public record Token(Type type, int line, String input,
         IDENTIFIER, STRING_LITERAL, INTEGER_LITERAL, FLOAT_LITERAL,
 
         // Keywords
-        FN,
         RETURN, IF, ELSE, TRUE, FALSE,
         FOR, FORK, BREAK, CONTINUE, SELECT, JOIN, SPAWN,
         DEFER, MAP, STRUCT, ENUM, UNION,
