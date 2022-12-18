@@ -10,6 +10,7 @@ import java.util.concurrent.Phaser;
 public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     void interpret(Statement.Loop loop) {
         final Context context = new Context(loop, new Phaser(), new ArrayList<>());
+        context.phaser().register();
         if (loop.iterable() == null) {
             // Infinite loop
             assert !loop.fork() : "Forking infinite loops is not supported";
@@ -24,7 +25,6 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             case Value.Array array -> rangeArray(context, array);
             default -> throw new RuntimeException("Expected iterable, got: " + iterable);
         }
-        context.phaser().register();
         context.phaser().arriveAndAwaitAdvance();
         final List<ScopeWalker<Value>> walkers = context.executors().stream().map(Executor::walker).toList();
         ValueCompute.merge(walker, walkers);
