@@ -992,6 +992,18 @@ public final class IntegrationTest {
                           return $shared;
                         }
                         """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          stop :~ false;
+                          join {
+                            -> test :: $stop;
+                            -> test :: $stop;
+                            -> stop = true;
+                          }
+                          return 1;
+                        }
+                        """);
     }
 
     @Test
@@ -1016,15 +1028,6 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           shared :~ 0;
-                          spawn shared = 1;
-                          return $shared;
-                        }
-                        """);
-        assertProgram(ONE,
-                """
-                        main :: () int {
-                          shared :~ 0;
-                          shared = 1;
                           spawn shared = 1;
                           return $shared;
                         }

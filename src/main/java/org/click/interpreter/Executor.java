@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class Executor {
     private final VM.Context context;
@@ -25,12 +26,13 @@ public final class Executor {
 
     private CurrentFunction currentFunction = null;
 
-    record SharedMutation(AtomicReference<Value> ref) {
+    record SharedMutation(AtomicReference<Value> ref, ReentrantLock lock) {
         public SharedMutation(Value initial) {
-            this(new AtomicReference<>(initial));
+            this(new AtomicReference<>(initial), new ReentrantLock());
         }
 
-        synchronized void append(Executor executor, Value previous, Value next) {
+        void append(Executor executor, Value previous, Value next) {
+            lock.lock();
             if (executor.async) {
                 final Value current = ref.get();
                 final Value delta = ValueCompute.delta(previous, next);
@@ -39,28 +41,25 @@ public final class Executor {
             } else {
                 ref.set(next);
             }
-            notifyAll();
+            lock.unlock();
+            synchronized (this) {
+                notifyAll();
+            }
         }
 
         Value await(Value value) {
-            var current = ref.get();
-            if (!value.equals(current)) {
-                return current;
-            } else {
-                // Wait for update
-                synchronized (this) {
-                    current = ref.get();
-                    if (!value.equals(current)) {
-                        return current;
-                    } else {
-                        try {
-                            wait();
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                        return ref.get();
-                    }
+            Value current = ref.get();
+            if (!value.equals(current)) return current;
+            // Wait for update
+            synchronized (this) {
+                current = ref.get();
+                if (!value.equals(current)) return current;
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
+                return ref.get();
             }
         }
     }
