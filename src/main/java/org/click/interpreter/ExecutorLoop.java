@@ -35,7 +35,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
 
     private boolean iterate(Context context) {
         final Statement.Loop loop = context.loop();
-        final List<Statement> body = loop.body();
+        final Statement body = loop.body();
         if (!loop.fork()) {
             // Single thread
             var previousLoop = executor.insideLoop;
@@ -56,13 +56,10 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         }
     }
 
-    private boolean iterateBody(Executor executor, List<Statement> body) {
-        for (Statement statement : body) {
-            final Value value = executor.interpret(statement);
-            if (value instanceof Value.Continue) break;
-            if (value instanceof Value.Break) return false;
-        }
-        return true;
+    private boolean iterateBody(Executor executor, Statement body) {
+        final Value value = executor.interpret(body);
+        if (value instanceof Value.Continue) return true;
+        return !(value instanceof Value.Break);
     }
 
     private void rangeLoop(Context context, Value.Range range) {

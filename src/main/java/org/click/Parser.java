@@ -459,7 +459,7 @@ public final class Parser {
         if (!fork) consume(FOR, "Expect 'for' or 'fork'.");
         // Infinite loop
         if (check(LEFT_BRACE) || check(ARROW)) {
-            return new Statement.Loop(null, null, nextBlock(), fork);
+            return new Statement.Loop(null, null, nextStatement(), fork);
         }
         List<Statement.Loop.Declaration> declarations = new ArrayList<>();
         if (check(LEFT_PAREN) || check(DOT) || check(IDENTIFIER) && (checkNext(COLON) || checkNext(COMMA))) {
@@ -478,7 +478,7 @@ public final class Parser {
             consume(COLON, "Expect ':' after declaration name.");
         }
         final Expression iterable = nextExpression();
-        final List<Statement> body = nextBlock();
+        final Statement body = nextStatement();
         return new Statement.Loop(declarations, iterable, body, fork);
     }
 

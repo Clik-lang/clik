@@ -24,7 +24,7 @@ public sealed interface Statement {
     }
 
     record Loop(List<Declaration> declarations, Expression iterable,
-                List<Statement> body, boolean fork) implements Statement {
+                Statement body, boolean fork) implements Statement {
         public record Declaration(boolean ref, String name) {
         }
     }
