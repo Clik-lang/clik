@@ -980,7 +980,7 @@ public final class IntegrationTest {
                           return shared;
                         }
                         """);
-        assertProgram(ONE,
+        assertProgram(TWO,
                 """
                         main :: () int {
                           shared :~ 0;
@@ -1017,6 +1017,24 @@ public final class IntegrationTest {
                         main :: () int {
                           shared :~ 0;
                           spawn shared = 1;
+                          return $shared;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          shared :~ 0;
+                          shared = 1;
+                          spawn shared = 1;
+                          return $shared;
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () int {
+                          shared :~ 0;
+                          shared = 1;
+                          spawn shared = shared + 1;
                           return $shared;
                         }
                         """);

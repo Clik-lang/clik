@@ -3,7 +3,6 @@ package org.click.interpreter;
 import org.click.*;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.LongStream;
 
 public final class Evaluator {
@@ -21,7 +20,7 @@ public final class Evaluator {
                 Executor lambdaExecutor = null;
                 if (this.executor.currentFunction() != null) {
                     // Local function
-                    lambdaExecutor = this.executor.fork(this.executor.insideLoop);
+                    lambdaExecutor = this.executor.fork(executor.async, executor.insideLoop);
                 }
                 final List<Parameter> params = functionDeclaration.parameters();
                 final Type returnType = functionDeclaration.returnType();
@@ -118,15 +117,9 @@ public final class Evaluator {
                 if (value == null) {
                     throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked.keySet());
                 }
-                final AtomicReference<Value> sharedRef = executor.sharedMutations().get(name);
-                if (sharedRef == null) {
-                    throw new RuntimeException("Variable not shared: " + name);
-                }
-                Value result;
-                while ((result = sharedRef.get()).equals(value)) {
-                    Thread.yield();
-                }
-                yield result;
+                final Executor.SharedMutation sharedMutation = executor.sharedMutations.get(name);
+                if (sharedMutation == null) throw new RuntimeException("Variable not shared: " + name);
+                yield sharedMutation.await(value);
             }
             case Expression.ArrayAccess arrayAccess -> {
                 final Value array = evaluate(arrayAccess.array(), null);
@@ -165,9 +158,9 @@ public final class Evaluator {
                     final Value value = executor.evaluate(expression, param.type());
                     evaluated.add(value);
                 }
-                final Executor callExecutor = Objects.requireNonNullElseGet(functionDecl.lambdaExecutor(),
-                        () -> executor.fork(executor.insideLoop));
-                yield callExecutor.interpret(name, functionDecl, evaluated);
+                final Executor callExecutor = Objects.requireNonNullElse(functionDecl.lambdaExecutor(), executor);
+                final Executor fork = callExecutor.fork(executor.async, executor.insideLoop);
+                yield fork.interpret(name, functionDecl, evaluated);
             }
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());

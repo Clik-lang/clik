@@ -46,7 +46,19 @@ public final class ValueCompute {
             final long value = initialConstant.value() + nextConstant.value();
             return new Value.IntegerLiteral(initialConstant.type(), value);
         } else if (initial instanceof Value.BooleanLiteral initialConstant && next instanceof Value.BooleanLiteral nextConstant) {
-            final boolean value = initialConstant.value() && nextConstant.value();
+            final boolean value = initialConstant.value() || nextConstant.value();
+            return new Value.BooleanLiteral(value);
+        } else {
+            throw new RuntimeException("Unknown types: " + initial + " and " + next);
+        }
+    }
+
+    public static Value delta(Value initial, Value next) {
+        if (initial instanceof Value.IntegerLiteral initialConstant && next instanceof Value.IntegerLiteral nextConstant) {
+            final long delta = nextConstant.value() - initialConstant.value();
+            return new Value.IntegerLiteral(initialConstant.type(), delta);
+        } else if (initial instanceof Value.BooleanLiteral initialConstant && next instanceof Value.BooleanLiteral nextConstant) {
+            final boolean value = initialConstant.value() || nextConstant.value();
             return new Value.BooleanLiteral(value);
         } else {
             throw new RuntimeException("Unknown types: " + initial + " and " + next);

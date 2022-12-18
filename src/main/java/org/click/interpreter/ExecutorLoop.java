@@ -45,7 +45,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             return result;
         } else {
             // Virtual threads
-            final Executor executor = executor().fork(true);
+            final Executor executor = executor().fork(true, true);
             context.executors().add(executor);
             context.phaser().register();
             Thread.startVirtualThread(() -> {

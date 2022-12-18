@@ -13,7 +13,7 @@ public record ExecutorJoin(Executor executor, ScopeWalker<Value> walker) {
         List<ScopeWalker<Value>> walkers = new ArrayList<>();
         CountDownLatch latch = new CountDownLatch(statements.size());
         for (Statement stmt : statements) {
-            final Executor executor = executor().fork(false);
+            final Executor executor = executor().fork(true, false);
             walkers.add(executor.walker());
             Thread.startVirtualThread(() -> {
                 executor.interpret(stmt);

@@ -13,8 +13,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class Executor {
     private final VM.Context context;
     private final ScopeWalker<Value> walker;
+    final boolean async;
     boolean insideLoop;
-    private final Map<String, AtomicReference<Value>> sharedMutations;
+    final Map<String, SharedMutation> sharedMutations;
 
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
@@ -24,13 +25,55 @@ public final class Executor {
 
     private CurrentFunction currentFunction = null;
 
+    record SharedMutation(AtomicReference<Value> ref) {
+        public SharedMutation(Value initial) {
+            this(new AtomicReference<>(initial));
+        }
+
+        synchronized void append(Executor executor, Value previous, Value next) {
+            if (executor.async) {
+                final Value current = ref.get();
+                final Value delta = ValueCompute.delta(previous, next);
+                final Value merged = ValueCompute.merge(current, delta);
+                ref.set(merged);
+            } else {
+                ref.set(next);
+            }
+            notifyAll();
+        }
+
+        Value await(Value value) {
+            var current = ref.get();
+            if (!value.equals(current)) {
+                return current;
+            } else {
+                // Wait for update
+                synchronized (this) {
+                    current = ref.get();
+                    if (!value.equals(current)) {
+                        return current;
+                    } else {
+                        try {
+                            wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        return ref.get();
+                    }
+                }
+            }
+        }
+    }
+
     record CurrentFunction(String name, List<Parameter> parameters, Type returnType,
                            List<Value> evaluatedParameters) {
     }
 
-    public Executor(VM.Context context, boolean insideLoop, Map<String, AtomicReference<Value>> sharedMutations) {
+    public Executor(VM.Context context, boolean async, boolean insideLoop,
+                    Map<String, SharedMutation> sharedMutations) {
         this.context = context;
         this.walker = context.walker();
+        this.async = async;
         this.insideLoop = insideLoop;
         this.sharedMutations = new HashMap<>(sharedMutations);
 
@@ -42,6 +85,10 @@ public final class Executor {
         this.interpreterSpawn = new ExecutorSpawn(this, walker);
     }
 
+    public Executor(VM.Context context) {
+        this(context, false, false, Map.of());
+    }
+
     public VM.Context context() {
         return context;
     }
@@ -50,18 +97,14 @@ public final class Executor {
         return walker;
     }
 
-    public Map<String, AtomicReference<Value>> sharedMutations() {
-        return sharedMutations;
-    }
-
     public CurrentFunction currentFunction() {
         return currentFunction;
     }
 
-    public Executor fork(boolean insideLoop) {
+    public Executor fork(boolean async, boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
         final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.phaser());
-        final Executor executor = new Executor(context, insideLoop, sharedMutations);
+        final Executor executor = new Executor(context, async, insideLoop, sharedMutations);
         copy.enterBlock(executor);
         copy.currentScope().tracked.putAll(walker.currentScope().tracked);
         return executor;
@@ -107,14 +150,14 @@ public final class Executor {
             // Single return
             final String name = names.get(0);
             walker.register(name, value);
-            if (isShared) sharedMutations.put(name, new AtomicReference<>(value));
+            if (isShared) this.sharedMutations.put(name, new SharedMutation(value));
         } else {
             // Multiple return
             for (int i = 0; i < names.size(); i++) {
                 final String name = names.get(i);
                 final Value deconstructed = ValueExtractor.deconstruct(walker, value, i);
                 walker.register(name, deconstructed);
-                if (isShared) sharedMutations.put(name, new AtomicReference<>(deconstructed));
+                if (isShared) this.sharedMutations.put(name, new SharedMutation(value));
             }
         }
     }
@@ -158,8 +201,8 @@ public final class Executor {
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
                     final Value updatedVariable = ValueExtractor.updateVariable(this, tracked, assignTarget.accessPoint(), evaluated);
                     walker.update(name, updatedVariable);
-                    var ref = sharedMutations.get(name);
-                    if (ref != null) ref.set(updatedVariable);
+                    var sharedMutation = sharedMutations.get(name);
+                    if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
                 } else {
                     final Value evaluated = interpreter.evaluate(assign.expression(), null);
                     for (int i = 0; i < count; i++) {
@@ -169,8 +212,8 @@ public final class Executor {
                         final Value deconstructed = ValueExtractor.deconstruct(walker, evaluated, i);
                         final Value updatedVariable = ValueExtractor.updateVariable(this, tracked, assignTarget.accessPoint(), deconstructed);
                         walker.update(name, updatedVariable);
-                        var ref = sharedMutations.get(name);
-                        if (ref != null) ref.set(updatedVariable);
+                        var sharedMutation = sharedMutations.get(name);
+                        if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
                     }
                 }
                 yield null;
