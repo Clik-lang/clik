@@ -167,9 +167,7 @@ public final class Evaluator {
                 }
                 final Executor callExecutor = Objects.requireNonNullElseGet(functionDecl.lambdaExecutor(),
                         () -> executor.fork(executor.insideLoop));
-                final Value result = callExecutor.interpret(name, functionDecl, evaluated);
-                ValueCompute.merge(callExecutor.walker(), List.of(callExecutor.walker()));
-                yield result;
+                yield callExecutor.interpret(name, functionDecl, evaluated);
             }
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());
