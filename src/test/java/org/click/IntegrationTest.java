@@ -700,6 +700,24 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          value := 0;
+                          if true value = 1;
+                          else value = 2;
+                          return value;
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () int {
+                          value := 0;
+                          if false value = 1;
+                          else value = 2;
+                          return value;
+                        }
+                        """);
     }
 
     @Test

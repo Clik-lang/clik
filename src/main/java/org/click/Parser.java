@@ -93,6 +93,8 @@ public final class Parser {
             } else {
                 statement = new Statement.Block(nextBlock());
             }
+        } else if (check(ARROW)) {
+            statement = new Statement.Block(nextBlock());
         } else if (check(HASH)) {
             // Directive
             final Directive.Statement directive = nextDirectiveStatement();
@@ -447,8 +449,8 @@ public final class Parser {
     Statement.Branch nextBranch() {
         consume(IF, "Expect 'if'.");
         final Expression condition = nextExpression();
-        final List<Statement> thenBranch = nextBlock();
-        final List<Statement> elseBranch = match(ELSE) ? nextBlock() : null;
+        final Statement thenBranch = nextStatement();
+        final Statement elseBranch = match(ELSE) ? nextStatement() : null;
         return new Statement.Branch(condition, thenBranch, elseBranch);
     }
 

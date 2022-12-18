@@ -181,15 +181,9 @@ public final class Executor {
                 assert condition != null;
                 if (condition instanceof Value.BooleanLiteral booleanLiteral) {
                     if (booleanLiteral.value()) {
-                        for (Statement thenBranch : branch.thenBranch()) {
-                            final Value value = interpret(thenBranch);
-                            if (value != null) yield value;
-                        }
+                        yield interpret(branch.thenBranch());
                     } else if (branch.elseBranch() != null) {
-                        for (Statement elseBranch : branch.elseBranch()) {
-                            final Value value = interpret(elseBranch);
-                            if (value != null) yield value;
-                        }
+                        yield interpret(branch.elseBranch());
                     }
                 } else {
                     throw new RuntimeException("Condition must be a boolean");

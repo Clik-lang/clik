@@ -19,9 +19,8 @@ public sealed interface Statement {
     record Call(String name, Parameter.Passed arguments) implements Statement {
     }
 
-    record Branch(Expression condition,
-                  List<Statement> thenBranch,
-                  @Nullable List<Statement> elseBranch) implements Statement {
+    record Branch(Expression condition, Statement thenBranch,
+                  @Nullable Statement elseBranch) implements Statement {
     }
 
     record Loop(List<Declaration> declarations, Expression iterable,
