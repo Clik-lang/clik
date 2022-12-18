@@ -32,7 +32,7 @@ public record Token(Type type, int line, String input,
         // Keywords
         FN,
         RETURN, IF, ELSE, TRUE, FALSE,
-        FOR, FORK, BREAK, CONTINUE, SELECT, SPAWN,
+        FOR, FORK, BREAK, CONTINUE, SELECT, JOIN, SPAWN,
         DEFER, MAP, STRUCT, ENUM, UNION,
 
         // End of file

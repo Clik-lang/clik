@@ -77,6 +77,8 @@ public final class Parser {
             statement = new Statement.Continue();
         } else if (check(SELECT)) {
             statement = nextSelect();
+        } else if (check(JOIN)) {
+            statement = nextJoin();
         } else if (check(SPAWN)) {
             statement = nextSpawn();
         } else if (match(DEFER)) {
@@ -487,6 +489,20 @@ public final class Parser {
         }
         consume(RIGHT_BRACE, "Expect '}'.");
         return new Statement.Select(cases);
+    }
+
+    Statement.Join nextJoin() {
+        consume(JOIN, "Expect 'join'.");
+        consume(LEFT_BRACE, "Expect '{'.");
+        List<Statement> statements = new ArrayList<>();
+        if (!check(RIGHT_BRACE)) {
+            do {
+                consume(ARROW, "Expect '->'.");
+                statements.add(nextStatement());
+            } while (!check(RIGHT_BRACE));
+        }
+        consume(RIGHT_BRACE, "Expect '}'.");
+        return new Statement.Join(statements);
     }
 
     Statement.Spawn nextSpawn() {

@@ -13,7 +13,7 @@ main :: fn() {
       print("Handling client ");
       backend :: connect_server("localhost", 25565);
       stop :~ false;
-      forward :: spawn(receiver: Socket, sender: Socket) {
+      forward :: fn(receiver: Socket, sender: Socket) {
         for {
           select {
             {data :: recv(receiver); send(sender, data);} {}
@@ -23,9 +23,10 @@ main :: fn() {
         }
         stop = true;
       }
-      forward(client, backend);
-      forward(backend, client);
-      stop = $stop; // Wait for the fibers to stop
+      join {
+        -> forward(client, backend);
+        -> forward(backend, client);
+      }
       print("Client disconnected ");
       close(client);
     }

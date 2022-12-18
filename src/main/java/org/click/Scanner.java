@@ -26,6 +26,7 @@ public final class Scanner {
             entry("break", Token.Type.BREAK),
             entry("continue", Token.Type.CONTINUE),
             entry("select", Token.Type.SELECT),
+            entry("join", Token.Type.JOIN),
             entry("spawn", Token.Type.SPAWN),
             entry("defer", Token.Type.DEFER),
             entry("map", Token.Type.MAP),

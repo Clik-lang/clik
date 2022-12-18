@@ -894,6 +894,55 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void join() {
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
+                          join {
+                            -> test :: 10;
+                            -> test2:: 10;
+                          }
+                          return 0;
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: fn() int {
+                          shared :~ 0;
+                          join {
+                            -> shared = 1;
+                            -> shared = 1;
+                          }
+                          return shared;
+                        }
+                        """);
+        assertProgram(ZERO,
+                """
+                        main :: fn() int {
+                          shared :~ 0;
+                          lambda :: fn() -> shared = 1;
+                          join {
+                            -> lambda();
+                            -> lambda();
+                          }
+                          return shared;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: fn() int {
+                          shared :~ 0;
+                          lambda :: fn() -> shared = 1;
+                          join {
+                            -> lambda();
+                            -> lambda();
+                          }
+                          return $shared;
+                        }
+                        """);
+    }
+
+    @Test
     public void spawn() {
         assertProgram(ZERO,
                 """

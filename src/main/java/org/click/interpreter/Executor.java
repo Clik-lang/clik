@@ -19,6 +19,7 @@ public final class Executor {
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
     private final ExecutorSelect interpreterSelect;
+    private final ExecutorJoin interpreterJoin;
     private final ExecutorSpawn interpreterSpawn;
 
     private CurrentFunction currentFunction = null;
@@ -37,6 +38,7 @@ public final class Executor {
 
         this.interpreterLoop = new ExecutorLoop(this, walker);
         this.interpreterSelect = new ExecutorSelect(this, walker);
+        this.interpreterJoin = new ExecutorJoin(this, walker);
         this.interpreterSpawn = new ExecutorSpawn(this, walker);
     }
 
@@ -206,6 +208,7 @@ public final class Executor {
                 yield new Value.Continue();
             }
             case Statement.Select select -> interpreterSelect.interpret(select);
+            case Statement.Join join -> interpreterJoin.interpret(join);
             case Statement.Spawn spawn -> {
                 this.interpreterSpawn.interpret(spawn);
                 yield null;
