@@ -153,6 +153,7 @@ public final class Executor {
                     final Statement.AssignTarget assignTarget = assignTargets.get(0);
                     final String name = assignTarget.name();
                     final Value tracked = walker.find(name);
+                    assert tracked != null : "Variable not found: " + name;
                     final Type variableType = ValueExtractor.extractAssignmentType(tracked);
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
                     final Value updatedVariable = ValueExtractor.updateVariable(this, tracked, assignTarget.accessPoint(), evaluated);
