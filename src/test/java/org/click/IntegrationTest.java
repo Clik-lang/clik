@@ -989,6 +989,22 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         main :: () int {
+                          shared :~ 0;
+                          spawn shared = 1;
+                          return shared;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          shared :~ 0;
+                          spawn shared = 1;
+                          return $shared;
+                        }
+                        """);
+        assertProgram(ZERO,
+                """
+                        main :: () int {
                           stop :~ false;
                           spawn {
                             stop = true;

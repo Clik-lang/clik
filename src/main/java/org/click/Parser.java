@@ -112,13 +112,17 @@ public final class Parser {
 
     boolean checkStatementBlock() {
         final int start = index;
-        consume(LEFT_BRACE, "Expected '{' before block.");
+        if (!check(LEFT_BRACE))
+            throw error(peek(), "Expected '{' to start block");
+        if (checkNext(RIGHT_BRACE)) return true;
         // Verify if there is at least one semicolon or statement keyword between the braces
         int braceLevel = 0;
-        while (!check(RIGHT_BRACE) || braceLevel > 0) {
-            if (check(LEFT_BRACE)) braceLevel++;
-            if (check(RIGHT_BRACE)) braceLevel--;
-            if (check(SEMICOLON) || check(RETURN) || check(IF) || check(FOR) || check(FORK) || check(BREAK) || check(CONTINUE) || check(SELECT) || check(SPAWN) || check(DEFER) || check(HASH)) {
+        while (!checkNext(RIGHT_BRACE) || braceLevel > 0) {
+            if (checkNext(LEFT_BRACE)) braceLevel++;
+            if (checkNext(RIGHT_BRACE)) braceLevel--;
+            if (checkNext(SEMICOLON) || checkNext(RETURN) || checkNext(IF) ||
+                    checkNext(FOR) || checkNext(FORK) || checkNext(BREAK) || checkNext(CONTINUE) ||
+                    checkNext(SELECT) || checkNext(SPAWN) || checkNext(DEFER) || checkNext(HASH)) {
                 index = start;
                 return true;
             }
@@ -507,8 +511,8 @@ public final class Parser {
 
     Statement.Spawn nextSpawn() {
         consume(SPAWN, "Expect 'spawn'.");
-        final List<Statement> block = nextBlock();
-        return new Statement.Spawn(block);
+        final Statement statement = nextStatement();
+        return new Statement.Spawn(statement);
     }
 
     List<Statement> nextBlock() {

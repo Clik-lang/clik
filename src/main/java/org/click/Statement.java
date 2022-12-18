@@ -42,7 +42,7 @@ public sealed interface Statement {
     record Join(List<Statement> statements) implements Statement {
     }
 
-    record Spawn(List<Statement> statements) implements Statement {
+    record Spawn(Statement statement) implements Statement {
     }
 
     record Defer(Statement statement) implements Statement {
