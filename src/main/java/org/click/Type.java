@@ -1,5 +1,8 @@
 package org.click;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public interface Type {
     Type VOID = new Primitive("void");
     Type BOOL = new Primitive("bool");
@@ -44,6 +47,18 @@ public interface Type {
         @Override
         public String name() {
             return "map[" + key.name() + "]" + value.name();
+        }
+
+        @Override
+        public boolean primitive() {
+            return false;
+        }
+    }
+
+    record Function(List<Parameter> parameters, Type returnType) implements Type {
+        @Override
+        public String name() {
+            return "(" + parameters.stream().map(Parameter::name).collect(Collectors.joining(", ")) + ") " + returnType.name();
         }
 
         @Override

@@ -237,6 +237,28 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void lambdaParam() {
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          function :: () int -> 1;
+                          forward :: (function: () int) -> function();
+                          value :: forward(function);
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 11),
+                """
+                        main :: () int {
+                          add :: (a: int, b: int) int -> a + b;
+                          forward :: (a: int, b: int, function: (c: int, d: int) int) -> function(a, b);
+                          value :: forward(5, 6, add);
+                          return value;
+                        }
+                        """);
+    }
+
+    @Test
     public void mathInteger() {
         assertProgram(ONE,
                 """

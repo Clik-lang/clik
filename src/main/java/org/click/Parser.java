@@ -345,7 +345,8 @@ public final class Parser {
     }
 
     Type nextType() {
-        if (!(check(IDENTIFIER) || check(LEFT_BRACKET) || check(MAP))) return null;
+        if (!(check(IDENTIFIER) || check(LEFT_BRACKET) ||
+                check(MAP) || check(LEFT_PAREN))) return null;
         if (match(LEFT_BRACKET)) {
             // Array
             long length = -1;
@@ -365,6 +366,24 @@ public final class Parser {
             consume(RIGHT_BRACKET, "Expected ']' after key type.");
             final Type valueType = nextType();
             return new Type.Map(keyType, valueType);
+        }
+        if (match(LEFT_PAREN)) {
+            // Function
+            final List<Parameter> parameterTypes = new ArrayList<>();
+            if (!check(RIGHT_PAREN)) {
+                do {
+                    final Token identifier = consume(IDENTIFIER, "Expected parameter name.");
+                    consume(COLON, "Expected ':' after parameter name.");
+                    final Type type = nextType();
+                    parameterTypes.add(new Parameter(identifier.input(), type));
+                } while (match(COMMA));
+            }
+            consume(RIGHT_PAREN, "Expected ')' after parameters.");
+            Type returnType = Type.VOID;
+            if (!check(SEMICOLON) && !check(COMMA)) {
+                returnType = nextType();
+            }
+            return new Type.Function(parameterTypes, returnType);
         }
         final Token identifier = consume(IDENTIFIER, "Expected type name.");
         return Type.of(identifier.input());
