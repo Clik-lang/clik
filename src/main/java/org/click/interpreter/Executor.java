@@ -251,12 +251,9 @@ public final class Executor {
                 if (!insideLoop) throw new RuntimeException("Continue statement outside of loop");
                 yield new Value.Continue();
             }
-            case Statement.Select select -> interpreterSelect.interpret(select);
-            case Statement.Join join -> interpreterJoin.interpret(join);
-            case Statement.Spawn spawn -> {
-                this.interpreterSpawn.interpret(spawn);
-                yield null;
-            }
+            case Statement.Select select -> this.interpreterSelect.interpret(select);
+            case Statement.Join join -> this.interpreterJoin.interpret(join);
+            case Statement.Spawn spawn -> this.interpreterSpawn.interpret(spawn);
             case Statement.Defer defer -> {
                 ScopeWalker<Value>.Scope currentScope = walker.currentScope();
                 currentScope.deferred.add(defer.statement());
