@@ -23,7 +23,7 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
     data := [25000]i8;
     for {
       Result :: struct {length: int, success: bool};
-      read :Result: select {
+      length, success :Result= select {
         {
           length, success :: recv(receiver, data);
           {length, success};
@@ -31,7 +31,7 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
         {stop = $stop; {0, false};}
         {sleep(30000); {0, false};}
       }
-      if !read.success {
+      if !success {
         stop = true;
         break;
       }
@@ -39,7 +39,7 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
       // TODO transform data
 
       select {
-        -> send(sender, data, read.length);
+        -> send(sender, data, length);
         -> stop = $stop;
         {sleep(30000); stop = true;}
       }
