@@ -55,7 +55,8 @@ public final class Parser {
                     } while (match(COMMA));
                 }
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
-                statement = new Statement.Call(name, new Parameter.Passed.Positional(arguments));
+                final Expression.Call call = new Expression.Call(name, new Parameter.Passed.Positional(arguments));
+                statement = new Statement.Run(call);
             } else {
                 // Implicit return
                 index = startIndex;

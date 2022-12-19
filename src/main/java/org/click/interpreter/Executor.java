@@ -237,7 +237,7 @@ public final class Executor {
                 }
                 yield null;
             }
-            case Statement.Call call -> interpreter.evaluate(new Expression.Call(call.name(), call.arguments()), null);
+            case Statement.Run run -> interpreter.evaluate(run.expression(), null);
             case Statement.Branch branch -> {
                 final Value condition = interpreter.evaluate(branch.condition(), null);
                 assert condition != null;

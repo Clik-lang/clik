@@ -3,7 +3,6 @@ package org.click;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 public sealed interface Statement {
     record Declare(List<String> names, DeclarationType type, Expression initializer,
@@ -16,7 +15,7 @@ public sealed interface Statement {
     record Assign(List<AssignTarget> assignTargets, Expression expression) implements Statement {
     }
 
-    record Call(String name, Parameter.Passed arguments) implements Statement {
+    record Run(Expression expression) implements Statement {
     }
 
     record Branch(Expression condition, Statement thenBranch,
