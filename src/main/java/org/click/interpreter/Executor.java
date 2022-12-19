@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public final class Executor {
@@ -26,13 +27,18 @@ public final class Executor {
 
     private CurrentFunction currentFunction = null;
 
-    record SharedMutation(AtomicReference<Value> ref, ReentrantLock lock) {
+    record SharedMutation(AtomicReference<Value> ref, ReentrantLock writeLock,
+                          ReentrantLock readLock, Condition condition) {
         public SharedMutation(Value initial) {
-            this(new AtomicReference<>(initial), new ReentrantLock());
+            this(new AtomicReference<>(initial), new ReentrantLock(), new ReentrantLock(), null);
+        }
+
+        public SharedMutation {
+            condition = readLock.newCondition();
         }
 
         void append(Executor executor, Value previous, Value next) {
-            lock.lock();
+            writeLock.lock();
             if (executor.async) {
                 final Value current = ref.get();
                 final Value delta = ValueCompute.delta(previous, next);
@@ -41,26 +47,27 @@ public final class Executor {
             } else {
                 ref.set(next);
             }
-            lock.unlock();
-            synchronized (this) {
-                notifyAll();
-            }
+            writeLock.unlock();
+            readLock.lock();
+            condition.signalAll();
+            readLock.unlock();
         }
 
         Value await(Value value) {
             Value current = ref.get();
             if (!value.equals(current)) return current;
             // Wait for update
-            synchronized (this) {
+            this.readLock.lock();
+            try {
                 current = ref.get();
                 if (!value.equals(current)) return current;
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                return ref.get();
+                condition.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } finally {
+                this.readLock.unlock();
             }
+            return ref.get();
         }
     }
 
