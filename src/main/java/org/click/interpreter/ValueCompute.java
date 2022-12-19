@@ -191,9 +191,9 @@ public final class ValueCompute {
             case Value.BooleanLiteral ignored -> Type.BOOL;
             case Value.StringLiteral ignored -> Type.STRING;
             case Value.Struct struct -> Type.of(struct.name());
-            case Value.ArrayRef arrayRef -> arrayRef.type().type();
-            case Value.ArrayValue arrayValue -> arrayValue.type().type();
-            case Value.Map map -> map.type().value();
+            case Value.ArrayRef arrayRef -> arrayRef.type();
+            case Value.ArrayValue arrayValue -> arrayValue.type();
+            case Value.Map map -> map.type();
             default -> throw new RuntimeException("Unknown type: " + expression);
         };
     }

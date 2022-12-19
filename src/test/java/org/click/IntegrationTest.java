@@ -321,6 +321,22 @@ public final class IntegrationTest {
                           return array[0];
                         }
                         """);
+        assertProgram(TWO,
+                """
+                        main :: () int {
+                          array := [5]int {1, 2, 3, 4, 5};
+                          array = [5]int {2, 3, 4, 5, 6};
+                          return array[0];
+                        }
+                        """);
+        assertProgram(TWO,
+                """
+                        main :: () int {
+                          array := [5]int {1, 2, 3, 4, 5};
+                          array = {2, 3, 4, 5, 6};
+                          return array[0];
+                        }
+                        """);
         assertProgram(ONE,
                 """
                         main :: () int {
