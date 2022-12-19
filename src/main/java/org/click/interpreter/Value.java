@@ -65,7 +65,7 @@ public sealed interface Value {
     record Union(String name, Value value) implements Value {
     }
 
-    record Array(Type.Array type, List<Value> elements) implements Value {
+    record ArrayRef(Type.Array type, List<Value> elements) implements Value {
     }
 
     record Map(Type.Map type, java.util.Map<Value, Value> entries) implements Value {

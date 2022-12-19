@@ -36,8 +36,8 @@ public final class ValueSerializer {
                 final Value field = union.value();
                 yield union.name() + "." + serialize(walker, field);
             }
-            case Value.Array array -> {
-                final List<Value> values = array.elements();
+            case Value.ArrayRef arrayRef -> {
+                final List<Value> values = arrayRef.elements();
                 final StringBuilder builder = new StringBuilder();
                 builder.append("[");
                 for (int i = 0; i < values.size(); i++) {

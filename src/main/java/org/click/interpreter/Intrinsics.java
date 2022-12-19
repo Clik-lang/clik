@@ -99,7 +99,7 @@ public final class Intrinsics {
             final ByteBuffer buffer = ByteBuffer.allocateDirect(25_000);
             final int length = socketChannel.read(buffer);
             final List<Value> values = IntStream.range(0, length).mapToObj(i -> (Value) new Value.IntegerLiteral(Type.I8, buffer.get(i))).toList();
-            return new Value.Array(new Type.Array(Type.I8, length), values);
+            return new Value.ArrayRef(new Type.Array(Type.I8, length), values);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -111,8 +111,8 @@ public final class Intrinsics {
                 javaObject.object() instanceof SocketChannel socketChannel)) {
             throw new RuntimeException("Expected client, got " + value);
         }
-        final Value.Array array = (Value.Array) evaluated.get(1);
-        final List<Value> elements = array.elements();
+        final Value.ArrayRef arrayRef = (Value.ArrayRef) evaluated.get(1);
+        final List<Value> elements = arrayRef.elements();
         ByteBuffer buffer = ByteBuffer.allocateDirect(elements.size());
         for (Value element : elements) {
             final byte b = (byte) ((Value.IntegerLiteral) element).value();

@@ -89,7 +89,7 @@ public final class ValueCompute {
             case Value.BooleanLiteral ignored -> Type.BOOL;
             case Value.StringLiteral ignored -> Type.STRING;
             case Value.Struct struct -> Type.of(struct.name());
-            case Value.Array array -> array.type().type();
+            case Value.ArrayRef arrayRef -> arrayRef.type().type();
             case Value.Map map -> map.type().value();
             default -> throw new RuntimeException("Unknown type: " + expression);
         };
@@ -128,14 +128,14 @@ public final class ValueCompute {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }
             }
-            case Value.Array array -> {
+            case Value.ArrayRef arrayRef -> {
                 if (access instanceof AccessPoint.Index indexAccess) {
                     final Expression indexExpression = indexAccess.expression();
-                    final List<Value> newParams = new ArrayList<>(array.elements());
+                    final List<Value> newParams = new ArrayList<>(arrayRef.elements());
                     final Value index = executor.evaluate(indexExpression, null);
                     final int targetIndex = (int) ((Value.IntegerLiteral) index).value();
                     newParams.set(targetIndex, updated);
-                    yield new Value.Array(array.type(), newParams);
+                    yield new Value.ArrayRef(arrayRef.type(), newParams);
                 } else {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }

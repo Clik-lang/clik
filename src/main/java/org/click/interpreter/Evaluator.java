@@ -92,12 +92,12 @@ public final class Evaluator {
                             if (value == null) throw new RuntimeException("Enum entry not found: " + component);
                             yield value;
                         }
-                        case Value.Array array -> {
+                        case Value.ArrayRef arrayRef -> {
                             if (!(access instanceof AccessPoint.Index indexAccess)) {
                                 throw new RuntimeException("Invalid array access: " + access);
                             }
                             final int index = (int) ((Value.IntegerLiteral) evaluate(indexAccess.expression(), null)).value();
-                            yield array.elements().get(index);
+                            yield arrayRef.elements().get(index);
                         }
                         case Value.Map map -> {
                             if (!(access instanceof AccessPoint.Index indexAccess)) {
@@ -124,13 +124,13 @@ public final class Evaluator {
             case Expression.ArrayAccess arrayAccess -> {
                 final Value array = evaluate(arrayAccess.array(), null);
                 yield switch (array) {
-                    case Value.Array arrayValue -> {
+                    case Value.ArrayRef arrayRef -> {
                         final Value index = evaluate(arrayAccess.index(), null);
                         if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
                             throw new RuntimeException("Expected constant, got: " + index);
                         }
                         final int integer = (int) integerLiteral.value();
-                        final List<Value> content = arrayValue.elements();
+                        final List<Value> content = arrayRef.elements();
                         if (integer < 0 || integer >= content.size())
                             throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
                         yield content.get(integer);
@@ -173,10 +173,10 @@ public final class Evaluator {
                 }
                 yield new Value.Struct(structValue.name(), evaluated);
             }
-            case Expression.ArrayValue arrayValue -> {
-                final Type.Array arrayType = arrayValue.type();
+            case Expression.ArrayValue arrayRef -> {
+                final Type.Array arrayType = arrayRef.type();
                 final long length = arrayType.length();
-                final List<Expression> expressions = arrayValue.expressions();
+                final List<Expression> expressions = arrayRef.expressions();
                 final List<Value> evaluated;
                 if (expressions != null) {
                     // Initialized array
@@ -187,7 +187,7 @@ public final class Evaluator {
                     final Value defaultValue = ValueCompute.defaultValue(arrayType.type());
                     evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
                 }
-                yield new Value.Array(arrayType, evaluated);
+                yield new Value.ArrayRef(arrayType, evaluated);
             }
             case Expression.MapValue mapValue -> {
                 final Type.Map type = mapValue.type();

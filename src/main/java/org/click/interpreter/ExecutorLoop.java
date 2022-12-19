@@ -22,7 +22,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final Value iterable = executor.evaluate(loop.iterable(), null);
         switch (iterable) {
             case Value.Range range -> rangeLoop(context, range);
-            case Value.Array array -> rangeArray(context, array);
+            case Value.ArrayRef arrayRef -> rangeArrayRef(context, arrayRef);
             default -> throw new RuntimeException("Expected iterable, got: " + iterable);
         }
         context.phaser().arriveAndAwaitAdvance();
@@ -88,12 +88,12 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         walker.exitBlock();
     }
 
-    private void rangeArray(Context context, Value.Array array) {
+    private void rangeArrayRef(Context context, Value.ArrayRef arrayRef) {
         final Statement.Loop loop = context.loop();
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
         walker.enterBlock(executor);
-        final List<Value> values = array.elements();
+        final List<Value> values = arrayRef.elements();
         if (!declarations.isEmpty()) {
             if (declarations.size() == 1 && !declarations.get(0).ref()) {
                 // for-each loop
@@ -117,7 +117,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 }
             } else {
                 // Ref loop
-                final Type arrayType = array.type();
+                final Type arrayType = arrayRef.type();
                 if (!(arrayType instanceof Type.Array typeArray))
                     throw new RuntimeException("Expected array of structures, got: " + arrayType);
                 final Value tracked = walker.find(typeArray.type().name());
