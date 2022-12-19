@@ -2,13 +2,15 @@ package org.click.interpreter;
 
 import org.click.Expression;
 import org.click.Statement;
+import org.click.Type;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 public record EvaluatorSelect(Executor executor, ScopeWalker<Value> walker) {
-    Value evaluate(Expression.Select select) {
+    Value evaluate(Expression.Select select, @Nullable Type explicitType) {
         final List<Statement.Block> blocks = select.blocks();
         // Run every statement in a virtual thread and start the block of the first one that finishes
         AtomicReference<Selection> selectionRef = new AtomicReference<>();
@@ -17,9 +19,10 @@ public record EvaluatorSelect(Executor executor, ScopeWalker<Value> walker) {
         for (int i = 0; i < threads.length; i++) {
             final Statement.Block block = blocks.get(i);
             final Executor executor = executor().fork(true, executor().insideLoop);
+            final Value.FunctionDecl decl = new Value.FunctionDecl(List.of(), explicitType, List.of(block), null);
             threads[i] = Thread.ofVirtual().unstarted(() -> {
                 if (selectionRef.get() != null) return;
-                final Value result = executor.interpret(block);
+                final Value result = executor.interpret("select", decl, List.of());
                 if (executor.interrupted) return;
                 Selection selection = new Selection(executor, result);
                 if (selectionRef.compareAndSet(null, selection)) {

@@ -178,7 +178,7 @@ public final class Evaluator {
                 final Executor fork = callExecutor.fork(executor.async, executor.insideLoop);
                 yield fork.interpret(name, functionDecl, evaluated);
             }
-            case Expression.Select select -> this.evaluatorSelect.evaluate(select);
+            case Expression.Select select -> this.evaluatorSelect.evaluate(select, explicitType);
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());
                 final List<Parameter> parameters = struct.parameters();

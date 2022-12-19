@@ -1119,6 +1119,16 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
+                """
+                        main :: () int {
+                          Point :: struct {x: int, y: int}
+                          value :Point: select {
+                            -> {1, 2};
+                          }
+                          return value;
+                        }
+                        """);
     }
 
     @Test

@@ -282,12 +282,9 @@ public final class Executor {
             case Statement.Return returnStatement -> {
                 final Expression expression = returnStatement.expression();
                 if (expression != null) {
-                    if (currentFunction != null) {
-                        final Type returnType = currentFunction.returnType();
-                        yield interpreter.evaluate(expression, returnType);
-                    } else {
-                        yield interpreter.evaluate(expression, null);
-                    }
+                    assert currentFunction != null : "Return statement outside of function";
+                    final Type returnType = currentFunction.returnType();
+                    yield interpreter.evaluate(expression, returnType);
                 }
                 yield null;
             }
