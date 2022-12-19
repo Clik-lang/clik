@@ -2,6 +2,7 @@ package org.click;
 
 import org.click.interpreter.VM;
 import org.click.interpreter.Value;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -758,6 +759,18 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          value := 0;
+                          if true {
+                            value = 1;
+                          } else {
+                            value = 2;
+                          }
+                          return value;
+                        }
+                        """);
         assertProgram(TWO,
                 """
                         main :: () int {
@@ -945,13 +958,41 @@ public final class IntegrationTest {
     }
 
     @Test
-    public void select() {
+    public void selectStmt() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 5;
                           select {
-                            test :: 10; -> value = test;
+                            -> value = 10;
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
+                """
+                        main :: () int {
+                          value := 5;
+                          select {
+                            {
+                              value = 10;
+                              if value == 10 value = 6;
+                            }
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
+                """
+                        main :: () int {
+                          value := 5;
+                          select {
+                            {
+                              value = 10;
+                              if true {
+                                value = 6;
+                              }
+                            }
                           }
                           return value;
                         }
@@ -963,19 +1004,19 @@ public final class IntegrationTest {
                           value :~ 0;
                           fork 0..10 {
                             select {
-                              test :: 10; -> value = value + 1;
+                              -> value = value + 1;
                             }
                           }
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 110),
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
                           fork 0..10 {
                             select {
-                              value = 10; -> value = value + 1;
+                              -> value = value + 1;
                             }
                           }
                           return value;
@@ -986,10 +1027,33 @@ public final class IntegrationTest {
                         main :: () int {
                           for {
                             select {
-                              test :: 10; -> break;
+                              -> break;
                             }
                           }
                           return 1;
+                        }
+                        """);
+    }
+
+    @Disabled
+    @Test
+    public void selectExpr() {
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          value :: select {
+                            -> 10;
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          value :int: select {
+                            -> 10;
+                          }
+                          return value;
                         }
                         """);
     }

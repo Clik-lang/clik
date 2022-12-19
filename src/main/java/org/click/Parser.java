@@ -500,16 +500,16 @@ public final class Parser {
     Statement.Select nextSelect() {
         consume(SELECT, "Expect 'select'.");
         consume(LEFT_BRACE, "Expect '{'.");
-        Map<Statement, Statement.Block> cases = new HashMap<>();
+        List<Statement.Block> blocks = new ArrayList<>();
         if (!check(RIGHT_BRACE)) {
             do {
-                final Statement condition = nextStatement();
-                final Statement.Block body = new Statement.Block(nextBlock());
-                cases.put(condition, body);
+                final List<Statement> statements = nextBlock();
+                final Statement.Block block = new Statement.Block(statements);
+                blocks.add(block);
             } while (!check(RIGHT_BRACE));
         }
         consume(RIGHT_BRACE, "Expect '}'.");
-        return new Statement.Select(cases);
+        return new Statement.Select(blocks);
     }
 
     Statement.Join nextJoin() {

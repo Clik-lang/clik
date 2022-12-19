@@ -101,16 +101,18 @@ public final class Intrinsics {
             final MemorySegment data = arrayValue.data();
             final ByteBuffer buffer = data.asByteBuffer();
             final int length = socketChannel.read(buffer);
-            return new Value.Struct("RecvResult", Map.of(
-                    "length", new Value.IntegerLiteral(Type.INT, length),
-                    "success", new Value.BooleanLiteral(true)
-            ));
-        } catch (IOException e) {
-            return new Value.Struct("RecvResult", Map.of(
-                    "length", new Value.IntegerLiteral(Type.INT, 0),
-                    "success", new Value.BooleanLiteral(false)
-            ));
+            if (length > 0) {
+                return new Value.Struct("RecvResult", Map.of(
+                        "length", new Value.IntegerLiteral(Type.INT, length),
+                        "success", new Value.BooleanLiteral(true)
+                ));
+            }
+        } catch (IOException ignored) {
         }
+        return new Value.Struct("RecvResult", Map.of(
+                "length", new Value.IntegerLiteral(Type.INT, 0),
+                "success", new Value.BooleanLiteral(false)
+        ));
     }
 
     public static Value send(Executor executor, List<Value> evaluated) {

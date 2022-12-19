@@ -23,10 +23,15 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
     data := [25000]i8;
     for {
       select {
-        {length, success :: recv(receiver, data); send(sender, data, length);} {}
-        stop = $stop; {break;}
-        sleep(30000); {break;}
+        {
+          length, success :: recv(receiver, data);
+          if success send(sender, data, length);
+          else stop = true;
+        }
+        -> stop = $stop;
+        {sleep(30000); stop = true;}
       }
+      if stop break;
     }
     stop = true;
   }

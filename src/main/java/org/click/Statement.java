@@ -35,7 +35,7 @@ public sealed interface Statement {
     record Continue() implements Statement {
     }
 
-    record Select(Map<Statement, Block> cases) implements Statement {
+    record Select(List<Block> blocks) implements Statement {
     }
 
     record Join(List<Block> blocks) implements Statement {
