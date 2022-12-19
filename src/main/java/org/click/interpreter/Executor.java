@@ -161,7 +161,7 @@ public final class Executor {
             // Multiple return
             for (int i = 0; i < names.size(); i++) {
                 final String name = names.get(i);
-                final Value deconstructed = ValueExtractor.deconstruct(walker, value, i);
+                final Value deconstructed = ValueCompute.deconstruct(walker, value, i);
                 walker.register(name, deconstructed);
                 if (isShared) this.sharedMutations.put(name, new SharedMutation(value));
             }
@@ -203,9 +203,9 @@ public final class Executor {
                     final String name = assignTarget.name();
                     final Value tracked = walker.find(name);
                     assert tracked != null : "Variable not found: " + name;
-                    final Type variableType = ValueExtractor.extractAssignmentType(tracked);
+                    final Type variableType = ValueCompute.extractAssignmentType(tracked);
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
-                    final Value updatedVariable = ValueExtractor.updateVariable(this, tracked, assignTarget.accessPoint(), evaluated);
+                    final Value updatedVariable = ValueCompute.updateVariable(this, tracked, assignTarget.accessPoint(), evaluated);
                     walker.update(name, updatedVariable);
                     var sharedMutation = sharedMutations.get(name);
                     if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
@@ -215,8 +215,8 @@ public final class Executor {
                         final Statement.AssignTarget assignTarget = assignTargets.get(i);
                         final String name = assignTarget.name();
                         final Value tracked = walker.find(name);
-                        final Value deconstructed = ValueExtractor.deconstruct(walker, evaluated, i);
-                        final Value updatedVariable = ValueExtractor.updateVariable(this, tracked, assignTarget.accessPoint(), deconstructed);
+                        final Value deconstructed = ValueCompute.deconstruct(walker, evaluated, i);
+                        final Value updatedVariable = ValueCompute.updateVariable(this, tracked, assignTarget.accessPoint(), deconstructed);
                         walker.update(name, updatedVariable);
                         var sharedMutation = sharedMutations.get(name);
                         if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
