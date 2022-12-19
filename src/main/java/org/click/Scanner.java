@@ -119,6 +119,9 @@ public final class Scanner {
         } else if (c == '\"') {
             type = Token.Type.STRING_LITERAL;
             literal = nextString();
+        } else if (c == '`') {
+            type = Token.Type.STRING_LITERAL;
+            literal = nextRawString();
         } else if (Character.isDigit(c)) {
             literal = nextNumber();
             type = literal.value() instanceof Long ? Token.Type.INTEGER_LITERAL : Token.Type.FLOAT_LITERAL;
@@ -217,31 +220,24 @@ public final class Scanner {
     }
 
     private Token.Literal nextString() {
-        final var start = index;
+        final StringBuilder builder = new StringBuilder();
         while (peek() != '\"') {
-            if (peek() == '\n') line++;
-            advance();
+            if (peek() == '\\') advance();
+            final char c = advance();
+            builder.append(c);
         }
         advance();
-        final String value = input.substring(start, index - 1);
-        // Escape string
-        final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < value.length(); i++) {
-            if (value.charAt(i) == '\\') {
-                i++;
-                if (value.charAt(i) == 'n') sb.append('\n');
-                else if (value.charAt(i) == 't') sb.append('\t');
-                else if (value.charAt(i) == 'r') sb.append('\r');
-                else if (value.charAt(i) == '0') sb.append('\0');
-                else if (value.charAt(i) == '\'') sb.append('\'');
-                else if (value.charAt(i) == '\"') sb.append('\"');
-                else if (value.charAt(i) == '\\') sb.append('\\');
-                else throw new RuntimeException("Unexpected character: " + value.charAt(i));
-            } else {
-                sb.append(value.charAt(i));
-            }
+        return new Token.Literal(Type.STRING, builder.toString());
+    }
+
+    private Token.Literal nextRawString() {
+        final StringBuilder builder = new StringBuilder();
+        while (peek() != '`') {
+            final char c = advance();
+            builder.append(c);
         }
-        return new Token.Literal(Type.STRING, sb.toString());
+        advance();
+        return new Token.Literal(Type.STRING, builder.toString());
     }
 
     char advance() {

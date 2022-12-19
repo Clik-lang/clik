@@ -182,6 +182,27 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void stringLiterals() {
+        assertProgram(new Value.StringLiteral("Hello"),
+                """
+                        main :: () string -> "Hello";
+                        """);
+        assertProgram(new Value.StringLiteral("\"Hello\""),
+                """
+                        main :: () string -> "\\"Hello\\"";
+                        """);
+
+        assertProgram(new Value.StringLiteral("Hello"),
+                """
+                        main :: () string -> `Hello`;
+                        """);
+        assertProgram(new Value.StringLiteral("\"Hello\""),
+                """
+                        main :: () string -> `"Hello"`;
+                        """);
+    }
+
+    @Test
     public void lambda() {
         assertProgram(ONE,
                 """
