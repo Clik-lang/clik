@@ -3,7 +3,6 @@ package org.click.interpreter;
 import org.click.*;
 
 import java.util.*;
-import java.util.stream.LongStream;
 
 public final class Evaluator {
     private final Executor executor;
@@ -173,22 +172,7 @@ public final class Evaluator {
                 }
                 yield new Value.Struct(structValue.name(), evaluated);
             }
-            case Expression.ArrayValue arrayRef -> {
-                final Type.Array arrayType = arrayRef.type();
-                final long length = arrayType.length();
-                final List<Expression> expressions = arrayRef.expressions();
-                final List<Value> evaluated;
-                if (expressions != null) {
-                    // Initialized array
-                    evaluated = expressions.stream()
-                            .map(expression -> evaluate(expression, arrayType)).toList();
-                } else {
-                    // Default value
-                    final Value defaultValue = ValueCompute.defaultValue(arrayType.type());
-                    evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
-                }
-                yield new Value.ArrayRef(arrayType, evaluated);
-            }
+            case Expression.ArrayValue array -> ValueCompute.computeArray(executor, array.type(), array.expressions());
             case Expression.MapValue mapValue -> {
                 final Type.Map type = mapValue.type();
                 Map<Value, Value> evaluatedEntries = new HashMap<>();

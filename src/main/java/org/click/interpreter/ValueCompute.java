@@ -3,11 +3,13 @@ package org.click.interpreter;
 import org.click.AccessPoint;
 import org.click.Expression;
 import org.click.Type;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.LongStream;
 
 public final class ValueCompute {
     public static void update(ScopeWalker<Value> walker, ScopeWalker<Value> updated) {
@@ -66,6 +68,23 @@ public final class ValueCompute {
         } else {
             throw new RuntimeException("Unknown types: " + initial + " and " + next);
         }
+    }
+
+    public static Value computeArray(Executor executor, Type.Array arrayType, @Nullable List<Expression> expressions) {
+        // Reference type
+        final Type elementType = arrayType.type();
+        final long length = arrayType.length();
+        final List<Value> evaluated;
+        if (expressions != null) {
+            // Initialized array
+            evaluated = expressions.stream()
+                    .map(expression -> executor.evaluate(expression, elementType)).toList();
+        } else {
+            // Default value
+            final Value defaultValue = ValueCompute.defaultValue(elementType);
+            evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
+        }
+        return new Value.ArrayRef(arrayType, evaluated);
     }
 
     public static Value defaultValue(Type type) {
