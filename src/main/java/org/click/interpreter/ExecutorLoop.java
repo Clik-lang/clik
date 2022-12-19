@@ -59,7 +59,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     private boolean iterateBody(Executor executor, Statement body) {
         final Value value = executor.interpret(body);
         if (value instanceof Value.Continue) return true;
-        return !(value instanceof Value.Break);
+        return !(value instanceof Value.Break) && !(value instanceof Value.Interrupt);
     }
 
     private void rangeLoop(Context context, Value.Range range) {

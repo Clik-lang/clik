@@ -39,6 +39,9 @@ public sealed interface Value {
     record Continue() implements Value {
     }
 
+    record Interrupt() implements Value {
+    }
+
     record IntegerLiteral(Type type, long value) implements Value {
         public IntegerLiteral {
             if (type != Type.U8 && type != Type.U16 && type != Type.U32 && type != Type.U64 &&

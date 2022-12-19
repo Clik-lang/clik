@@ -46,9 +46,10 @@ public final class Intrinsics {
         try {
             final int millis = getInteger(evaluated, 0);
             Thread.sleep(millis);
+            return null;
         } catch (InterruptedException ignored) {
+            return new Value.Interrupt();
         }
-        return null;
     }
 
     public static Value openServer(Executor executor, List<Value> evaluated) {

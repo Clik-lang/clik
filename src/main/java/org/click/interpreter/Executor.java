@@ -17,6 +17,7 @@ public final class Executor {
     private final ScopeWalker<Value> walker;
     final boolean async;
     boolean insideLoop;
+    boolean interrupted;
     final Map<String, SharedMutation> sharedMutations;
 
     private final Evaluator interpreter;
@@ -63,7 +64,7 @@ public final class Executor {
                 if (!value.equals(current)) return current;
                 condition.await();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                return new Value.Interrupt();
             } finally {
                 this.readLock.unlock();
             }
@@ -186,6 +187,16 @@ public final class Executor {
     }
 
     Value interpret(Statement statement) {
+        assert !interrupted : "Cannot interpret after interrupt";
+        try {
+            return interpret0(statement);
+        } catch (InterruptedException e) {
+            interrupted = true;
+            return new Value.Interrupt();
+        }
+    }
+
+    Value interpret0(Statement statement) throws InterruptedException {
         return switch (statement) {
             case Statement.Declare declare -> {
                 final List<String> names = declare.names();
@@ -205,12 +216,14 @@ public final class Executor {
                     assert tracked != null : "Variable not found: " + name;
                     final Type variableType = ValueType.extractAssignmentType(tracked);
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
+                    if (evaluated instanceof Value.Interrupt) yield evaluated;
                     final Value updatedVariable = ValueCompute.updateVariable(this, tracked, assignTarget.accessPoint(), evaluated);
                     walker.update(name, updatedVariable);
                     var sharedMutation = sharedMutations.get(name);
                     if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
                 } else {
                     final Value evaluated = interpreter.evaluate(assign.expression(), null);
+                    if (evaluated instanceof Value.Interrupt) yield evaluated;
                     for (int i = 0; i < count; i++) {
                         final Statement.AssignTarget assignTarget = assignTargets.get(i);
                         final String name = assignTarget.name();

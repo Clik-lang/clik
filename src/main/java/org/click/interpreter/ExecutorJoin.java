@@ -23,7 +23,7 @@ public record ExecutorJoin(Executor executor, ScopeWalker<Value> walker) {
         try {
             latch.await();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            return new Value.Interrupt();
         }
         ValueCompute.merge(walker, walkers);
         return null;
