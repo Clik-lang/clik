@@ -22,10 +22,10 @@ accept_client :: (server: ServerSocket) Socket {
 connect_server :: (host: string, port: int) Socket {
   #intrinsic;
 }
-send :: (socket: Socket, data: []i8) bool {
+send :: (socket: Socket, data: []i8, length: int) {
   #intrinsic;
 }
-recv :: (socket: Socket) []i8 {
+recv :: (socket: Socket, data: []i8) int {
   #intrinsic;
 }
 close :: (socket: Socket) {

@@ -4,7 +4,6 @@ import org.click.Type;
 
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.MemorySession;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
@@ -91,33 +90,33 @@ public final class Intrinsics {
     }
 
     public static Value recv(Executor executor, List<Value> evaluated) {
-        final Value value = evaluated.get(0);
-        if (!(value instanceof Value.JavaObject javaObject &&
+        if (!(evaluated.get(0) instanceof Value.JavaObject javaObject &&
                 javaObject.object() instanceof SocketChannel socketChannel)) {
-            throw new RuntimeException("Expected socket, got " + value);
+            throw new RuntimeException("Expected socket, got " + evaluated.get(0));
+        }
+        if (!(evaluated.get(1) instanceof Value.ArrayValue arrayValue)) {
+            throw new RuntimeException("Expected array, got " + evaluated.get(1));
         }
         try {
-            final ByteBuffer buffer = MemorySegment.allocateNative(25_000, MemorySession.openImplicit()).asByteBuffer();
+            final MemorySegment data = arrayValue.data();
+            final ByteBuffer buffer = data.asByteBuffer();
             final int length = socketChannel.read(buffer);
-            buffer.flip();
-            final MemorySegment data = MemorySegment.allocateNative(length, MemorySession.openImplicit());
-            data.asByteBuffer().put(buffer);
-            return new Value.ArrayValue(new Type.Array(Type.I8, length), data);
+            return new Value.IntegerLiteral(Type.INT, length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static Value send(Executor executor, List<Value> evaluated) {
-        final Value value = evaluated.get(0);
-        if (!(value instanceof Value.JavaObject javaObject &&
+        if (!(evaluated.get(0) instanceof Value.JavaObject javaObject &&
                 javaObject.object() instanceof SocketChannel socketChannel)) {
-            throw new RuntimeException("Expected client, got " + value);
+            throw new RuntimeException("Expected client, got " + evaluated.get(0));
         }
         final Value.ArrayValue arrayValue = (Value.ArrayValue) evaluated.get(1);
+        final Value.IntegerLiteral lengthValue = (Value.IntegerLiteral) evaluated.get(2);
         final MemorySegment data = arrayValue.data();
         try {
-            socketChannel.write(data.asByteBuffer());
+            socketChannel.write(data.asByteBuffer().limit((int) lengthValue.value()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

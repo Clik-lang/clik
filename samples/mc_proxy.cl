@@ -14,9 +14,10 @@ main :: () {
       backend :: connect_server("localhost", 25565);
       stop :~ false;
       forward :: (receiver: Socket, sender: Socket) {
+        data := [25000]i8;
         for {
           select {
-            {data :: recv(receiver); send(sender, data);} {}
+            {length :: recv(receiver, data); send(sender, data, length);} {}
             stop = $stop; {break;}
             sleep(30000); {break;}
           }
