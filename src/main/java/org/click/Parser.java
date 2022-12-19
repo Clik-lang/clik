@@ -164,7 +164,7 @@ public final class Parser {
         while (precedence < getPrecedence(peek().type())) {
             final Token operator = advance();
             final Expression right = nextExpression(getPrecedence(operator.type()));
-            expression = new Expression.Binary(expression, operator, right);
+            expression = new Expression.Binary(expression, operator.type(), right);
         }
         return expression;
     }
@@ -218,6 +218,9 @@ public final class Parser {
             return new Expression.BooleanLiteral(true);
         } else if (match(FALSE)) {
             return new Expression.BooleanLiteral(false);
+        } else if (match(EXCLAMATION)) {
+            final Expression expression = nextExpression();
+            return new Expression.Unary(EXCLAMATION, expression);
         } else if (check(IDENTIFIER) && checkNext(DOT)) {
             // Field
             final Token identifier = advance();

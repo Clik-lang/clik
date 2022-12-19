@@ -228,6 +228,18 @@ public final class Evaluator {
                 final Value right = evaluate(binary.right(), explicitType);
                 yield ValueOperator.operate(binary.operator(), left, right);
             }
+            case Expression.Unary unary -> {
+                final Value value = evaluate(unary.expression(), explicitType);
+                if (unary.operator() == Token.Type.EXCLAMATION) {
+                    if (value instanceof Value.BooleanLiteral booleanLiteral) {
+                        yield new Value.BooleanLiteral(!booleanLiteral.value());
+                    } else {
+                        throw new RuntimeException("Expected boolean, got: " + value);
+                    }
+                } else {
+                    throw new RuntimeException("Unsupported unary operator: " + unary.operator());
+                }
+            }
         };
 
         if (explicitType == null) {

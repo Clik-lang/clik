@@ -4,7 +4,7 @@ import org.click.Token;
 import org.click.Type;
 
 public final class ValueOperator {
-    public static Value operate(Token operator, Value left, Value right) {
+    public static Value operate(Token.Type operator, Value left, Value right) {
         if (left instanceof Value.IntegerLiteral leftLiteral && right instanceof Value.IntegerLiteral rightLiteral) {
             assert leftLiteral.type().equals(rightLiteral.type()) : "leftLiteral.type() = " + leftLiteral.type() + ", rightLiteral.type() = " + rightLiteral.type();
 
@@ -16,8 +16,8 @@ public final class ValueOperator {
         }
     }
 
-    private static Value operateBoolean(Token operator, boolean left, boolean right) {
-        final boolean result = switch (operator.type()) {
+    private static Value operateBoolean(Token.Type operator, boolean left, boolean right) {
+        final boolean result = switch (operator) {
             case OR -> left || right;
             case AND -> left && right;
             case EQUAL_EQUAL -> left == right;
@@ -26,9 +26,9 @@ public final class ValueOperator {
         return new Value.BooleanLiteral(result);
     }
 
-    private static Value operateInteger(Token operator, Type type, long left, long right) {
+    private static Value operateInteger(Token.Type operator, Type type, long left, long right) {
         boolean isComparison = false;
-        final long result = switch (operator.type()) {
+        final long result = switch (operator) {
             case PLUS -> left + right;
             case MINUS -> left - right;
             case STAR -> left * right;

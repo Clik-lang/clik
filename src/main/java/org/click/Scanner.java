@@ -86,7 +86,14 @@ public final class Scanner {
         else if (c == '/') type = Token.Type.SLASH;
         else if (c == '$') type = Token.Type.DOLLAR;
         else if (c == '#') type = Token.Type.HASH;
-        else if (c == '=') {
+        else if (c == '!') {
+            if (peek() == '=') {
+                advance();
+                type = Token.Type.NOT_EQUAL;
+            } else {
+                type = Token.Type.EXCLAMATION;
+            }
+        } else if (c == '=') {
             if (peek() == '=') {
                 advance();
                 type = Token.Type.EQUAL_EQUAL;
