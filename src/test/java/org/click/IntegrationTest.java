@@ -112,6 +112,10 @@ public final class IntegrationTest {
                 """
                         main :: () int -> 1;
                         """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 1000),
+                """
+                        main :: () int -> 1_000;
+                        """);
         assertProgram(new Value.IntegerLiteral(Type.I32, 1),
                 """
                         main :: () i32 -> 1i32;
@@ -124,6 +128,14 @@ public final class IntegrationTest {
         assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
                 """
                         main :: () f64 -> 5.5;
+                        """);
+        assertProgram(new Value.FloatLiteral(Type.F64, 5000.5),
+                """
+                        main :: () f64 -> 5_000.5;
+                        """);
+        assertProgram(new Value.FloatLiteral(Type.F64, 5000.55),
+                """
+                        main :: () f64 -> 5_000.5_5;
                         """);
         assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
                 """
@@ -144,6 +156,10 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 255),
                 """
+                        main :: () int -> 0xF_F;
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+                """
                         main :: () int -> 0xfF;
                         """);
 
@@ -154,6 +170,10 @@ public final class IntegrationTest {
         assertProgram(new Value.IntegerLiteral(Type.INT, 255),
                 """
                         main :: () int -> 0b11111111;
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+                """
+                        main :: () int -> 0b1111_1111;
                         """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 254),
                 """

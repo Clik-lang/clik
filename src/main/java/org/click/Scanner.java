@@ -149,32 +149,47 @@ public final class Scanner {
         if (peek() == 'x') {
             // Hexadecimal integer
             advance();
-            while (isHexDigit(peek())) advance();
+            while (isHexDigit(peek())) {
+                advance();
+                if (peek() == '_' && isHexDigit(peekNext())) advance();
+            }
+            final String text = input.substring(start + 2, index).replace("_", "");
             final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
-            final long value = Long.parseLong(input.substring(start + 2, index), 16);
+            final long value = Long.parseLong(text, 16);
             return new Token.Literal(type, value);
         }
 
         if (peek() == 'b') {
             // Binary integer
             advance();
-            while (peek() == '0' || peek() == '1') advance();
+            while (peek() == '0' || peek() == '1') {
+                advance();
+                if (peek() == '_' && (peekNext() == '0' || peekNext() == '1')) advance();
+            }
+            final String text = input.substring(start + 2, index).replace("_", "");
             final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
-            final long value = Long.parseLong(input.substring(start + 2, index), 2);
+            final long value = Long.parseLong(text, 2);
             return new Token.Literal(type, value);
         }
 
-        while (Character.isDigit(peek())) advance();
+        do {
+            if (peek() == '_' && Character.isDigit(peekNext())) advance();
+            if (Character.isDigit(peek())) advance();
+        } while (Character.isDigit(peek()) || peek() == '_');
         if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer
-            final long value = Long.parseLong(input.substring(start, index));
+            final String text = input.substring(start, index).replace("_", "");
+            final long value = Long.parseLong(text);
             final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
             return new Token.Literal(type, value);
         }
         // Float
         advance();
-        while (Character.isDigit(peek())) advance();
-        final String text = input.substring(start, index);
+        do {
+            if (peek() == '_' && Character.isDigit(peekNext())) advance();
+            if (Character.isDigit(peek())) advance();
+        } while (Character.isDigit(peek()) || peek() == '_');
+        final String text = input.substring(start, index).replace("_", "");
         final double value = Double.parseDouble(text);
         final Type type = nextNumberSuffix(Type.F64, 'f');
         return new Token.Literal(type, value);
