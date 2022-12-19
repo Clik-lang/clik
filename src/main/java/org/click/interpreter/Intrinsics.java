@@ -3,6 +3,8 @@ package org.click.interpreter;
 import org.click.Type;
 
 import java.io.IOException;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.MemorySession;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
@@ -10,7 +12,6 @@ import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.stream.IntStream;
 
 import static java.util.Map.entry;
 
@@ -96,10 +97,12 @@ public final class Intrinsics {
             throw new RuntimeException("Expected socket, got " + value);
         }
         try {
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(25_000);
+            final ByteBuffer buffer = MemorySegment.allocateNative(25_000, MemorySession.openImplicit()).asByteBuffer();
             final int length = socketChannel.read(buffer);
-            final List<Value> values = IntStream.range(0, length).mapToObj(i -> (Value) new Value.IntegerLiteral(Type.I8, buffer.get(i))).toList();
-            return new Value.ArrayRef(new Type.Array(Type.I8, length), values);
+            buffer.flip();
+            final MemorySegment data = MemorySegment.allocateNative(length, MemorySession.openImplicit());
+            data.asByteBuffer().put(buffer);
+            return new Value.ArrayValue(new Type.Array(Type.I8, length), data);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -111,16 +114,10 @@ public final class Intrinsics {
                 javaObject.object() instanceof SocketChannel socketChannel)) {
             throw new RuntimeException("Expected client, got " + value);
         }
-        final Value.ArrayRef arrayRef = (Value.ArrayRef) evaluated.get(1);
-        final List<Value> elements = arrayRef.elements();
-        ByteBuffer buffer = ByteBuffer.allocateDirect(elements.size());
-        for (Value element : elements) {
-            final byte b = (byte) ((Value.IntegerLiteral) element).value();
-            buffer.put(b);
-        }
-        buffer.flip();
+        final Value.ArrayValue arrayValue = (Value.ArrayValue) evaluated.get(1);
+        final MemorySegment data = arrayValue.data();
         try {
-            socketChannel.write(buffer);
+            socketChannel.write(data.asByteBuffer());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

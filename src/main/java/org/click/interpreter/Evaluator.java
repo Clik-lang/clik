@@ -2,6 +2,7 @@ package org.click.interpreter;
 
 import org.click.*;
 
+import java.lang.foreign.MemorySegment;
 import java.util.*;
 
 public final class Evaluator {
@@ -133,6 +134,18 @@ public final class Evaluator {
                         if (integer < 0 || integer >= content.size())
                             throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
                         yield content.get(integer);
+                    }
+                    case Value.ArrayValue arrayValue -> {
+                        final Value index = evaluate(arrayAccess.index(), null);
+                        if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
+                            throw new RuntimeException("Expected constant, got: " + index);
+                        }
+                        final long integer = integerLiteral.value();
+                        final long length = arrayValue.type().length();
+                        final MemorySegment data = arrayValue.data();
+                        if (integer < 0 || integer >= length)
+                            throw new RuntimeException("Index out of bounds: " + integer + " in " + length);
+                        yield ValueCompute.lookupArray(arrayValue.type().type(), data, integer);
                     }
                     case Value.Map mapValue -> {
                         final Value index = evaluate(arrayAccess.index(), mapValue.type().key());

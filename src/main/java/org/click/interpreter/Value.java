@@ -5,6 +5,7 @@ import org.click.Statement;
 import org.click.Type;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.foreign.MemorySegment;
 import java.util.List;
 
 public sealed interface Value {
@@ -66,6 +67,9 @@ public sealed interface Value {
     }
 
     record ArrayRef(Type.Array type, List<Value> elements) implements Value {
+    }
+
+    record ArrayValue(Type.Array type, MemorySegment data) implements Value {
     }
 
     record Map(Type.Map type, java.util.Map<Value, Value> entries) implements Value {

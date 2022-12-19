@@ -5,6 +5,9 @@ import org.click.Expression;
 import org.click.Type;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.MemorySession;
+import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,21 +73,83 @@ public final class ValueCompute {
         }
     }
 
+    public static void setSegment(Type type, Value value, MemorySegment segment, long index) {
+        if (value instanceof Value.IntegerLiteral literal) {
+            if (type == Type.I8) {
+                segment.set(ValueLayout.JAVA_BYTE, index, (byte) literal.value());
+            } else if (type == Type.I16) {
+                segment.setAtIndex(ValueLayout.JAVA_SHORT, index, (short) literal.value());
+            } else if (type == Type.I32) {
+                segment.setAtIndex(ValueLayout.JAVA_INT, index, (int) literal.value());
+            } else if (type == Type.I64) {
+                segment.setAtIndex(ValueLayout.JAVA_LONG, index, literal.value());
+            } else if (type == Type.INT) {
+                segment.setAtIndex(ValueLayout.JAVA_LONG, index, literal.value());
+            } else {
+                throw new RuntimeException("Unknown integer type: " + type);
+            }
+        } else if (value instanceof Value.FloatLiteral literal) {
+            if (type == Type.F32) {
+                segment.setAtIndex(ValueLayout.JAVA_FLOAT, index, (float) literal.value());
+            } else if (type == Type.F64) {
+                segment.setAtIndex(ValueLayout.JAVA_DOUBLE, index, literal.value());
+            } else {
+                throw new RuntimeException("Unknown float type: " + type);
+            }
+        } else {
+            throw new RuntimeException("Unknown type: " + value);
+        }
+    }
+
+    public static Value lookupArray(Type type, MemorySegment data, long index) {
+        if (type == Type.I8) {
+            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_BYTE, index));
+        } else if (type == Type.I16) {
+            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_SHORT, index));
+        } else if (type == Type.I32) {
+            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_INT, index));
+        } else if (type == Type.I64) {
+            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_LONG, index));
+        } else if (type == Type.F32) {
+            return new Value.FloatLiteral(type, data.get(ValueLayout.JAVA_FLOAT, index));
+        } else if (type == Type.F64) {
+            return new Value.FloatLiteral(type, data.get(ValueLayout.JAVA_DOUBLE, index));
+        } else if (type == Type.INT) {
+            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_LONG, index));
+        } else {
+            throw new RuntimeException("Unknown type: " + type);
+        }
+    }
+
     public static Value computeArray(Executor executor, Type.Array arrayType, @Nullable List<Expression> expressions) {
-        // Reference type
         final Type elementType = arrayType.type();
         final long length = arrayType.length();
-        final List<Value> evaluated;
-        if (expressions != null) {
-            // Initialized array
-            evaluated = expressions.stream()
-                    .map(expression -> executor.evaluate(expression, elementType)).toList();
+        if (elementType.primitive() && elementType != Type.STRING) {
+            // Primitive types are stored in a single segment
+            final long sizeof = sizeOf(elementType);
+            MemorySegment segment = MemorySegment.allocateNative(length * sizeof, MemorySession.openImplicit());
+            if (expressions != null) {
+                for (int i = 0; i < expressions.size(); i++) {
+                    final Expression expression = expressions.get(i);
+                    final Value value = executor.evaluate(expression, elementType);
+                    setSegment(elementType, value, segment, i);
+                }
+            }
+            return new Value.ArrayValue(arrayType, segment);
         } else {
-            // Default value
-            final Value defaultValue = ValueCompute.defaultValue(elementType);
-            evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
+            // Reference type
+            final List<Value> evaluated;
+            if (expressions != null) {
+                // Initialized array
+                evaluated = expressions.stream()
+                        .map(expression -> executor.evaluate(expression, elementType)).toList();
+            } else {
+                // Default value
+                final Value defaultValue = ValueCompute.defaultValue(elementType);
+                evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
+            }
+            return new Value.ArrayRef(arrayType, evaluated);
         }
-        return new Value.ArrayRef(arrayType, evaluated);
     }
 
     public static Value defaultValue(Type type) {
@@ -101,6 +166,24 @@ public final class ValueCompute {
         throw new RuntimeException("Unknown type: " + type);
     }
 
+    public static long sizeOf(Type type) {
+        if (type == Type.BOOL) return 1;
+        if (type == Type.I8) return 1;
+        if (type == Type.U8) return 1;
+        if (type == Type.I16) return 2;
+        if (type == Type.U16) return 2;
+        if (type == Type.I32) return 4;
+        if (type == Type.U32) return 4;
+        if (type == Type.I64) return 8;
+        if (type == Type.U64) return 8;
+        if (type == Type.F32) return 4;
+        if (type == Type.F64) return 8;
+
+        if (type == Type.INT) return 8;
+        if (type == Type.UINT) return 8;
+        throw new RuntimeException("Unknown type: " + type);
+    }
+
     public static Type extractAssignmentType(Value expression) {
         return switch (expression) {
             case Value.IntegerLiteral integerLiteral -> integerLiteral.type();
@@ -109,6 +192,7 @@ public final class ValueCompute {
             case Value.StringLiteral ignored -> Type.STRING;
             case Value.Struct struct -> Type.of(struct.name());
             case Value.ArrayRef arrayRef -> arrayRef.type().type();
+            case Value.ArrayValue arrayValue -> arrayValue.type().type();
             case Value.Map map -> map.type().value();
             default -> throw new RuntimeException("Unknown type: " + expression);
         };
@@ -155,6 +239,19 @@ public final class ValueCompute {
                     final int targetIndex = (int) ((Value.IntegerLiteral) index).value();
                     newParams.set(targetIndex, updated);
                     yield new Value.ArrayRef(arrayRef.type(), newParams);
+                } else {
+                    throw new RuntimeException("Cannot update variable: " + variable);
+                }
+            }
+            case Value.ArrayValue arrayValue -> {
+                if (access instanceof AccessPoint.Index indexAccess) {
+                    final Expression indexExpression = indexAccess.expression();
+                    final MemorySegment newData = MemorySegment.allocateNative(arrayValue.data().byteSize(), MemorySession.openImplicit());
+                    newData.copyFrom(arrayValue.data());
+                    final Value index = executor.evaluate(indexExpression, null);
+                    final long targetIndex = ((Value.IntegerLiteral) index).value();
+                    ValueCompute.setSegment(arrayValue.type().type(), updated, newData, targetIndex);
+                    yield new Value.ArrayValue(arrayValue.type(), newData);
                 } else {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }

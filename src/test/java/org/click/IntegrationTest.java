@@ -335,6 +335,13 @@ public final class IntegrationTest {
                           return array[0];
                         }
                         """);
+        assertProgram(new Value.StringLiteral("Hello"),
+                """
+                        main :: () string {
+                          array :: [2]string {"Hello", "World"};
+                          return array[0];
+                        }
+                        """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
