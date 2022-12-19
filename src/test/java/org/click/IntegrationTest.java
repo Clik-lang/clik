@@ -735,6 +735,16 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           value := 0;
+                          if true {
+                            value = 1;
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          value := 0;
                           if true -> value = 1;
                           return value;
                         }

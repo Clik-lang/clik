@@ -101,9 +101,15 @@ public final class Intrinsics {
             final MemorySegment data = arrayValue.data();
             final ByteBuffer buffer = data.asByteBuffer();
             final int length = socketChannel.read(buffer);
-            return new Value.IntegerLiteral(Type.INT, length);
+            return new Value.Struct("RecvResult", Map.of(
+                    "length", new Value.IntegerLiteral(Type.INT, length),
+                    "success", new Value.BooleanLiteral(true)
+            ));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return new Value.Struct("RecvResult", Map.of(
+                    "length", new Value.IntegerLiteral(Type.INT, 0),
+                    "success", new Value.BooleanLiteral(false)
+            ));
         }
     }
 
@@ -116,11 +122,12 @@ public final class Intrinsics {
         final Value.IntegerLiteral lengthValue = (Value.IntegerLiteral) evaluated.get(2);
         final MemorySegment data = arrayValue.data();
         try {
-            socketChannel.write(data.asByteBuffer().limit((int) lengthValue.value()));
+            final ByteBuffer buffer = data.asByteBuffer().limit((int) lengthValue.value());
+            socketChannel.write(buffer);
+            return new Value.BooleanLiteral(true);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return new Value.BooleanLiteral(false);
         }
-        return null;
     }
 
     public static Value close(Executor executor, List<Value> evaluated) {
@@ -132,8 +139,7 @@ public final class Intrinsics {
         }
         try {
             socketChannel.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ignored) {
         }
         return null;
     }

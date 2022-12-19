@@ -12,6 +12,7 @@ sleep :: (millis: int) {
 
 ServerSocket :: struct {fd: int,}
 Socket :: struct {fd: int,}
+RecvResult :: struct {length: int, success: bool}
 
 open_server :: (port: int) ServerSocket {
   #intrinsic;
@@ -22,10 +23,10 @@ accept_client :: (server: ServerSocket) Socket {
 connect_server :: (host: string, port: int) Socket {
   #intrinsic;
 }
-send :: (socket: Socket, data: []i8, length: int) {
+send :: (socket: Socket, data: []i8, length: int) bool {
   #intrinsic;
 }
-recv :: (socket: Socket, data: []i8) int {
+recv :: (socket: Socket, data: []i8) RecvResult {
   #intrinsic;
 }
 close :: (socket: Socket) {
