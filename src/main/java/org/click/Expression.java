@@ -64,7 +64,7 @@ public sealed interface Expression {
     record ArrayValue(Type.Array type, @Nullable List<Expression> expressions) implements Expression {
     }
 
-    record MapValue(Type.Map type, Map<Expression, Expression> entries) implements Expression {
+    record MapValue(Type.Map type, Parameter.Passed.Mapped parameters) implements Expression {
     }
 
     record InitializationBlock(Parameter.Passed parameters) implements Expression {

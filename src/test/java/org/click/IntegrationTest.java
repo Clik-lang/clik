@@ -417,6 +417,22 @@ public final class IntegrationTest {
                           return values["test"];
                         }
                         """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
+                """
+                        main :: () int {
+                          values := map[string]int {"test": 5};
+                          values = map[string]int {"test": 6};
+                          return values["test"];
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
+                """
+                        main :: () int {
+                          values := map[string]int {"test": 5};
+                          values = {"test": 6};
+                          return values["test"];
+                        }
+                        """);
         assertProgram(new Value.IntegerLiteral(Type.INT, 5),
                 """
                         Point :: struct {x: int, y: int}

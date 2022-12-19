@@ -85,13 +85,13 @@ public final class Parser {
             final Statement deferred = nextStatement();
             statement = new Statement.Defer(deferred);
         } else if (check(LEFT_BRACE)) {
-            if (!checkStatementBlock()) {
+            if (checkTrailing(SEMICOLON, RETURN, IF, FOR, FORK, BREAK, CONTINUE, SELECT, SPAWN, DEFER, HASH)) {
+                statement = new Statement.Block(nextBlock());
+            } else {
                 // Inline block return
                 final Expression expression = nextExpression();
                 assert expression != null;
                 statement = new Statement.Return(expression);
-            } else {
-                statement = new Statement.Block(nextBlock());
             }
         } else if (check(ARROW)) {
             statement = new Statement.Block(nextBlock());
@@ -112,21 +112,22 @@ public final class Parser {
         return statement;
     }
 
-    boolean checkStatementBlock() {
+    boolean checkTrailing(Token.Type... types) {
         final int start = index;
-        if (!check(LEFT_BRACE))
-            throw error(peek(), "Expected '{' to start block");
+        if (!check(LEFT_BRACE)) return false;
         if (checkNext(RIGHT_BRACE)) return true;
         // Verify if there is at least one semicolon or statement keyword between the braces
         int braceLevel = 0;
         while (!checkNext(RIGHT_BRACE) || braceLevel > 0) {
             if (checkNext(LEFT_BRACE)) braceLevel++;
-            if (checkNext(RIGHT_BRACE)) braceLevel--;
-            if (checkNext(SEMICOLON) || checkNext(RETURN) || checkNext(IF) ||
-                    checkNext(FOR) || checkNext(FORK) || checkNext(BREAK) || checkNext(CONTINUE) ||
-                    checkNext(SELECT) || checkNext(SPAWN) || checkNext(DEFER) || checkNext(HASH)) {
-                index = start;
-                return true;
+            if (checkNext(RIGHT_BRACE)) {
+                braceLevel--;
+            }
+            for (Token.Type type : types) {
+                if (checkNext(type)) {
+                    index = start;
+                    return true;
+                }
             }
             advance();
         }
@@ -242,7 +243,9 @@ public final class Parser {
                     consume(RIGHT_BRACE, "Expected '}' after struct.");
                     return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(List.of()));
                 }
-                final Parameter.Passed passed = nextPassedParameters();
+                final Class<? extends Parameter.Passed> paramType = check(LEFT_BRACE) && checkNext(DOT) ?
+                        Parameter.Passed.Named.class : Parameter.Passed.Positional.class;
+                final Parameter.Passed passed = nextPassedParameters(paramType);
                 return new Expression.StructValue(identifier.input(), passed);
             } else if (match(LEFT_BRACKET)) {
                 // Array
@@ -261,40 +264,51 @@ public final class Parser {
             assert type != null;
             List<Expression> expressions = null;
             if (check(LEFT_BRACE)) {
-                final Parameter.Passed.Positional passed = (Parameter.Passed.Positional) nextPassedParameters();
+                final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
                 expressions = passed.expressions();
                 assert type.length() == passed.expressions().size() : "Array length does not match passed parameters.";
             }
             return new Expression.ArrayValue(type, expressions);
         } else if (check(MAP)) {
             final Type.Map type = (Type.Map) nextType();
-            Map<Expression, Expression> entries = new HashMap<>();
-            if (check(LEFT_BRACE)) {
-                consume(LEFT_BRACE, "Expected '{' after map.");
-                while (!check(RIGHT_BRACE)) {
-                    final Expression key = nextExpression();
-                    consume(COLON, "Expected ':' after key.");
-                    final Expression value = nextExpression();
-                    entries.put(key, value);
-                    if (check(COMMA)) {
-                        consume(COMMA, "Expected ',' after entry.");
-                    }
-                }
-                consume(RIGHT_BRACE, "Expected '}' after map.");
-            }
-            return new Expression.MapValue(type, entries);
+            final Parameter.Passed.Mapped mapped = nextPassedParameters(Parameter.Passed.Mapped.class);
+            return new Expression.MapValue(type, mapped);
         } else if (check(LEFT_BRACE)) {
             // Inline block
-            final Parameter.Passed passed = nextPassedParameters();
+            final Parameter.Passed passed = nextPassedParameters(null);
             return new Expression.InitializationBlock(passed);
         } else {
             throw error(peek(), "Expect expression.");
         }
     }
 
-    private Parameter.Passed nextPassedParameters() {
+    private <T extends Parameter.Passed> T nextPassedParameters(Class<T> preferred) {
+        final boolean colon = checkTrailing(COLON);
         consume(LEFT_BRACE, "Expected '{' after struct name.");
-        if (check(DOT)) {
+        if (preferred == null) {
+            if (!check(DOT) && colon) {
+                preferred = (Class<T>) Parameter.Passed.Mapped.class;
+            } else if (check(DOT)) {
+                preferred = (Class<T>) Parameter.Passed.Named.class;
+            } else {
+                preferred = (Class<T>) Parameter.Passed.Positional.class;
+            }
+        }
+        if (preferred == Parameter.Passed.Mapped.class) {
+            // Mapped
+            Map<Expression, Expression> entries = new HashMap<>();
+            while (!check(RIGHT_BRACE)) {
+                final Expression key = nextExpression();
+                consume(COLON, "Expected ':' after key.");
+                final Expression value = nextExpression();
+                entries.put(key, value);
+                if (check(COMMA)) {
+                    consume(COMMA, "Expected ',' after entry.");
+                }
+            }
+            consume(RIGHT_BRACE, "Expected '}' after map.");
+            return (T) new Parameter.Passed.Mapped(entries);
+        } else if (preferred == Parameter.Passed.Named.class) {
             // Named struct
             final Map<String, Expression> fields = new HashMap<>();
             do {
@@ -305,15 +319,16 @@ public final class Parser {
                 fields.put(name, value);
             } while (match(COMMA) && !check(RIGHT_BRACE));
             consume(RIGHT_BRACE, "Expected '}' after struct fields.");
-            return new Parameter.Passed.Named(fields);
+            return (T) new Parameter.Passed.Named(fields);
         } else {
+            assert preferred == Parameter.Passed.Positional.class : "Expected positional parameters.";
             // Positional struct
             final List<Expression> fields = new ArrayList<>();
             do {
                 fields.add(nextExpression());
             } while (match(COMMA) && !check(RIGHT_BRACE));
             consume(RIGHT_BRACE, "Expected '}' after struct fields.");
-            return new Parameter.Passed.Positional(fields);
+            return (T) new Parameter.Passed.Positional(fields);
         }
     }
 

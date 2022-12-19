@@ -189,7 +189,7 @@ public final class Evaluator {
             case Expression.MapValue mapValue -> {
                 final Type.Map type = mapValue.type();
                 Map<Value, Value> evaluatedEntries = new HashMap<>();
-                for (var entry : mapValue.entries().entrySet()) {
+                for (var entry : mapValue.parameters().entries().entrySet()) {
                     final Value key = evaluate(entry.getKey(), type.key());
                     final Value value = evaluate(entry.getValue(), type.value());
                     evaluatedEntries.put(key, value);
@@ -204,7 +204,14 @@ public final class Evaluator {
                     yield evaluate(new Expression.StructValue(identifier.name(), initializationBlock.parameters()), null);
                 } else if (explicitType instanceof Type.Array array) {
                     // Array
-                    yield evaluate(new Expression.ArrayValue(array, initializationBlock.parameters().expressions()), null);
+                    if (!(initializationBlock.parameters() instanceof Parameter.Passed.Positional positional))
+                        throw new RuntimeException("Expected positional parameters for array initialization");
+                    yield evaluate(new Expression.ArrayValue(array, positional.expressions()), null);
+                } else if (explicitType instanceof Type.Map map) {
+                    // Map
+                    if (!(initializationBlock.parameters() instanceof Parameter.Passed.Mapped mapped))
+                        throw new RuntimeException("Expected mapped parameters for map initialization");
+                    yield evaluate(new Expression.MapValue(map, mapped), null);
                 }
                 throw new RuntimeException("Expected struct, got: " + explicitType);
             }

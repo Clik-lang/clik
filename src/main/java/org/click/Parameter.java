@@ -34,5 +34,17 @@ public record Parameter(String name, Type type) {
                 return List.copyOf(entries.values());
             }
         }
+
+        record Mapped(Map<Expression, Expression> entries) implements Passed {
+            @Override
+            public Expression find(List<Parameter> parameters, Parameter parameter) {
+                throw new RuntimeException("Mapped parameters are not supported");
+            }
+
+            @Override
+            public List<Expression> expressions() {
+                throw new RuntimeException("Mapped parameters are not supported");
+            }
+        }
     }
 }
