@@ -20,9 +20,10 @@ main :: () {
 handle_client :: (id: int, client: Socket, backend: Socket) {
   stop :~ false;
   forward :: (receiver: Socket, sender: Socket) {
-    data := [25000]i8;
+    data := [25000]i8; // TODO thread local storage so we can allocate a few 2MB buffers to fit the largest packet
     for {
       Result :: struct {length: int, success: bool};
+      // Read socket
       length, success :Result= select {
         {
           length, success :: recv(receiver, data);
@@ -38,6 +39,7 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
 
       // TODO transform data
 
+      // Write socket
       select {
         -> send(sender, data, length);
         -> stop = $stop;
@@ -47,10 +49,13 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
     }
     stop = true;
   }
+  // Run the two streams (client -> backend and backend -> client) in parallel
   join {
     -> forward(client, backend);
     -> forward(backend, client);
   }
+  // Close sockets
   print("Client disconnected ");
   close(client);
+  close(backend);
 }
