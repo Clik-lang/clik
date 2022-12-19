@@ -248,10 +248,17 @@ public final class Parser {
                     consume(RIGHT_BRACE, "Expected '}' after struct.");
                     return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(List.of()));
                 }
-                final Class<? extends Parameter.Passed> paramType = check(LEFT_BRACE) && checkNext(DOT) ?
-                        Parameter.Passed.Named.class : Parameter.Passed.Positional.class;
-                final Parameter.Passed passed = nextPassedParameters(paramType);
-                return new Expression.StructValue(identifier.input(), passed);
+                final int index = this.index;
+                try {
+                    final Class<? extends Parameter.Passed> paramType = check(LEFT_BRACE) && checkNext(DOT) ?
+                            Parameter.Passed.Named.class : Parameter.Passed.Positional.class;
+                    final Parameter.Passed passed = nextPassedParameters(paramType);
+                    return new Expression.StructValue(identifier.input(), passed);
+                } catch (RuntimeException e) {
+                    // Variable
+                    this.index = index;
+                    return new Expression.Variable(identifier.input());
+                }
             } else if (match(LEFT_BRACKET)) {
                 // Array
                 final Expression index = nextExpression();

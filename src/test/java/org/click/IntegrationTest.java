@@ -811,6 +811,26 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          value :: true;
+                          if value {
+                            return 1;
+                          }
+                          return 2;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          value :: false;
+                          if !value {
+                            return 1;
+                          }
+                          return 2;
+                        }
+                        """);
     }
 
     @Test
