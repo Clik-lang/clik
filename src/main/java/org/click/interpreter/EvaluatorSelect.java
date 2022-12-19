@@ -1,13 +1,14 @@
 package org.click.interpreter;
 
+import org.click.Expression;
 import org.click.Statement;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-public record ExecutorSelect(Executor executor, ScopeWalker<Value> walker) {
-    Value interpret(Statement.Select select) {
+public record EvaluatorSelect(Executor executor, ScopeWalker<Value> walker) {
+    Value evaluate(Expression.Select select) {
         final List<Statement.Block> blocks = select.blocks();
         // Run every statement in a virtual thread and start the block of the first one that finishes
         AtomicReference<Selection> selectionRef = new AtomicReference<>();

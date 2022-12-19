@@ -22,7 +22,6 @@ public final class Executor {
 
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
-    private final ExecutorSelect interpreterSelect;
     private final ExecutorJoin interpreterJoin;
     private final ExecutorSpawn interpreterSpawn;
 
@@ -87,7 +86,6 @@ public final class Executor {
         this.interpreter = new Evaluator(this, walker);
 
         this.interpreterLoop = new ExecutorLoop(this, walker);
-        this.interpreterSelect = new ExecutorSelect(this, walker);
         this.interpreterJoin = new ExecutorJoin(this, walker);
         this.interpreterSpawn = new ExecutorSpawn(this, walker);
     }
@@ -264,7 +262,6 @@ public final class Executor {
                 if (!insideLoop) throw new RuntimeException("Continue statement outside of loop");
                 yield new Value.Continue();
             }
-            case Statement.Select select -> this.interpreterSelect.interpret(select);
             case Statement.Join join -> this.interpreterJoin.interpret(join);
             case Statement.Spawn spawn -> this.interpreterSpawn.interpret(spawn);
             case Statement.Defer defer -> {
@@ -285,9 +282,12 @@ public final class Executor {
             case Statement.Return returnStatement -> {
                 final Expression expression = returnStatement.expression();
                 if (expression != null) {
-                    assert currentFunction != null : "Return outside of function";
-                    final Type returnType = currentFunction.returnType();
-                    yield interpreter.evaluate(expression, returnType);
+                    if (currentFunction != null) {
+                        final Type returnType = currentFunction.returnType();
+                        yield interpreter.evaluate(expression, returnType);
+                    } else {
+                        yield interpreter.evaluate(expression, null);
+                    }
                 }
                 yield null;
             }

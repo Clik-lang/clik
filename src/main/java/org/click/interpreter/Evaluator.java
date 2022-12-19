@@ -9,9 +9,13 @@ public final class Evaluator {
     private final Executor executor;
     private final ScopeWalker<Value> walker;
 
+    private final EvaluatorSelect evaluatorSelect;
+
     public Evaluator(Executor executor, ScopeWalker<Value> walker) {
         this.executor = executor;
         this.walker = walker;
+
+        this.evaluatorSelect = new EvaluatorSelect(executor, walker);
     }
 
     public Value evaluate(Expression argument, Type explicitType) {
@@ -174,6 +178,7 @@ public final class Evaluator {
                 final Executor fork = callExecutor.fork(executor.async, executor.insideLoop);
                 yield fork.interpret(name, functionDecl, evaluated);
             }
+            case Expression.Select select -> this.evaluatorSelect.evaluate(select);
             case Expression.StructValue structValue -> {
                 final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());
                 final List<Parameter> parameters = struct.parameters();

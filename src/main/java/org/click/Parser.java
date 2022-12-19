@@ -77,7 +77,8 @@ public final class Parser {
         } else if (match(CONTINUE)) {
             statement = new Statement.Continue();
         } else if (check(SELECT)) {
-            statement = nextSelect();
+            final Expression.Select select = nextSelect();
+            statement = new Statement.Run(select);
         } else if (check(JOIN)) {
             statement = nextJoin();
         } else if (check(SPAWN)) {
@@ -256,6 +257,8 @@ public final class Parser {
             } else {
                 return new Expression.Variable(identifier.input());
             }
+        } else if (check(SELECT)) {
+            return nextSelect();
         } else if (match(DOLLAR)) {
             // Variable await
             final Token identifier = consume(IDENTIFIER, "Expected variable name.");
@@ -517,7 +520,7 @@ public final class Parser {
         return new Statement.Loop(declarations, iterable, body, fork);
     }
 
-    Statement.Select nextSelect() {
+    Expression.Select nextSelect() {
         consume(SELECT, "Expect 'select'.");
         consume(LEFT_BRACE, "Expect '{'.");
         List<Statement.Block> blocks = new ArrayList<>();
@@ -529,7 +532,7 @@ public final class Parser {
             } while (!check(RIGHT_BRACE));
         }
         consume(RIGHT_BRACE, "Expect '}'.");
-        return new Statement.Select(blocks);
+        return new Expression.Select(blocks);
     }
 
     Statement.Join nextJoin() {

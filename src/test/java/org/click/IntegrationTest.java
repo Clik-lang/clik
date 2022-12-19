@@ -2,7 +2,6 @@ package org.click;
 
 import org.click.interpreter.VM;
 import org.click.interpreter.Value;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -1090,7 +1089,6 @@ public final class IntegrationTest {
                         """);
     }
 
-    @Disabled
     @Test
     public void selectExpr() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),

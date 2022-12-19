@@ -58,6 +58,9 @@ public sealed interface Expression {
     record Call(String name, Parameter.Passed arguments) implements Expression {
     }
 
+    record Select(List<Statement.Block> blocks) implements Expression {
+    }
+
     record StructValue(String name, Parameter.Passed fields) implements Expression {
     }
 
