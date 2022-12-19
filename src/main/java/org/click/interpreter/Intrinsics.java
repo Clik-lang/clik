@@ -3,8 +3,10 @@ package org.click.interpreter;
 import org.click.Type;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -51,10 +53,11 @@ public final class Intrinsics {
     }
 
     public static Value openServer(Executor executor, List<Value> evaluated) {
-        // Open http server
         try {
-            final long port = getInteger(evaluated, 0);
-            ServerSocket serverSocket = new ServerSocket((int) port);
+            final int port = getInteger(evaluated, 0);
+            ServerSocketChannel serverSocket = ServerSocketChannel.open();
+            serverSocket.configureBlocking(true);
+            serverSocket.bind(new InetSocketAddress("0.0.0.0", port));
             return new Value.JavaObject(serverSocket);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -62,12 +65,12 @@ public final class Intrinsics {
     }
 
     public static Value connectServer(Executor executor, List<Value> evaluated) {
-        // Connect to http server
         try {
             final String host = getString(evaluated, 0);
             final int port = getInteger(evaluated, 1);
-            Socket socket = new Socket(host, port);
-            return new Value.JavaObject(socket);
+            SocketChannel channel = SocketChannel.open(new InetSocketAddress(host, port));
+            channel.configureBlocking(true);
+            return new Value.JavaObject(channel);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -75,11 +78,11 @@ public final class Intrinsics {
 
     public static Value acceptClient(Executor executor, List<Value> evaluated) {
         final Value value = evaluated.get(0);
-        if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof ServerSocket serverSocket)) {
+        if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof ServerSocketChannel serverSocket)) {
             throw new RuntimeException("Expected server, got " + value);
         }
         try {
-            var clientSocket = serverSocket.accept();
+            final SocketChannel clientSocket = serverSocket.accept();
             return new Value.JavaObject(clientSocket);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -88,13 +91,14 @@ public final class Intrinsics {
 
     public static Value recv(Executor executor, List<Value> evaluated) {
         final Value value = evaluated.get(0);
-        if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
+        if (!(value instanceof Value.JavaObject javaObject &&
+                javaObject.object() instanceof SocketChannel socketChannel)) {
             throw new RuntimeException("Expected socket, got " + value);
         }
         try {
-            final byte[] buffer = new byte[25_000];
-            final int length = socket.getInputStream().read(buffer);
-            final List<Value> values = IntStream.range(0, length).mapToObj(i -> (Value) new Value.IntegerLiteral(Type.I8, buffer[i])).toList();
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(25_000);
+            final int length = socketChannel.read(buffer);
+            final List<Value> values = IntStream.range(0, length).mapToObj(i -> (Value) new Value.IntegerLiteral(Type.I8, buffer.get(i))).toList();
             return new Value.Array(new Type.Array(Type.I8, length), values);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -103,16 +107,20 @@ public final class Intrinsics {
 
     public static Value send(Executor executor, List<Value> evaluated) {
         final Value value = evaluated.get(0);
-        if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
+        if (!(value instanceof Value.JavaObject javaObject &&
+                javaObject.object() instanceof SocketChannel socketChannel)) {
             throw new RuntimeException("Expected client, got " + value);
         }
         final Value.Array array = (Value.Array) evaluated.get(1);
-        byte[] bytes = new byte[array.elements().size()];
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = (byte) ((Value.IntegerLiteral) array.elements().get(i)).value();
+        final List<Value> elements = array.elements();
+        ByteBuffer buffer = ByteBuffer.allocateDirect(elements.size());
+        for (Value element : elements) {
+            final byte b = (byte) ((Value.IntegerLiteral) element).value();
+            buffer.put(b);
         }
+        buffer.flip();
         try {
-            socket.getOutputStream().write(bytes);
+            socketChannel.write(buffer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -122,12 +130,12 @@ public final class Intrinsics {
     public static Value close(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());
         final Value value = evaluated.get(0);
-        if (!(value instanceof Value.JavaObject javaObject && javaObject.object() instanceof Socket socket)) {
+        if (!(value instanceof Value.JavaObject javaObject &&
+                javaObject.object() instanceof SocketChannel socketChannel)) {
             throw new RuntimeException("Expected client, got " + value);
         }
         try {
-            socket.getOutputStream().close();
-            socket.close();
+            socketChannel.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
