@@ -46,8 +46,7 @@ public final class Intrinsics {
         try {
             final int millis = getInteger(evaluated, 0);
             Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (InterruptedException ignored) {
         }
         return null;
     }
