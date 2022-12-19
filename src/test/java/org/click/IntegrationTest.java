@@ -1055,6 +1055,39 @@ public final class IntegrationTest {
                           return 1;
                         }
                         """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          value := 5;
+                          select {
+                            -> value = 10;
+                            -> value = 10;
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          value :~ 5;
+                          select {
+                            -> value = 10;
+                            -> value = 10;
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          value :~ 5;
+                          select {
+                            -> value = 10;
+                            -> value = $value;
+                          }
+                          return value;
+                        }
+                        """);
     }
 
     @Disabled
