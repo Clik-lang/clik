@@ -22,12 +22,24 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
   forward :: (receiver: Socket, sender: Socket) {
     data := [25000]i8;
     for {
-      select {
+      Result :: struct {length: int, success: bool};
+      read :Result: select {
         {
           length, success :: recv(receiver, data);
-          if success send(sender, data, length);
-          else stop = true;
+          {length, success};
         }
+        {stop = $stop; {0, false};}
+        {sleep(30000); {0, false};}
+      }
+      if !read.success {
+        stop = true;
+        break;
+      }
+
+      // TODO transform data
+
+      select {
+        -> send(sender, data, read.length);
         -> stop = $stop;
         {sleep(30000); stop = true;}
       }
