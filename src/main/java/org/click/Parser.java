@@ -515,15 +515,16 @@ public final class Parser {
     Statement.Join nextJoin() {
         consume(JOIN, "Expect 'join'.");
         consume(LEFT_BRACE, "Expect '{'.");
-        List<Statement> statements = new ArrayList<>();
+        List<Statement.Block> blocks = new ArrayList<>();
         if (!check(RIGHT_BRACE)) {
             do {
-                consume(ARROW, "Expect '->'.");
-                statements.add(nextStatement());
+                final List<Statement> statements = nextBlock();
+                final Statement.Block block = new Statement.Block(statements);
+                blocks.add(block);
             } while (!check(RIGHT_BRACE));
         }
         consume(RIGHT_BRACE, "Expect '}'.");
-        return new Statement.Join(statements);
+        return new Statement.Join(blocks);
     }
 
     Statement.Spawn nextSpawn() {

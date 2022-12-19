@@ -8,15 +8,15 @@ import java.util.concurrent.CountDownLatch;
 
 public record ExecutorJoin(Executor executor, ScopeWalker<Value> walker) {
     Value interpret(Statement.Join join) {
-        final List<Statement> statements = join.statements();
+        final List<Statement.Block> blocks = join.blocks();
         // Run every statement in a virtual thread and start the block of the first one that finishes
         List<ScopeWalker<Value>> walkers = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(statements.size());
-        for (Statement stmt : statements) {
+        CountDownLatch latch = new CountDownLatch(blocks.size());
+        for (Statement.Block block : blocks) {
             final Executor executor = executor().fork(true, false);
             walkers.add(executor.walker());
             Thread.startVirtualThread(() -> {
-                executor.interpret(stmt);
+                executor.interpret(block);
                 latch.countDown();
             });
         }

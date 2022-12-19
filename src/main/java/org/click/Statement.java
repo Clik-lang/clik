@@ -38,7 +38,7 @@ public sealed interface Statement {
     record Select(Map<Statement, Block> cases) implements Statement {
     }
 
-    record Join(List<Statement> statements) implements Statement {
+    record Join(List<Block> blocks) implements Statement {
     }
 
     record Spawn(Statement statement) implements Statement {
