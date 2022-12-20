@@ -6,13 +6,13 @@ import org.click.Type;
 import java.util.List;
 
 public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
-    void interpret(Statement.Loop loop) {
+    Value interpret(Statement.Loop loop) {
         if (loop.iterable() == null) {
             // Infinite loop
             while (true) {
                 if (!iterate(loop)) break;
             }
-            return;
+            return null;
         }
         final Value iterable = executor.evaluate(loop.iterable(), null);
         switch (iterable) {
@@ -20,6 +20,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             case Value.ArrayRef arrayRef -> rangeArrayRef(loop, arrayRef);
             default -> throw new RuntimeException("Expected iterable, got: " + iterable);
         }
+        return null;
     }
 
     private boolean iterate(Statement.Loop loop) {

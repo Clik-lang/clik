@@ -274,10 +274,7 @@ public final class Executor {
                 }
                 yield null;
             }
-            case Statement.Loop loop -> {
-                this.interpreterLoop.interpret(loop);
-                yield null;
-            }
+            case Statement.Loop loop -> this.interpreterLoop.interpret(loop);
             case Statement.Break ignored -> {
                 if (!insideLoop) throw new RuntimeException("Break statement outside of loop");
                 yield new Value.Break();
