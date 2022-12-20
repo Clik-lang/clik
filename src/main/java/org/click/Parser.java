@@ -634,7 +634,7 @@ public final class Parser {
     }
 
     private RuntimeException error(Token peek, String message) {
-        return new RuntimeException(message + ": got token " + peek + " previous: " + previous());
+        return new RuntimeException("Error at line " + peek.line() + ": " + message);
     }
 
     public List<Statement> parse() {

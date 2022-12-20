@@ -9,7 +9,8 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        final String input = Files.readString(Path.of("samples", "hello.cl"));
+        final String input = Files.readAllLines(Path.of("samples", "hello.cl"))
+                .stream().reduce("", (a, b) -> a + b + '\n');
         var tokens = new Scanner(input).scanTokens();
         System.out.println("Tokens:");
         for (var token : tokens) System.out.println(token);

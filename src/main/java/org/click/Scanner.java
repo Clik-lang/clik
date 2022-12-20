@@ -49,6 +49,11 @@ public final class Scanner {
 
     Token nextToken() {
         if (isAtEnd()) return null;
+        if (peek() == '\n') {
+            advance();
+            line++;
+            return nextToken();
+        }
         skipWhitespace();
         if (isAtEnd()) return null;
         skipComment();
@@ -127,9 +132,6 @@ public final class Scanner {
         } else if (Character.isLetter(c)) {
             final String value = nextIdentifier();
             type = KEYWORDS.getOrDefault(value, Token.Type.IDENTIFIER);
-        } else if (c == '\n') {
-            line++;
-            return nextToken();
         } else {
             throw new RuntimeException("Unexpected character: " + c);
         }
