@@ -40,6 +40,9 @@ public sealed interface Expression {
     record StringLiteral(String value) implements Expression {
     }
 
+    record RuneLiteral(String value) implements Expression {
+    }
+
     record Variable(String name) implements Expression {
     }
 

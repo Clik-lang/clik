@@ -206,6 +206,10 @@ public final class Parser {
             final Token literal = previous();
             final Object value = literal.literal().value();
             return new Expression.StringLiteral((String) value);
+        } else if (match(RUNE_LITERAL)) {
+            final Token literal = previous();
+            final Object value = literal.literal().value();
+            return new Expression.RuneLiteral((String) value);
         } else if (match(INTEGER_LITERAL)) {
             final var literal = previous().literal();
             final Object value = literal.value();

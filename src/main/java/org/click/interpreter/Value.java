@@ -63,6 +63,9 @@ public sealed interface Value {
     record StringLiteral(String value) implements Value {
     }
 
+    record RuneLiteral(String character) implements Value {
+    }
+
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
     }
 

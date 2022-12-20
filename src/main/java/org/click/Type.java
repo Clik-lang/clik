@@ -18,6 +18,7 @@ public interface Type {
     Type F64 = new Primitive("f64");
     Type INT = new Primitive("int");
     Type UINT = new Primitive("uint");
+    Type RUNE = new Primitive("rune");
     Type STRING = new Primitive("string");
 
     String name();
@@ -89,6 +90,7 @@ public interface Type {
             case "f64" -> F64;
             case "int" -> INT;
             case "uint" -> UINT;
+            case "rune" -> RUNE;
             case "string" -> STRING;
             default -> new Identifier(name);
         };

@@ -27,7 +27,7 @@ public record Token(Type type, int line, String input,
         EQUAL, COLON, TILDE, RANGE, ARROW,
 
         // Values
-        IDENTIFIER, STRING_LITERAL, INTEGER_LITERAL, FLOAT_LITERAL,
+        IDENTIFIER, STRING_LITERAL, RUNE_LITERAL, INTEGER_LITERAL, FLOAT_LITERAL,
 
         // Keywords
         RETURN, IF, ELSE, TRUE, FALSE,

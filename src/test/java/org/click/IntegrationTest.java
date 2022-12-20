@@ -203,6 +203,18 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void runeLiterals() {
+        assertProgram(new Value.RuneLiteral("a"),
+                """
+                        main :: () rune -> 'a';
+                        """);
+        assertProgram(new Value.RuneLiteral("β"),
+                """
+                        main :: () rune -> 'β';
+                        """);
+    }
+
+    @Test
     public void lambda() {
         assertProgram(ONE,
                 """

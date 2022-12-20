@@ -128,6 +128,9 @@ public final class Scanner {
         } else if (c == '\"') {
             type = Token.Type.STRING_LITERAL;
             literal = nextString();
+        } else if (c == '\'') {
+            type = Token.Type.RUNE_LITERAL;
+            literal = nextRune();
         } else if (c == '`') {
             type = Token.Type.STRING_LITERAL;
             literal = nextRawString();
@@ -234,6 +237,17 @@ public final class Scanner {
         }
         advance();
         return new Token.Literal(Type.STRING, builder.toString());
+    }
+
+    private Token.Literal nextRune() {
+        final StringBuilder builder = new StringBuilder();
+        while (peek() != '\'') {
+            if (peek() == '\\') advance();
+            final char c = advance();
+            builder.append(c);
+        }
+        advance();
+        return new Token.Literal(Type.RUNE, builder.toString());
     }
 
     private Token.Literal nextRawString() {

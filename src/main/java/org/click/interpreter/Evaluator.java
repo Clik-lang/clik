@@ -65,6 +65,7 @@ public final class Evaluator {
                     new Value.FloatLiteral(floatLiteral.type(), floatLiteral.value());
             case Expression.BooleanLiteral booleanLiteral -> new Value.BooleanLiteral(booleanLiteral.value());
             case Expression.StringLiteral stringLiteral -> new Value.StringLiteral(stringLiteral.value());
+            case Expression.RuneLiteral runeLiteral -> new Value.RuneLiteral(runeLiteral.value());
             case Expression.Variable variable -> {
                 final String name = variable.name();
                 final Value value = walker.find(name);
