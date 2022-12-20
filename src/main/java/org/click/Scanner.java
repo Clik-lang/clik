@@ -57,6 +57,11 @@ public final class Scanner {
         skipWhitespace();
         if (isAtEnd()) return null;
         skipComment();
+        if (peek() == '\n') {
+            advance();
+            line++;
+            return nextToken();
+        }
         final int startIndex = index;
 
         Token.Type type;
