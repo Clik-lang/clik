@@ -253,12 +253,24 @@ public final class Evaluator {
         }
 
         if (explicitType instanceof Type.Identifier identifier) {
-            final String unionName = identifier.name();
-            final Value trackedType = walker.find(unionName);
+            final String name = identifier.name();
+            final Value trackedType = walker.find(name);
+            // Union cast
             if (trackedType instanceof Value.UnionDecl unionDecl && rawValue instanceof Value.Struct struct) {
                 // Put struct in union wrapper
                 assert unionDecl.entries().containsKey(struct.name()) : "Struct not found in union: " + struct.name();
-                return new Value.Union(unionName, rawValue);
+                return new Value.Union(name, rawValue);
+            }
+            // Enum cast
+            if (trackedType instanceof Value.EnumDecl enumDecl && !(rawValue instanceof Value.Enum)) {
+                final Map<String, Value> entries = enumDecl.entries();
+                final String enumName = entries.entrySet().stream()
+                        .filter(entry -> entry.getValue().equals(rawValue))
+                        .findFirst()
+                        .orElseThrow()
+                        .getKey();
+                // Put struct in enum wrapper
+                return new Value.Enum(name, enumName);
             }
         }
         // Valid type, no conversion needed

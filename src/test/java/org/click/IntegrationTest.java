@@ -729,6 +729,50 @@ public final class IntegrationTest {
                           return Component.Position;
                         }
                         """);
+        assertProgram(new Value.Enum("State", "LOGIN"),
+                """
+                        State :: enum {LOGIN, PLAY}
+                        Player :: struct {state: State}
+                        main :: () State {
+                          player :: Player {State.LOGIN};
+                          return player.state;
+                        }
+                        """);
+        assertProgram(new Value.Enum("Test", "SECOND"),
+                """
+                        Point :: struct {x: int, y: int}
+                        Test :: enum Point {
+                          FIRST :: {1, 2},
+                          SECOND :: {3, 4},
+                        }
+                        main :: () Test {
+                          return Test.SECOND;
+                        }
+                        """);
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
+                """
+                        Point :: struct {x: int, y: int}
+                        Test :: enum Point {
+                          FIRST :: {1, 2},
+                          SECOND :: {3, 4},
+                        }
+                        main :: () Point {
+                          return Test.FIRST;
+                        }
+                        """);
+        assertProgram(new Value.Enum("Test", "FIRST"),
+                """
+                        Point :: struct {x: int, y: int}
+                        Test :: enum Point {
+                          FIRST :: {1, 2},
+                          SECOND :: {3, 4},
+                        }
+                        Player :: struct {test: Test}
+                        main :: () Test {
+                          player :: Player {Test.FIRST};
+                          return player.test;
+                        }
+                        """);
     }
 
     @Test

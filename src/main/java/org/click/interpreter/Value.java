@@ -66,6 +66,9 @@ public sealed interface Value {
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
     }
 
+    record Enum(String name, String enumName) implements Value {
+    }
+
     record Union(String name, Value value) implements Value {
     }
 
