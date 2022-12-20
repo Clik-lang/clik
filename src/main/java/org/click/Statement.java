@@ -23,7 +23,7 @@ public sealed interface Statement {
     }
 
     record Loop(List<Declaration> declarations, Expression iterable,
-                Statement body, boolean fork) implements Statement {
+                Statement body) implements Statement {
         public record Declaration(boolean ref, String name) {
         }
     }

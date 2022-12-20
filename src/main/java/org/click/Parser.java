@@ -70,7 +70,7 @@ public final class Parser {
             statement = new Statement.Return(nextExpression());
         } else if (check(IF)) {
             statement = nextBranch();
-        } else if (check(FOR) || check(FORK)) {
+        } else if (check(FOR)) {
             statement = nextLoop();
         } else if (match(BREAK)) {
             statement = new Statement.Break();
@@ -87,7 +87,7 @@ public final class Parser {
             final Statement deferred = nextStatement();
             statement = new Statement.Defer(deferred);
         } else if (check(LEFT_BRACE)) {
-            if (checkTrailing(SEMICOLON, RETURN, IF, FOR, FORK, BREAK, CONTINUE, SELECT, SPAWN, DEFER, HASH)) {
+            if (checkTrailing(SEMICOLON, RETURN, IF, FOR, BREAK, CONTINUE, SELECT, SPAWN, DEFER, HASH)) {
                 statement = new Statement.Block(nextBlock());
             } else {
                 // Inline block return
@@ -503,11 +503,10 @@ public final class Parser {
     }
 
     Statement.Loop nextLoop() {
-        final boolean fork = match(FORK);
-        if (!fork) consume(FOR, "Expect 'for' or 'fork'.");
+        consume(FOR, "Expect 'for' or 'fork'.");
         // Infinite loop
         if (check(LEFT_BRACE) || check(ARROW)) {
-            return new Statement.Loop(null, null, nextStatement(), fork);
+            return new Statement.Loop(null, null, nextStatement());
         }
         List<Statement.Loop.Declaration> declarations = new ArrayList<>();
         if (check(LEFT_PAREN) || check(DOT) || check(IDENTIFIER) && (checkNext(COLON) || checkNext(COMMA))) {
@@ -527,7 +526,7 @@ public final class Parser {
         }
         final Expression iterable = nextExpression();
         final Statement body = nextStatement();
-        return new Statement.Loop(declarations, iterable, body, fork);
+        return new Statement.Loop(declarations, iterable, body);
     }
 
     Expression.Select nextSelect() {

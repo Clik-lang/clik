@@ -13,7 +13,6 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         context.phaser().register();
         if (loop.iterable() == null) {
             // Infinite loop
-            assert !loop.fork() : "Forking infinite loops is not supported";
             while (true) {
                 if (!iterate(context)) break;
             }
@@ -36,24 +35,11 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     private boolean iterate(Context context) {
         final Statement.Loop loop = context.loop();
         final Statement body = loop.body();
-        if (!loop.fork()) {
-            // Single thread
-            var previousLoop = executor.insideLoop;
-            executor.insideLoop = true;
-            final boolean result = iterateBody(executor, body);
-            executor.insideLoop = previousLoop;
-            return result;
-        } else {
-            // Virtual threads
-            final Executor executor = executor().fork(true, true);
-            context.executors().add(executor);
-            context.phaser().register();
-            Thread.startVirtualThread(() -> {
-                iterateBody(executor, body);
-                context.phaser().arriveAndDeregister();
-            });
-            return true; // Fork cannot be stopped from within
-        }
+        var previousLoop = executor.insideLoop;
+        executor.insideLoop = true;
+        final boolean result = iterateBody(executor, body);
+        executor.insideLoop = previousLoop;
+        return result;
     }
 
     private boolean iterateBody(Executor executor, Statement body) {

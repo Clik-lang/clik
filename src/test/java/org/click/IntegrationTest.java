@@ -1012,44 +1012,6 @@ public final class IntegrationTest {
     }
 
     @Test
-    public void fork() {
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
-                """
-                        main :: () int {
-                          value :~ 0;
-                          fork 0..10 {
-                            value = value + 1;
-                          }
-                          return value;
-                        }
-                        """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
-                """
-                        main :: () int {
-                          value :~ 0;
-                          fork 0..10 {
-                            {value = value + 1;}
-                          }
-                          return value;
-                        }
-                        """);
-
-        assertProgram(ONE,
-                """
-                        main :: () int {
-                          value :~ 0;
-                          fork i: 0..2 {
-                            if i == 1 {
-                              continue;
-                            }
-                            value = value + 1;
-                          }
-                          return value;
-                        }
-                        """);
-    }
-
-    @Test
     public void selectStmt() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 10),
                 """
@@ -1084,31 +1046,6 @@ public final class IntegrationTest {
                               if true {
                                 value = 6;
                               }
-                            }
-                          }
-                          return value;
-                        }
-                        """);
-
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
-                """
-                        main :: () int {
-                          value :~ 0;
-                          fork 0..10 {
-                            select {
-                              -> value = value + 1;
-                            }
-                          }
-                          return value;
-                        }
-                        """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
-                """
-                        main :: () int {
-                          value :~ 0;
-                          fork 0..10 {
-                            select {
-                              -> value = value + 1;
                             }
                           }
                           return value;
@@ -1249,6 +1186,31 @@ public final class IntegrationTest {
                             spawn stop = true;
                           }
                           return 1;
+                        }
+                        """);
+
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          value :~ 0;
+                          join {
+                            for 0.. 10 {
+                              value = value + 1;
+                            }
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+                """
+                        main :: () int {
+                          value :~ 0;
+                          join {
+                            for 0.. 10 {
+                              spawn value = value + 1;
+                            }
+                          }
+                          return value;
                         }
                         """);
     }
