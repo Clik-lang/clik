@@ -51,8 +51,8 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
   }
   // Run the two streams (client -> backend and backend -> client) in parallel
   join {
-    -> forward(client, backend);
-    -> forward(backend, client);
+    spawn forward(client, backend);
+    spawn forward(backend, client);
   }
   // Close sockets
   print("Client disconnected ");
