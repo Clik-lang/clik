@@ -124,7 +124,7 @@ public final class ValueCompute {
     public static Value computeArray(Executor executor, Type.Array arrayType, @Nullable List<Expression> expressions) {
         final Type elementType = arrayType.type();
         final long length = arrayType.length();
-        if (elementType.primitive() && elementType != Type.STRING) {
+        if (elementType instanceof Type.Primitive) {
             // Primitive types are stored in a single segment
             final long sizeof = ValueType.sizeOf(elementType);
             MemorySegment segment = MemorySegment.allocateNative(length * sizeof, MemorySession.openImplicit());

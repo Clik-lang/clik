@@ -19,28 +19,18 @@ public interface Type {
     Type INT = new Primitive("int");
     Type UINT = new Primitive("uint");
     Type RUNE = new Primitive("rune");
-    Type STRING = new Primitive("string");
+
+    Type STRING = new BuiltIn("string");
 
     String name();
 
-    boolean primitive();
-
     record Identifier(String name) implements Type {
-        @Override
-        public boolean primitive() {
-            return false;
-        }
     }
 
     record Array(Type type, long length) implements Type {
         @Override
         public String name() {
             return "[]" + type.name();
-        }
-
-        @Override
-        public boolean primitive() {
-            return false;
         }
     }
 
@@ -49,11 +39,6 @@ public interface Type {
         public String name() {
             return "map[" + key.name() + "]" + value.name();
         }
-
-        @Override
-        public boolean primitive() {
-            return false;
-        }
     }
 
     record Function(List<Parameter> parameters, Type returnType) implements Type {
@@ -61,17 +46,18 @@ public interface Type {
         public String name() {
             return "(" + parameters.stream().map(Parameter::name).collect(Collectors.joining(", ")) + ") " + returnType.name();
         }
-
-        @Override
-        public boolean primitive() {
-            return false;
-        }
     }
 
+    /**
+     * Constant sized type.
+     */
     record Primitive(String name) implements Type {
-        public boolean primitive() {
-            return true;
-        }
+    }
+
+    /**
+     * Convenient type supported by the language.
+     */
+    record BuiltIn(String name) implements Type {
     }
 
     static Type of(String name) {

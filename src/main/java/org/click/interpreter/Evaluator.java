@@ -247,7 +247,7 @@ public final class Evaluator {
             // No type defined, use inferred type
             return rawValue;
         }
-        if (explicitType.primitive()) {
+        if (explicitType instanceof Type.Primitive) {
             // Primitive type, no conversion needed
             // TODO: downcast
             return rawValue;
