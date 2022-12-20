@@ -13,6 +13,9 @@ main :: () {
       print("Handling client ");
       backend :: connect_server("localhost", 25565);
       handle_client(id, client, backend);
+      print("Client disconnected ");
+      close(client);
+      close(backend);
     }
   }
 }
@@ -50,12 +53,6 @@ handle_client :: (id: int, client: Socket, backend: Socket) {
     stop = true;
   }
   // Run the two streams (client -> backend and backend -> client) in parallel
-  join {
-    spawn forward(client, backend);
-    spawn forward(backend, client);
-  }
-  // Close sockets
-  print("Client disconnected ");
-  close(client);
-  close(backend);
+  spawn forward(client, backend);
+  spawn forward(backend, client);
 }

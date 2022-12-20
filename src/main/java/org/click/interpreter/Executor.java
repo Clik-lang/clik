@@ -129,6 +129,7 @@ public final class Executor {
             walker.register(parameter.name(), value);
         }
 
+        enterScope();
         var previousFunction = currentFunction;
         currentFunction = new CurrentFunction(name, declaration.parameters(),
                 declaration.returnType(), parameters);
@@ -138,8 +139,25 @@ public final class Executor {
             if (result != null) break;
         }
         currentFunction = previousFunction;
+        exitScope();
         walker.exitBlock();
         return result;
+    }
+
+    JoinScope previousJoinScope = null;
+
+    void enterScope() {
+        this.previousJoinScope = joinScope;
+        this.joinScope = new JoinScope(new Phaser(1), new ArrayList<>());
+    }
+
+    void exitScope() {
+        this.joinScope.phaser.arriveAndAwaitAdvance();
+        // Merge
+        final List<ScopeWalker<Value>> walkers = joinScope.spawns().stream().map(Executor::walker).toList();
+        ValueCompute.merge(walker, walkers);
+        // Restore
+        joinScope = previousJoinScope;
     }
 
     public Value interpret(String name, List<Value> parameters) {
@@ -269,15 +287,9 @@ public final class Executor {
                 yield new Value.Continue();
             }
             case Statement.Join join -> {
-                var previousScope = joinScope;
-                joinScope = new JoinScope(new Phaser(1), new ArrayList<>());
+                enterScope();
                 final Value value = interpret(join.block());
-                joinScope.phaser.arriveAndAwaitAdvance();
-                // Merge
-                final List<ScopeWalker<Value>> walkers = joinScope.spawns().stream().map(Executor::walker).toList();
-                ValueCompute.merge(walker, walkers);
-                // Restore
-                joinScope = previousScope;
+                exitScope();
                 yield value;
             }
             case Statement.Spawn spawn -> this.interpreterSpawn.interpret(spawn);
