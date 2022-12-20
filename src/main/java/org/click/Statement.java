@@ -34,7 +34,7 @@ public sealed interface Statement {
     record Continue() implements Statement {
     }
 
-    record Join(List<Block> blocks) implements Statement {
+    record Join(Block block) implements Statement {
     }
 
     record Spawn(Statement statement) implements Statement {

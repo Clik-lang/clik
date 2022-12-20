@@ -5,9 +5,11 @@ import org.click.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,11 +20,11 @@ public final class Executor {
     final boolean async;
     boolean insideLoop;
     boolean interrupted;
+    JoinScope joinScope;
     final Map<String, SharedMutation> sharedMutations;
 
     private final Evaluator interpreter;
     private final ExecutorLoop interpreterLoop;
-    private final ExecutorJoin interpreterJoin;
     private final ExecutorSpawn interpreterSpawn;
 
     private CurrentFunction currentFunction = null;
@@ -71,27 +73,30 @@ public final class Executor {
         }
     }
 
+    record JoinScope(Phaser phaser, List<Executor> spawns) {
+    }
+
     record CurrentFunction(String name, List<Parameter> parameters, Type returnType,
                            List<Value> evaluatedParameters) {
     }
 
     public Executor(VM.Context context, boolean async, boolean insideLoop,
-                    Map<String, SharedMutation> sharedMutations) {
+                    JoinScope joinScope, Map<String, SharedMutation> sharedMutations) {
         this.context = context;
         this.walker = context.walker();
         this.async = async;
         this.insideLoop = insideLoop;
+        this.joinScope = joinScope;
         this.sharedMutations = new HashMap<>(sharedMutations);
 
         this.interpreter = new Evaluator(this, walker);
 
         this.interpreterLoop = new ExecutorLoop(this, walker);
-        this.interpreterJoin = new ExecutorJoin(this, walker);
         this.interpreterSpawn = new ExecutorSpawn(this, walker);
     }
 
     public Executor(VM.Context context) {
-        this(context, false, false, Map.of());
+        this(context, false, false, new JoinScope(new Phaser(1), new ArrayList<>()), Map.of());
     }
 
     public VM.Context context() {
@@ -108,8 +113,8 @@ public final class Executor {
 
     public Executor fork(boolean async, boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
-        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.phaser());
-        final Executor executor = new Executor(context, async, insideLoop, sharedMutations);
+        final VM.Context context = new VM.Context(this.context.directory(), copy);
+        final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
         copy.enterBlock(executor);
         copy.currentScope().tracked.putAll(walker.currentScope().tracked);
         return executor;
@@ -185,6 +190,7 @@ public final class Executor {
     }
 
     Value interpret(Statement statement) {
+        assert joinScope != null : "Join scope not initialized";
         assert !interrupted : "Cannot interpret after interrupt";
         try {
             return interpret0(statement);
@@ -262,7 +268,18 @@ public final class Executor {
                 if (!insideLoop) throw new RuntimeException("Continue statement outside of loop");
                 yield new Value.Continue();
             }
-            case Statement.Join join -> this.interpreterJoin.interpret(join);
+            case Statement.Join join -> {
+                var previousScope = joinScope;
+                joinScope = new JoinScope(new Phaser(1), new ArrayList<>());
+                final Value value = interpret(join.block());
+                joinScope.phaser.arriveAndAwaitAdvance();
+                // Merge
+                final List<ScopeWalker<Value>> walkers = joinScope.spawns().stream().map(Executor::walker).toList();
+                ValueCompute.merge(walker, walkers);
+                // Restore
+                joinScope = previousScope;
+                yield value;
+            }
             case Statement.Spawn spawn -> this.interpreterSpawn.interpret(spawn);
             case Statement.Defer defer -> {
                 ScopeWalker<Value>.Scope currentScope = walker.currentScope();

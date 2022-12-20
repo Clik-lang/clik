@@ -1198,8 +1198,8 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           join {
-                            -> test :: 10;
-                            -> test2:: 10;
+                            spawn test :: 10;
+                            spawn test2:: 10;
                           }
                           return 0;
                         }
@@ -1209,8 +1209,8 @@ public final class IntegrationTest {
                         main :: () int {
                           shared :~ 0;
                           join {
-                            -> shared = 1;
-                            -> shared = 1;
+                            spawn shared = 1;
+                            spawn shared = 1;
                           }
                           return shared;
                         }
@@ -1221,8 +1221,8 @@ public final class IntegrationTest {
                           shared :~ 0;
                           lambda :: () -> shared = 1;
                           join {
-                            -> lambda();
-                            -> lambda();
+                            spawn lambda();
+                            spawn lambda();
                           }
                           return shared;
                         }
@@ -1233,8 +1233,8 @@ public final class IntegrationTest {
                           shared :~ 0;
                           lambda :: () -> shared = 1;
                           join {
-                            -> lambda();
-                            -> lambda();
+                            spawn lambda();
+                            spawn lambda();
                           }
                           return $shared;
                         }
@@ -1244,9 +1244,9 @@ public final class IntegrationTest {
                         main :: () int {
                           stop :~ false;
                           join {
-                            -> test :: $stop;
-                            -> test :: $stop;
-                            -> stop = true;
+                            spawn stop = $stop;
+                            spawn stop = $stop;
+                            spawn stop = true;
                           }
                           return 1;
                         }
