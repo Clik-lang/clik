@@ -23,7 +23,7 @@ main :: () {
 handle_client :: (id: int, client: Socket, backend: Socket) {
   stop :~ false;
   forward :: (receiver: Socket, sender: Socket) {
-    data := [25000]i8; // TODO thread local storage so we can allocate a few 2MB buffers to fit the largest packet
+    data := [2_000_000]i8;
     for {
       Result :: struct {length: int, success: bool};
       // Read socket
