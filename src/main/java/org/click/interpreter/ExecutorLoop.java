@@ -3,37 +3,26 @@ package org.click.interpreter;
 import org.click.Statement;
 import org.click.Type;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Phaser;
 
 public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     void interpret(Statement.Loop loop) {
-        final Context context = new Context(loop, new Phaser(), new ArrayList<>());
-        context.phaser().register();
         if (loop.iterable() == null) {
             // Infinite loop
             while (true) {
-                if (!iterate(context)) break;
+                if (!iterate(loop)) break;
             }
             return;
         }
         final Value iterable = executor.evaluate(loop.iterable(), null);
         switch (iterable) {
-            case Value.Range range -> rangeLoop(context, range);
-            case Value.ArrayRef arrayRef -> rangeArrayRef(context, arrayRef);
+            case Value.Range range -> rangeLoop(loop, range);
+            case Value.ArrayRef arrayRef -> rangeArrayRef(loop, arrayRef);
             default -> throw new RuntimeException("Expected iterable, got: " + iterable);
         }
-        context.phaser().arriveAndAwaitAdvance();
-        final List<ScopeWalker<Value>> walkers = context.executors().stream().map(Executor::walker).toList();
-        ValueCompute.merge(walker, walkers);
     }
 
-    record Context(Statement.Loop loop, Phaser phaser, List<Executor> executors) {
-    }
-
-    private boolean iterate(Context context) {
-        final Statement.Loop loop = context.loop();
+    private boolean iterate(Statement.Loop loop) {
         final Statement body = loop.body();
         var previousLoop = executor.insideLoop;
         executor.insideLoop = true;
@@ -48,8 +37,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         return !(value instanceof Value.Break) && !(value instanceof Value.Interrupt);
     }
 
-    private void rangeLoop(Context context, Value.Range range) {
-        final Statement.Loop loop = context.loop();
+    private void rangeLoop(Statement.Loop loop, Value.Range range) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
         final long start = ((Value.IntegerLiteral) range.start()).value();
@@ -63,19 +51,18 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             walker.register(variableName, new Value.IntegerLiteral(Type.INT, start));
             for (long i = start; i < end; i += step) {
                 walker.update(variableName, new Value.IntegerLiteral(Type.INT, i));
-                if (!iterate(context)) break;
+                if (!iterate(loop)) break;
             }
         } else {
             // No declaration
             for (long i = start; i < end; i += step) {
-                if (!iterate(context)) break;
+                if (!iterate(loop)) break;
             }
         }
         walker.exitBlock();
     }
 
-    private void rangeArrayRef(Context context, Value.ArrayRef arrayRef) {
-        final Statement.Loop loop = context.loop();
+    private void rangeArrayRef(Statement.Loop loop, Value.ArrayRef arrayRef) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
 
         walker.enterBlock(executor);
@@ -87,7 +74,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (Value value : values) {
                     walker.update(variableName, value);
-                    if (!iterate(context)) break;
+                    if (!iterate(loop)) break;
                 }
             } else if (declarations.size() == 2 && !declarations.get(0).ref() && !declarations.get(1).ref()) {
                 // for-each counted loop
@@ -99,7 +86,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                     final Value value = values.get(i);
                     walker.update(indexName, new Value.IntegerLiteral(Type.INT, i));
                     walker.update(variableName, value);
-                    if (!iterate(context)) break;
+                    if (!iterate(loop)) break;
                 }
             } else {
                 // Ref loop
@@ -122,13 +109,13 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                         final Value refValue = ((Value.Struct) value).parameters().get(refName);
                         walker.update(refName, refValue);
                     }
-                    if (!iterate(context)) break;
+                    if (!iterate(loop)) break;
                 }
             }
         } else {
             // No declaration
             for (Value value : values) {
-                if (!iterate(context)) break;
+                if (!iterate(loop)) break;
             }
         }
         walker.exitBlock();
