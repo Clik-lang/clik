@@ -1,5 +1,7 @@
 package org.click;
 
+import org.click.value.Value;
+
 import java.util.*;
 
 import static org.click.Token.Type.*;
@@ -153,6 +155,15 @@ public final class Parser {
 
     Expression nextExpression() {
         if (check(SEMICOLON)) return null;
+        // Range
+        if (check(INTEGER_LITERAL) && checkNext(RANGE)) {
+            final Expression start = nextExpression(0);
+            consume(RANGE, "Expected '..' after start of range.");
+            final Expression end = nextExpression(0);
+            final Expression step = match(RANGE) ? nextExpression(0) :
+                    new Expression.Constant(new Value.IntegerLiteral(Type.INT, 1));
+            return new Expression.Range(start, end, step);
+        }
         // Pratt's algorithm
         return nextExpression(0);
     }
@@ -168,23 +179,6 @@ public final class Parser {
     }
 
     private Expression nextPrimary() {
-        // Range
-        if (check(INTEGER_LITERAL) && checkNext(RANGE)) {
-            final Token.Literal startLiteral = advance().literal();
-            final Expression start = new Expression.IntegerLiteral(startLiteral.type(), (Long) startLiteral.value());
-            consume(RANGE, "Expected '..' after start of range.");
-            final Token.Literal endLiteral = advance().literal();
-            final Expression end = new Expression.IntegerLiteral(endLiteral.type(), (Long) endLiteral.value());
-            final Expression step;
-            if (match(RANGE)) {
-                final Token.Literal stepLiteral = advance().literal();
-                step = new Expression.IntegerLiteral(stepLiteral.type(), (Long) stepLiteral.value());
-            } else {
-                step = new Expression.IntegerLiteral(Type.INT, 1);
-            }
-            return new Expression.Range(start, end, step);
-        }
-
         if (check(LEFT_PAREN)) {
             if (checkNext(RIGHT_PAREN) || checkNext(IDENTIFIER) && checkNextNext(COLON)) {
                 return nextFunction();
@@ -203,23 +197,23 @@ public final class Parser {
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.literal().value();
-            return new Expression.StringLiteral((String) value);
+            return new Expression.Constant(new Value.StringLiteral((String) value));
         } else if (match(RUNE_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.literal().value();
-            return new Expression.RuneLiteral((String) value);
+            return new Expression.Constant(new Value.RuneLiteral((String) value));
         } else if (match(INTEGER_LITERAL)) {
             final var literal = previous().literal();
             final Object value = literal.value();
-            return new Expression.IntegerLiteral(literal.type(), (Long) value);
+            return new Expression.Constant(new Value.IntegerLiteral(literal.type(), (Long) value));
         } else if (match(FLOAT_LITERAL)) {
             final var literal = previous().literal();
             final Object value = literal.value();
-            return new Expression.FloatLiteral(literal.type(), (Double) value);
+            return new Expression.Constant(new Value.FloatLiteral(literal.type(), (Double) value));
         } else if (match(TRUE)) {
-            return new Expression.BooleanLiteral(true);
+            return new Expression.Constant(new Value.BooleanLiteral(true));
         } else if (match(FALSE)) {
-            return new Expression.BooleanLiteral(false);
+            return new Expression.Constant(new Value.BooleanLiteral(false));
         } else if (match(EXCLAMATION)) {
             final Expression expression = nextExpression();
             return new Expression.Unary(EXCLAMATION, expression);
@@ -466,7 +460,7 @@ public final class Parser {
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
-                    value = new Expression.IntegerLiteral(Type.INT, index++);
+                    value = new Expression.Constant(new Value.IntegerLiteral(Type.INT, index++));
                 }
                 entries.put(identifier.input(), value);
             } while (match(COMMA) && !check(RIGHT_BRACE));

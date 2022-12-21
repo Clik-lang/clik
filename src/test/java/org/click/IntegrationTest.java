@@ -1226,7 +1226,7 @@ public final class IntegrationTest {
                         main :: () int {
                           join {
                             spawn test :: 10;
-                            spawn test2:: 10;
+                            spawn test2 :: 10;
                           }
                           return 0;
                         }
