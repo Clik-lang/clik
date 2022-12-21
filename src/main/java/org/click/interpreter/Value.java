@@ -13,9 +13,17 @@ public sealed interface Value {
 
     record FunctionDecl(List<Parameter> parameters, Type returnType, List<Statement> body,
                         @Nullable Executor lambdaExecutor) implements Value {
+        public FunctionDecl {
+            parameters = List.copyOf(parameters);
+            body = List.copyOf(body);
+        }
     }
 
     record StructDecl(List<Parameter> parameters) implements Value {
+        public StructDecl {
+            parameters = List.copyOf(parameters);
+        }
+
         Type get(String name) {
             for (Parameter parameter : parameters) {
                 if (parameter.name().equals(name))
@@ -26,9 +34,15 @@ public sealed interface Value {
     }
 
     record EnumDecl(@Nullable Type type, java.util.Map<String, Value> entries) implements Value {
+        public EnumDecl {
+            entries = java.util.Map.copyOf(entries);
+        }
     }
 
     record UnionDecl(java.util.Map<String, StructDecl> entries) implements Value {
+        public UnionDecl {
+            entries = java.util.Map.copyOf(entries);
+        }
     }
 
     // VALUES
@@ -67,6 +81,9 @@ public sealed interface Value {
     }
 
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
+        public Struct {
+            parameters = java.util.Map.copyOf(parameters);
+        }
     }
 
     record Enum(String name, String enumName) implements Value {
@@ -76,12 +93,21 @@ public sealed interface Value {
     }
 
     record ArrayRef(Type.Array type, List<Value> elements) implements Value {
+        public ArrayRef {
+            elements = java.util.List.copyOf(elements);
+        }
     }
 
     record ArrayValue(Type.Array type, MemorySegment data) implements Value {
+        public ArrayValue {
+            data = data.asReadOnly();
+        }
     }
 
     record Map(Type.Map type, java.util.Map<Value, Value> entries) implements Value {
+        public Map {
+            entries = java.util.Map.copyOf(entries);
+        }
     }
 
     record Range(Value start, Value end, Value step) implements Value {
