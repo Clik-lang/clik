@@ -93,7 +93,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 }
             } else {
                 // Ref loop
-                final Type arrayType = arrayRef.type();
+                final Type arrayType = arrayRef.arrayType();
                 if (!(arrayType instanceof Type.Array typeArray))
                     throw new RuntimeException("Expected array of structures, got: " + arrayType);
                 final Value tracked = walker.find(typeArray.type().name());

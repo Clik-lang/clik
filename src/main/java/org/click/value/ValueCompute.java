@@ -2,9 +2,9 @@ package org.click.value;
 
 import org.click.AccessPoint;
 import org.click.Expression;
+import org.click.ScopeWalker;
 import org.click.Type;
 import org.click.interpreter.Executor;
-import org.click.ScopeWalker;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
@@ -192,7 +192,7 @@ public final class ValueCompute {
                     final Value index = executor.evaluate(indexExpression, null);
                     final int targetIndex = (int) ((Value.IntegerLiteral) index).value();
                     newParams.set(targetIndex, updated);
-                    yield new Value.ArrayRef(arrayRef.type(), newParams);
+                    yield new Value.ArrayRef(arrayRef.arrayType(), newParams);
                 } else {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }
@@ -203,10 +203,10 @@ public final class ValueCompute {
                     final MemorySegment newData = MemorySegment.allocateNative(arrayValue.data().byteSize(), SegmentScope.auto());
                     newData.copyFrom(arrayValue.data());
                     final Value indexExpr = executor.evaluate(indexExpression, null);
-                    final long index = ((Value.IntegerLiteral) indexExpr).value() * ValueType.sizeOf(arrayValue.type().type());
-                    final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.type().type());
+                    final long index = ((Value.IntegerLiteral) indexExpr).value() * ValueType.sizeOf(arrayValue.arrayType().type());
+                    final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.arrayType().type());
                     ValueCompute.assignArrayBuffer(type, updated, newData, index);
-                    yield new Value.ArrayValue(arrayValue.type(), newData);
+                    yield new Value.ArrayValue(arrayValue.arrayType(), newData);
                 } else {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }
@@ -215,9 +215,9 @@ public final class ValueCompute {
                 if (access instanceof AccessPoint.Index indexAccess) {
                     final Expression indexExpression = indexAccess.expression();
                     final HashMap<Value, Value> newParams = new HashMap<>(map.entries());
-                    final Value index = executor.evaluate(indexExpression, map.type().key());
+                    final Value index = executor.evaluate(indexExpression, map.mapType().key());
                     newParams.put(index, updated);
-                    yield new Value.Map(map.type(), newParams);
+                    yield new Value.Map(map.mapType(), newParams);
                 } else {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }

@@ -93,19 +93,19 @@ public sealed interface Value {
     record Union(String name, Value value) implements Value {
     }
 
-    record ArrayRef(Type.Array type, List<Value> elements) implements Value {
+    record ArrayRef(Type.Array arrayType, List<Value> elements) implements Value {
         public ArrayRef {
             elements = java.util.List.copyOf(elements);
         }
     }
 
-    record ArrayValue(Type.Array type, MemorySegment data) implements Value {
+    record ArrayValue(Type.Array arrayType, MemorySegment data) implements Value {
         public ArrayValue {
             data = data.asReadOnly();
         }
     }
 
-    record Map(Type.Map type, java.util.Map<Value, Value> entries) implements Value {
+    record Map(Type.Map mapType, java.util.Map<Value, Value> entries) implements Value {
         public Map {
             entries = java.util.Map.copyOf(entries);
         }

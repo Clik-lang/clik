@@ -42,9 +42,9 @@ public final class ValueType {
             case Value.BooleanLiteral ignored -> Type.BOOL;
             case Value.StringLiteral ignored -> Type.STRING;
             case Value.Struct struct -> Type.of(struct.name());
-            case Value.ArrayRef arrayRef -> arrayRef.type();
-            case Value.ArrayValue arrayValue -> arrayValue.type();
-            case Value.Map map -> map.type();
+            case Value.ArrayRef arrayRef -> arrayRef.arrayType();
+            case Value.ArrayValue arrayValue -> arrayValue.arrayType();
+            case Value.Map map -> map.mapType();
             default -> throw new RuntimeException("Unknown type: " + expression);
         };
     }

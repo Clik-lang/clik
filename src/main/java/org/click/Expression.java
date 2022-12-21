@@ -47,10 +47,10 @@ public sealed interface Expression {
     record StructValue(String name, Parameter.Passed fields) implements Expression {
     }
 
-    record ArrayValue(Type.Array type, @Nullable List<Expression> expressions) implements Expression {
+    record ArrayValue(Type.Array arrayType, @Nullable List<Expression> expressions) implements Expression {
     }
 
-    record MapValue(Type.Map type, Parameter.Passed.Mapped parameters) implements Expression {
+    record MapValue(Type.Map mapType, Parameter.Passed.Mapped parameters) implements Expression {
     }
 
     record InitializationBlock(Parameter.Passed parameters) implements Expression {

@@ -106,7 +106,7 @@ public final class Evaluator {
                             if (!(access instanceof AccessPoint.Index indexAccess)) {
                                 throw new RuntimeException("Invalid map access: " + access);
                             }
-                            final Value key = evaluate(indexAccess.expression(), map.type().key());
+                            final Value key = evaluate(indexAccess.expression(), map.mapType().key());
                             yield map.entries().get(key);
                         }
                         default -> throw new RuntimeException("Expected struct, got: " + expression);
@@ -129,7 +129,7 @@ public final class Evaluator {
                 final Value array = evaluate(arrayAccess.array(), null);
                 if (transmuteType != null && ((array instanceof Value.ArrayRef) ||
                         (array instanceof Value.ArrayValue arrayValue) &&
-                                !(arrayValue.type().type() instanceof Type.Primitive))) {
+                                !(arrayValue.arrayType().type() instanceof Type.Primitive))) {
                     throw new RuntimeException("Invalid transmute type: " + transmuteType + " for " + array);
                 }
                 yield switch (array) {
@@ -149,15 +149,15 @@ public final class Evaluator {
                         if (!(indexValue instanceof Value.IntegerLiteral integerLiteral)) {
                             throw new RuntimeException("Expected constant, got: " + indexValue);
                         }
-                        final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.type().type());
-                        final Type type = Objects.requireNonNullElse(transmuteType, arrayValue.type().type());
+                        final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.arrayType().type());
+                        final Type type = Objects.requireNonNullElse(transmuteType, arrayValue.arrayType().type());
                         final MemorySegment data = arrayValue.data();
                         if (index < 0 || index >= data.byteSize())
                             throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
                         yield ValueCompute.lookupArrayBuffer(type, data, index);
                     }
                     case Value.Map mapValue -> {
-                        final Value index = evaluate(arrayAccess.index(), mapValue.type().key());
+                        final Value index = evaluate(arrayAccess.index(), mapValue.mapType().key());
                         final Value result = mapValue.entries().get(index);
                         if (result == null) throw new RuntimeException("Key not found: " + index);
                         yield result;
@@ -195,9 +195,10 @@ public final class Evaluator {
                 }
                 yield new Value.Struct(structValue.name(), evaluated);
             }
-            case Expression.ArrayValue array -> ValueCompute.computeArray(executor, array.type(), array.expressions());
+            case Expression.ArrayValue array ->
+                    ValueCompute.computeArray(executor, array.arrayType(), array.expressions());
             case Expression.MapValue mapValue -> {
-                final Type.Map type = mapValue.type();
+                final Type.Map type = mapValue.mapType();
                 Map<Value, Value> evaluatedEntries = new HashMap<>();
                 for (var entry : mapValue.parameters().entries().entrySet()) {
                     final Value key = evaluate(entry.getKey(), type.key());
