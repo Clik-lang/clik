@@ -41,7 +41,7 @@ public final class Parser {
                 } else if (match(TILDE)) {
                     declarationType = Statement.DeclarationType.SHARED;
                 } else {
-                    throw error(peek(), "Expected declaration type");
+                    throw error("Expected declaration type");
                 }
                 final Expression initializer = nextExpression();
                 statement = new Statement.Declare(names, declarationType, initializer, explicitType);
@@ -299,7 +299,7 @@ public final class Parser {
             final Parameter.Passed passed = nextPassedParameters(null);
             return new Expression.InitializationBlock(passed);
         } else {
-            throw error(peek(), "Expect expression.");
+            throw error("Expect expression.");
         }
     }
 
@@ -416,7 +416,7 @@ public final class Parser {
         if (!check(RIGHT_PAREN)) {
             do {
                 if (parameters.size() >= 255) {
-                    throw error(peek(), "Cannot have more than 255 parameters.");
+                    throw error("Cannot have more than 255 parameters.");
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect parameter name.");
                 consume(COLON, "Expect ':' after parameter name.");
@@ -438,7 +438,7 @@ public final class Parser {
         if (!check(RIGHT_BRACE)) {
             do {
                 if (fields.size() >= 255) {
-                    throw error(peek(), "Cannot have more than 255 fields.");
+                    throw error("Cannot have more than 255 fields.");
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect field name.");
                 consume(COLON, "Expect ':' after field name.");
@@ -460,7 +460,7 @@ public final class Parser {
         if (!check(RIGHT_BRACE)) {
             do {
                 if (entries.size() >= 255) {
-                    throw error(peek(), "Cannot have more than 255 fields.");
+                    throw error("Cannot have more than 255 fields.");
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect field name.");
                 final Expression value;
@@ -485,7 +485,7 @@ public final class Parser {
         if (!check(RIGHT_BRACE)) {
             do {
                 if (entries.size() >= 255) {
-                    throw error(peek(), "Cannot have more than 255 fields.");
+                    throw error("Cannot have more than 255 fields.");
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect field name.");
                 Expression.Struct struct = null;
@@ -520,7 +520,7 @@ public final class Parser {
             final boolean paren = match(LEFT_PAREN);
             do {
                 if (declarations.size() >= 255) {
-                    throw error(peek(), "Cannot have more than 255 declarations.");
+                    throw error("Cannot have more than 255 declarations.");
                 }
                 final boolean ref = match(DOT);
                 final Token identifier = consume(IDENTIFIER, "Expect declaration name.");
@@ -575,7 +575,7 @@ public final class Parser {
             final Statement statement = nextStatement();
             return List.of(statement);
         }
-        throw error(peek(), "Expect '{' or '->'.");
+        throw error("Expect '{' or '->'.");
     }
 
     Directive.Statement nextDirectiveStatement() {
@@ -589,13 +589,13 @@ public final class Parser {
         } else if (name.equals("intrinsic")) {
             return new Directive.Statement.Intrinsic();
         } else {
-            throw error(directive, "Unknown directive.");
+            throw error("Unknown directive.");
         }
     }
 
     Token consume(Token.Type type, String message) {
         if (check(type)) return advance();
-        throw error(peek(), message);
+        throw error(message);
     }
 
     Token advance() {
@@ -608,7 +608,7 @@ public final class Parser {
     }
 
     boolean match(Token.Type... types) {
-        for (var type : types) {
+        for (Token.Type type : types) {
             if (check(type)) {
                 advance();
                 return true;
@@ -640,8 +640,8 @@ public final class Parser {
         return tokens.get(index);
     }
 
-    private RuntimeException error(Token peek, String message) {
-        return new RuntimeException("Error at line " + peek.line() + ": " + message);
+    private RuntimeException error(String message) {
+        return new RuntimeException("Error at line " + peek().line() + ": " + message);
     }
 
     public List<Statement> parse() {
