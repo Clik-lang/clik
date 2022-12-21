@@ -55,7 +55,7 @@ public sealed interface Expression {
     record VariableAwait(String name) implements Expression {
     }
 
-    record ArrayAccess(Expression array, Expression index) implements Expression {
+    record ArrayAccess(Expression array, Expression index, @Nullable Type transmuteType) implements Expression {
     }
 
     record Call(String name, Parameter.Passed arguments) implements Expression {

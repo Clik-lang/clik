@@ -127,7 +127,13 @@ public final class Evaluator {
                 yield sharedMutation.await(value);
             }
             case Expression.ArrayAccess arrayAccess -> {
+                final Type transmuteType = arrayAccess.transmuteType();
                 final Value array = evaluate(arrayAccess.array(), null);
+                if (transmuteType != null && ((array instanceof Value.ArrayRef) ||
+                        (array instanceof Value.ArrayValue arrayValue) &&
+                                !(arrayValue.type().type() instanceof Type.Primitive))) {
+                    throw new RuntimeException("Invalid transmute type: " + transmuteType + " for " + array);
+                }
                 yield switch (array) {
                     case Value.ArrayRef arrayRef -> {
                         final Value index = evaluate(arrayAccess.index(), null);
@@ -141,16 +147,16 @@ public final class Evaluator {
                         yield content.get(integer);
                     }
                     case Value.ArrayValue arrayValue -> {
-                        final Value index = evaluate(arrayAccess.index(), null);
-                        if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
-                            throw new RuntimeException("Expected constant, got: " + index);
+                        final Value indexValue = evaluate(arrayAccess.index(), null);
+                        if (!(indexValue instanceof Value.IntegerLiteral integerLiteral)) {
+                            throw new RuntimeException("Expected constant, got: " + indexValue);
                         }
-                        final long integer = integerLiteral.value();
-                        final long length = arrayValue.type().length();
+                        final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.type().type());
+                        final Type type = Objects.requireNonNullElse(transmuteType, arrayValue.type().type());
                         final MemorySegment data = arrayValue.data();
-                        if (integer < 0 || integer >= length)
-                            throw new RuntimeException("Index out of bounds: " + integer + " in " + length);
-                        yield ValueCompute.lookupArray(arrayValue.type().type(), data, integer);
+                        if (index < 0 || index >= data.byteSize())
+                            throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
+                        yield ValueCompute.lookupArrayBuffer(type, data, index);
                     }
                     case Value.Map mapValue -> {
                         final Value index = evaluate(arrayAccess.index(), mapValue.type().key());

@@ -1,5 +1,7 @@
 package org.click;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 public record AccessPoint(List<Access> accesses) {
@@ -9,6 +11,6 @@ public record AccessPoint(List<Access> accesses) {
     public record Field(String component) implements Access {
     }
 
-    public record Index(Expression expression) implements Access {
+    public record Index(Expression expression, @Nullable Type transmuteType) implements Access {
     }
 }

@@ -147,7 +147,8 @@ public final class Parser {
                 // Index access
                 final Expression expression = nextExpression();
                 consume(RIGHT_BRACKET, "Expected ']' after array index.");
-                accesses.add(new AccessPoint.Index(expression));
+                final Type transmutedType = check(IDENTIFIER) ? nextType() : null;
+                accesses.add(new AccessPoint.Index(expression, transmutedType));
             }
         }
         return new AccessPoint(accesses);
@@ -265,9 +266,11 @@ public final class Parser {
                 }
             } else if (match(LEFT_BRACKET)) {
                 // Array
+                final Expression.Variable expression = new Expression.Variable(identifier.input());
                 final Expression index = nextExpression();
                 consume(RIGHT_BRACKET, "Expected ']' after index.");
-                return new Expression.ArrayAccess(new Expression.Variable(identifier.input()), index);
+                final Type transmutedType = check(IDENTIFIER) ? nextType() : null;
+                return new Expression.ArrayAccess(expression, index, transmutedType);
             } else {
                 return new Expression.Variable(identifier.input());
             }

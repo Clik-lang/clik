@@ -484,6 +484,40 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void arrayTransmute() {
+        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+                """
+                        main :: () int {
+                          array := [2]i8 {0b00000000i8 ,0b00000001i8};
+                          return array[0]i16;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+                """
+                        main :: () int {
+                          array := [3]i8 {0i8, 0b00000000i8 ,0b00000001i8};
+                          return array[1]i16;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+                """
+                        main :: () int {
+                          array := [2]i8 {0i8, 0i8};
+                          array[0]i16 = 256i16;
+                          return array[0]i16;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+                """
+                        main :: () int {
+                          array := [3]i8 {0i8, 0i8, 0i8};
+                          array[1]i16 = 256i16;
+                          return array[1]i16;
+                        }
+                        """);
+    }
+
+    @Test
     public void map() {
         assertProgram(new Value.IntegerLiteral(Type.INT, 5),
                 """
