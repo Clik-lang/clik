@@ -47,10 +47,7 @@ handle_client :: (client: Client) {
         {stop = $stop; {0, false};}
         {sleep(30000); {0, false};}
       }
-      if !success {
-        stop = true;
-        break;
-      }
+      if !success break;
 
       // TODO transform data
 
