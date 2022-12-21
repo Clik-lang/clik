@@ -26,7 +26,6 @@ public final class Scanner {
             entry("select", Token.Type.SELECT),
             entry("join", Token.Type.JOIN),
             entry("spawn", Token.Type.SPAWN),
-            entry("defer", Token.Type.DEFER),
             entry("map", Token.Type.MAP),
             entry("struct", Token.Type.STRUCT),
             entry("enum", Token.Type.ENUM),

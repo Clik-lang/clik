@@ -1,7 +1,7 @@
 package org.click;
 
 import org.click.interpreter.VM;
-import org.click.interpreter.Value;
+import org.click.value.Value;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

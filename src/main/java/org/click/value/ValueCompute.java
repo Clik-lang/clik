@@ -1,8 +1,10 @@
-package org.click.interpreter;
+package org.click.value;
 
 import org.click.AccessPoint;
 import org.click.Expression;
 import org.click.Type;
+import org.click.interpreter.Executor;
+import org.click.ScopeWalker;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
@@ -13,7 +15,7 @@ import java.util.stream.LongStream;
 
 public final class ValueCompute {
     public static void update(ScopeWalker<Value> walker, ScopeWalker<Value> updated) {
-        for (Map.Entry<String, Value> entry : updated.currentScope().tracked.entrySet()) {
+        for (Map.Entry<String, Value> entry : updated.currentScope().tracked().entrySet()) {
             final String name = entry.getKey();
             final Value value = entry.getValue();
             if (walker.find(name) == null) {
@@ -25,10 +27,10 @@ public final class ValueCompute {
     }
 
     public static void merge(ScopeWalker<Value> walker, List<ScopeWalker<Value>> copies) {
-        Map<String, Value> initials = walker.currentScope().tracked;
+        Map<String, Value> initials = walker.currentScope().tracked();
         Map<String, Value> changes = new HashMap<>();
         for (ScopeWalker<Value> copy : copies) {
-            for (Map.Entry<String, Value> entry : copy.currentScope().tracked.entrySet()) {
+            for (Map.Entry<String, Value> entry : copy.currentScope().tracked().entrySet()) {
                 final String name = entry.getKey();
                 final Value value = entry.getValue();
                 final Value initial = initials.get(name);

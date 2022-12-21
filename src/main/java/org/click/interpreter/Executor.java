@@ -1,6 +1,9 @@
 package org.click.interpreter;
 
 import org.click.*;
+import org.click.value.Value;
+import org.click.value.ValueCompute;
+import org.click.value.ValueType;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -116,7 +119,7 @@ public final class Executor {
         final VM.Context context = new VM.Context(this.context.directory(), copy);
         final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
         copy.enterBlock(executor);
-        copy.currentScope().tracked.putAll(walker.currentScope().tracked);
+        this.walker.currentScope().tracked().forEach(copy::register);
         return executor;
     }
 
@@ -163,7 +166,7 @@ public final class Executor {
     public Value interpret(String name, List<Value> parameters) {
         final Value call = walker.find(name);
         if (!(call instanceof Value.FunctionDecl declaration)) {
-            throw new RuntimeException("Function not found: " + call + " " + name + " -> " + walker.currentScope().tracked.keySet());
+            throw new RuntimeException("Function not found: " + call + " " + name + " -> " + walker.currentScope().tracked().keySet());
         }
         return interpret(name, declaration, parameters);
     }
@@ -290,11 +293,6 @@ public final class Executor {
                 yield value;
             }
             case Statement.Spawn spawn -> this.interpreterSpawn.interpret(spawn);
-            case Statement.Defer defer -> {
-                ScopeWalker<Value>.Scope currentScope = walker.currentScope();
-                currentScope.deferred.add(defer.statement());
-                yield null;
-            }
             case Statement.Block block -> {
                 this.walker.enterBlock(this);
                 Value result = null;

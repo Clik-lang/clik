@@ -1,11 +1,14 @@
-package org.click.interpreter;
+package org.click;
 
-import org.click.Statement;
+import org.click.interpreter.Executor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public final class ScopeWalker<T> {
     final ArrayDeque<Scope> scopes = new ArrayDeque<>();
@@ -20,10 +23,6 @@ public final class ScopeWalker<T> {
     }
 
     public void exitBlock() {
-        final Scope scope = this.scopes.getFirst();
-        for (Statement deferred : scope.deferred) {
-            scope.executor.interpret(deferred);
-        }
         this.scopes.pop();
     }
 
@@ -47,7 +46,6 @@ public final class ScopeWalker<T> {
 
     public final class Scope {
         final Executor executor;
-        final List<Statement> deferred = new ArrayList<>();
         final @Nullable Scope parent;
         final @NotNull Map<String, T> tracked;
 
@@ -61,6 +59,10 @@ public final class ScopeWalker<T> {
             this.executor = executor;
             this.parent = scope;
             this.tracked = new HashMap<>(scope.tracked);
+        }
+
+        public Map<String, T> tracked() {
+            return Map.copyOf(tracked);
         }
 
         void register(String name, T value) {

@@ -1,8 +1,9 @@
-package org.click.interpreter;
+package org.click.value;
 
 import org.click.Parameter;
 import org.click.Statement;
 import org.click.Type;
+import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
@@ -24,7 +25,7 @@ public sealed interface Value {
             parameters = List.copyOf(parameters);
         }
 
-        Type get(String name) {
+        public Type get(String name) {
             for (Parameter parameter : parameters) {
                 if (parameter.name().equals(name))
                     return parameter.type();

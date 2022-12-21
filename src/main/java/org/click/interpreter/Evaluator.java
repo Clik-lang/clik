@@ -1,6 +1,10 @@
 package org.click.interpreter;
 
 import org.click.*;
+import org.click.value.Value;
+import org.click.value.ValueCompute;
+import org.click.value.ValueOperator;
+import org.click.value.ValueType;
 
 import java.lang.foreign.MemorySegment;
 import java.util.*;
@@ -70,7 +74,7 @@ public final class Evaluator {
                 final String name = variable.name();
                 final Value value = walker.find(name);
                 if (value == null) {
-                    throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked.keySet());
+                    throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked().keySet());
                 }
                 yield value;
             }
@@ -120,7 +124,7 @@ public final class Evaluator {
                 final String name = variableAwait.name();
                 final Value value = walker.find(name);
                 if (value == null) {
-                    throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked.keySet());
+                    throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked().keySet());
                 }
                 final Executor.SharedMutation sharedMutation = executor.sharedMutations.get(name);
                 if (sharedMutation == null) throw new RuntimeException("Variable not shared: " + name);

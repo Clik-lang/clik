@@ -1,6 +1,7 @@
-package org.click.interpreter;
+package org.click.value;
 
 import org.click.Parameter;
+import org.click.ScopeWalker;
 
 import java.util.List;
 

@@ -1,8 +1,11 @@
 package org.click.interpreter;
 
 import org.click.Expression;
+import org.click.ScopeWalker;
 import org.click.Statement;
 import org.click.Type;
+import org.click.value.Value;
+import org.click.value.ValueCompute;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;

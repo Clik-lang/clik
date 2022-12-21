@@ -40,9 +40,6 @@ public sealed interface Statement {
     record Spawn(Statement statement) implements Statement {
     }
 
-    record Defer(Statement statement) implements Statement {
-    }
-
     record Block(List<Statement> statements) implements Statement {
     }
 

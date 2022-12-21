@@ -83,11 +83,8 @@ public final class Parser {
             statement = nextJoin();
         } else if (check(SPAWN)) {
             statement = nextSpawn();
-        } else if (match(DEFER)) {
-            final Statement deferred = nextStatement();
-            statement = new Statement.Defer(deferred);
         } else if (check(LEFT_BRACE)) {
-            if (checkTrailing(SEMICOLON, RETURN, IF, FOR, BREAK, CONTINUE, SELECT, SPAWN, DEFER, HASH)) {
+            if (checkTrailing(SEMICOLON, RETURN, IF, FOR, BREAK, CONTINUE, SELECT, SPAWN, HASH)) {
                 statement = new Statement.Block(nextBlock());
             } else {
                 // Inline block return

@@ -1,6 +1,8 @@
 package org.click.interpreter;
 
 import org.click.Type;
+import org.click.value.Value;
+import org.click.value.ValueSerializer;
 
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
