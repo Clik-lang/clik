@@ -24,7 +24,7 @@ public final class Parser {
             do {
                 final Token identifier = consume(IDENTIFIER, "Expected identifier");
                 final String name = identifier.input();
-                final AccessPoint accessPoint = nextAccessPoint();
+                final List<AccessPoint> accessPoint = nextAccessPoint();
                 assignTargets.add(new Statement.AssignTarget(name, accessPoint));
             } while (match(COMMA));
             final List<String> names = assignTargets.stream().map(Statement.AssignTarget::name).toList();
@@ -136,8 +136,8 @@ public final class Parser {
         return false;
     }
 
-    AccessPoint nextAccessPoint() {
-        List<AccessPoint.Access> accesses = new ArrayList<>();
+    List<AccessPoint> nextAccessPoint() {
+        List<AccessPoint> accesses = new ArrayList<>();
         while (check(DOT) || check(LEFT_BRACKET)) {
             if (match(DOT)) {
                 // Field access
@@ -150,7 +150,7 @@ public final class Parser {
                 accesses.add(new AccessPoint.Index(expression, transmutedType));
             }
         }
-        return new AccessPoint(accesses);
+        return accesses;
     }
 
     Expression nextExpression() {
@@ -221,7 +221,7 @@ public final class Parser {
             // Field
             final Token identifier = advance();
             final Expression expression = new Expression.Variable(identifier.input());
-            final AccessPoint accessPoint = nextAccessPoint();
+            final List<AccessPoint> accessPoint = nextAccessPoint();
             return new Expression.Access(expression, accessPoint);
         } else if (match(IDENTIFIER)) {
             // Variable
@@ -259,7 +259,7 @@ public final class Parser {
             } else if (check(LEFT_BRACKET)) {
                 // Array
                 final Expression.Variable expression = new Expression.Variable(identifier.input());
-                final AccessPoint accessPoint = nextAccessPoint();
+                final List<AccessPoint> accessPoint = nextAccessPoint();
                 return new Expression.Access(expression, accessPoint);
             } else {
                 return new Expression.Variable(identifier.input());

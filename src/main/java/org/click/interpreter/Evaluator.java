@@ -60,32 +60,28 @@ public final class Evaluator {
                 }
                 yield value;
             }
-            case Expression.Access field -> {
-                final Value expression = evaluate(field.object(), null);
-                final AccessPoint accessPoint = field.accessPoint();
+            case Expression.Access access -> {
+                final Value expression = evaluate(access.object(), null);
                 Value result = expression;
-                for (AccessPoint.Access access : accessPoint.accesses()) {
+                for (AccessPoint accessPoint : access.accessPoints()) {
                     result = switch (result) {
                         case Value.Struct struct -> {
-                            if (!(access instanceof AccessPoint.Field fieldAccess)) {
+                            if (!(accessPoint instanceof AccessPoint.Field fieldAccess))
                                 throw new RuntimeException("Invalid struct access: " + access);
-                            }
                             final String name = fieldAccess.component();
                             yield struct.parameters().get(name);
                         }
                         case Value.EnumDecl enumDecl -> {
-                            if (!(access instanceof AccessPoint.Field fieldAccess)) {
+                            if (!(accessPoint instanceof AccessPoint.Field fieldAccess))
                                 throw new RuntimeException("Invalid enum access: " + access);
-                            }
                             final String component = fieldAccess.component();
                             final Value value = enumDecl.entries().get(component);
                             if (value == null) throw new RuntimeException("Enum entry not found: " + component);
                             yield value;
                         }
                         case Value.ArrayRef arrayRef -> {
-                            if (!(access instanceof AccessPoint.Index indexAccess)) {
+                            if (!(accessPoint instanceof AccessPoint.Index indexAccess))
                                 throw new RuntimeException("Invalid array access: " + access);
-                            }
                             final Value index = evaluate(indexAccess.expression(), null);
                             if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
                                 throw new RuntimeException("Expected constant, got: " + index);
@@ -97,13 +93,11 @@ public final class Evaluator {
                             yield content.get(integer);
                         }
                         case Value.ArrayValue arrayValue -> {
-                            if (!(access instanceof AccessPoint.Index indexAccess)) {
+                            if (!(accessPoint instanceof AccessPoint.Index indexAccess))
                                 throw new RuntimeException("Invalid array access: " + access);
-                            }
                             final Value indexValue = evaluate(indexAccess.expression(), null);
-                            if (!(indexValue instanceof Value.IntegerLiteral integerLiteral)) {
+                            if (!(indexValue instanceof Value.IntegerLiteral integerLiteral))
                                 throw new RuntimeException("Expected constant, got: " + indexValue);
-                            }
                             final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.arrayType().type());
                             final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.arrayType().type());
                             final MemorySegment data = arrayValue.data();
@@ -112,9 +106,8 @@ public final class Evaluator {
                             yield ValueCompute.lookupArrayBuffer(type, data, index);
                         }
                         case Value.Map map -> {
-                            if (!(access instanceof AccessPoint.Index indexAccess)) {
+                            if (!(accessPoint instanceof AccessPoint.Index indexAccess))
                                 throw new RuntimeException("Invalid map access: " + access);
-                            }
                             final Value key = evaluate(indexAccess.expression(), map.mapType().key());
                             yield map.entries().get(key);
                         }

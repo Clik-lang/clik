@@ -9,7 +9,7 @@ public sealed interface Statement {
                    @Nullable Type explicitType) implements Statement {
     }
 
-    record AssignTarget(String name, AccessPoint accessPoint) {
+    record AssignTarget(String name, List<AccessPoint> accessPoints) {
     }
 
     record Assign(List<AssignTarget> assignTargets, Expression expression) implements Statement {

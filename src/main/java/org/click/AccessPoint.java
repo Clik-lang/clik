@@ -2,15 +2,10 @@ package org.click;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
-public record AccessPoint(List<Access> accesses) {
-    public sealed interface Access {
+public sealed interface AccessPoint {
+    record Field(String component) implements AccessPoint {
     }
 
-    public record Field(String component) implements Access {
-    }
-
-    public record Index(Expression expression, @Nullable Type transmuteType) implements Access {
+    record Index(Expression expression, @Nullable Type transmuteType) implements AccessPoint {
     }
 }

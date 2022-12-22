@@ -163,10 +163,9 @@ public final class ValueCompute {
         };
     }
 
-    public static Value updateVariable(Executor executor, Value variable, AccessPoint accessPoint, Value updated) {
-        final List<AccessPoint.Access> accesses = accessPoint.accesses();
+    public static Value updateVariable(Executor executor, Value variable, List<AccessPoint> accesses, Value updated) {
         if (accesses.isEmpty()) return updated;
-        final AccessPoint.Access access = accesses.get(0);
+        final AccessPoint access = accesses.get(0);
         return switch (variable) {
             case Value.Struct struct -> {
                 if (access instanceof AccessPoint.Field field) {
@@ -176,7 +175,7 @@ public final class ValueCompute {
                         newParams.put(component, updated);
                     } else {
                         final Value prevValue = newParams.get(component);
-                        final AccessPoint recursiveAccess = new AccessPoint(accesses.subList(1, accesses.size()));
+                        final List<AccessPoint> recursiveAccess = accesses.subList(1, accesses.size());
                         final Value recursiveValue = updateVariable(executor, prevValue, recursiveAccess, updated);
                         newParams.put(component, recursiveValue);
                     }
@@ -222,7 +221,7 @@ public final class ValueCompute {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }
             }
-            default -> throw new RuntimeException("Cannot update: " + variable + " " + accessPoint);
+            default -> throw new RuntimeException("Cannot update: " + variable + " " + accesses);
         };
     }
 }
