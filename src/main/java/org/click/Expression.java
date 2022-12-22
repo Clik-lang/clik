@@ -14,13 +14,7 @@ public sealed interface Expression {
                     List<Statement> body) implements Expression {
     }
 
-    record Struct(List<Parameter> parameters) implements Expression {
-    }
-
     record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
-    }
-
-    record Union(Map<String, @Nullable Struct> entries) implements Expression {
     }
 
     record Variable(String name) implements Expression {

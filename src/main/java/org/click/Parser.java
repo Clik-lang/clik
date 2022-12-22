@@ -189,11 +189,11 @@ public final class Parser {
                 return expression;
             }
         } else if (check(STRUCT)) {
-            return nextStruct();
+            return new Expression.Constant(nextStruct());
         } else if (check(ENUM)) {
             return nextEnum();
         } else if (check(UNION)) {
-            return nextUnion();
+            return new Expression.Constant(nextUnion());
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.literal().value();
@@ -422,7 +422,7 @@ public final class Parser {
         return new Expression.Function(parameters, returnType, body);
     }
 
-    private Expression.Struct nextStruct() {
+    private Value.StructDecl nextStruct() {
         consume(STRUCT, "Expect 'struct'.");
         consume(LEFT_BRACE, "Expect '{'.");
         final List<Parameter> fields = new ArrayList<>();
@@ -439,7 +439,7 @@ public final class Parser {
             } while (match(COMMA) && !check(RIGHT_BRACE));
         }
         consume(RIGHT_BRACE, "Expect '}'.");
-        return new Expression.Struct(fields);
+        return new Value.StructDecl(fields);
     }
 
     private Expression.Enum nextEnum() {
@@ -469,27 +469,27 @@ public final class Parser {
         return new Expression.Enum(type, entries);
     }
 
-    private Expression.Union nextUnion() {
+    private Value.UnionDecl nextUnion() {
         consume(UNION, "Expect 'union'.");
         consume(LEFT_BRACE, "Expect '{'.");
-        Map<String, Expression.Struct> entries = new HashMap<>();
+        Map<String, Value.StructDecl> entries = new HashMap<>();
         if (!check(RIGHT_BRACE)) {
             do {
                 if (entries.size() >= 255) {
                     throw error("Cannot have more than 255 fields.");
                 }
                 final Token identifier = consume(IDENTIFIER, "Expect field name.");
-                Expression.Struct struct = null;
+                Value.StructDecl structDecl = null;
                 if (match(COLON)) {
                     // Inline struct
                     consume(COLON, "Expect ':' after field name.");
-                    struct = nextStruct();
+                    structDecl = nextStruct();
                 }
-                entries.put(identifier.input(), struct);
+                entries.put(identifier.input(), structDecl);
             } while (match(COMMA) && !check(RIGHT_BRACE));
         }
         consume(RIGHT_BRACE, "Expect '}'.");
-        return new Expression.Union(entries);
+        return new Value.UnionDecl(entries);
     }
 
     Statement.Branch nextBranch() {

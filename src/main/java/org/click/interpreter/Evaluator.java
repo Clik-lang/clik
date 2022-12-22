@@ -24,7 +24,18 @@ public final class Evaluator {
 
     public Value evaluate(Expression argument, Type explicitType) {
         final Value rawValue = switch (argument) {
-            case Expression.Constant constant -> constant.value();
+            case Expression.Constant constant -> {
+                final Value value = constant.value();
+                if (value instanceof Value.UnionDecl unionDecl) {
+                    // Register inline structs
+                    for (Map.Entry<String, Value.StructDecl> entry : unionDecl.entries().entrySet()) {
+                        final String name = entry.getKey();
+                        final Value.StructDecl structDecl = entry.getValue();
+                        if (structDecl != null) walker.register(name, structDecl);
+                    }
+                }
+                yield value;
+            }
             case Expression.Function functionDeclaration -> {
                 Executor lambdaExecutor = null;
                 if (this.executor.currentFunction() != null) {
@@ -36,7 +47,6 @@ public final class Evaluator {
                 final List<Statement> body = functionDeclaration.body();
                 yield new Value.FunctionDecl(params, returnType, body, lambdaExecutor);
             }
-            case Expression.Struct structDeclaration -> new Value.StructDecl(structDeclaration.parameters());
             case Expression.Enum enumDeclaration -> {
                 final Type type = enumDeclaration.type();
                 Map<String, Value> evaluated = new HashMap<>();
@@ -44,25 +54,6 @@ public final class Evaluator {
                     evaluated.put(entry.getKey(), evaluate(entry.getValue(), type));
                 }
                 yield new Value.EnumDecl(type, evaluated);
-            }
-            case Expression.Union unionDeclaration -> {
-                Map<String, Value.StructDecl> entries = new HashMap<>();
-                for (Map.Entry<String, Expression.Struct> entry : unionDeclaration.entries().entrySet()) {
-                    final String name = entry.getKey();
-                    final Expression.Struct struct = entry.getValue();
-                    final Value.StructDecl structDecl;
-                    if (struct == null) {
-                        if (!(walker.find(name) instanceof Value.StructDecl structDeclaration)) {
-                            throw new RuntimeException("Struct not found: " + name);
-                        }
-                        structDecl = structDeclaration;
-                    } else {
-                        structDecl = (Value.StructDecl) evaluate(struct, null);
-                        walker.register(name, structDecl);
-                    }
-                    entries.put(name, structDecl);
-                }
-                yield new Value.UnionDecl(entries);
             }
             case Expression.Variable variable -> {
                 final String name = variable.name();

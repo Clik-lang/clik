@@ -40,10 +40,7 @@ public sealed interface Value {
         }
     }
 
-    record UnionDecl(java.util.Map<String, StructDecl> entries) implements Value {
-        public UnionDecl {
-            entries = java.util.Map.copyOf(entries);
-        }
+    record UnionDecl(java.util.Map<String, @Nullable StructDecl> entries) implements Value {
     }
 
     // VALUES
