@@ -237,19 +237,20 @@ public final class Parser {
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
                 return new Expression.Call(identifier.input(), new Parameter.Passed.Positional(arguments));
             } else if (check(LEFT_BRACE)) {
+                final Type type = Type.of(identifier.input());
                 // Struct
                 if (checkNext(RIGHT_BRACE)) {
                     // Empty struct
                     consume(LEFT_BRACE, "Expected '{' after struct name.");
                     consume(RIGHT_BRACE, "Expected '}' after struct.");
-                    return new Expression.StructValue(identifier.input(), new Parameter.Passed.Positional(List.of()));
+                    return new Expression.Initialization(type, new Parameter.Passed.Positional(List.of()));
                 }
                 final int index = this.index;
                 try {
                     final Class<? extends Parameter.Passed> paramType = check(LEFT_BRACE) && checkNext(DOT) ?
                             Parameter.Passed.Named.class : Parameter.Passed.Positional.class;
                     final Parameter.Passed passed = nextPassedParameters(paramType);
-                    return new Expression.StructValue(identifier.input(), passed);
+                    return new Expression.Initialization(type, passed);
                 } catch (RuntimeException e) {
                     // Variable
                     this.index = index;
@@ -274,21 +275,21 @@ public final class Parser {
         } else if (check(LEFT_BRACKET)) {
             final Type.Array type = (Type.Array) nextType();
             assert type != null;
-            List<Expression> expressions = null;
-            if (check(LEFT_BRACE)) {
-                final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
-                expressions = passed.expressions();
-                assert type.length() == passed.expressions().size() : "Array length does not match passed parameters.";
+            if (!check(LEFT_BRACE)) {
+                // Empty array
+                return new Expression.Initialization(type, new Parameter.Passed.Positional(List.of()));
             }
-            return new Expression.ArrayValue(type, expressions);
+            final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
+            assert type.length() == passed.expressions().size() : "Array length does not match passed parameters.";
+            return new Expression.Initialization(type, passed);
         } else if (check(MAP)) {
             final Type.Map type = (Type.Map) nextType();
             final Parameter.Passed.Mapped mapped = nextPassedParameters(Parameter.Passed.Mapped.class);
-            return new Expression.MapValue(type, mapped);
+            return new Expression.Initialization(type, mapped);
         } else if (check(LEFT_BRACE)) {
             // Inline block
             final Parameter.Passed passed = nextPassedParameters(null);
-            return new Expression.InitializationBlock(passed);
+            return new Expression.Initialization(null, passed);
         } else {
             throw error("Expect expression.");
         }

@@ -171,47 +171,37 @@ public final class Evaluator {
                 yield fork.interpret(name, functionDecl, evaluated);
             }
             case Expression.Select select -> this.evaluatorSelect.evaluate(select, explicitType);
-            case Expression.StructValue structValue -> {
-                final Value.StructDecl struct = (Value.StructDecl) walker.find(structValue.name());
-                final List<Parameter> parameters = struct.parameters();
-                Map<String, Value> evaluated = new HashMap<>();
-                for (Parameter param : struct.parameters()) {
-                    final Expression value = structValue.fields().find(parameters, param);
-                    if (value == null) throw new RuntimeException("Missing field: " + param.name());
-                    evaluated.put(param.name(), evaluate(value, param.type()));
-                }
-                yield new Value.Struct(structValue.name(), evaluated);
-            }
-            case Expression.ArrayValue array ->
-                    ValueCompute.computeArray(executor, array.arrayType(), array.expressions());
-            case Expression.MapValue mapValue -> {
-                final Type.Map type = mapValue.mapType();
-                Map<Value, Value> evaluatedEntries = new HashMap<>();
-                for (var entry : mapValue.parameters().entries().entrySet()) {
-                    final Value key = evaluate(entry.getKey(), type.key());
-                    final Value value = evaluate(entry.getValue(), type.value());
-                    evaluatedEntries.put(key, value);
-                }
-                yield new Value.Map(type, evaluatedEntries);
-            }
-            case Expression.InitializationBlock initializationBlock -> {
-                // Retrieve explicit type from context
-                if (explicitType == null) throw new RuntimeException("Expected explicit type for initialization block");
-                if (explicitType instanceof Type.Identifier identifier) {
-                    // Struct
-                    yield evaluate(new Expression.StructValue(identifier.name(), initializationBlock.parameters()), null);
-                } else if (explicitType instanceof Type.Array array) {
-                    // Array
-                    if (!(initializationBlock.parameters() instanceof Parameter.Passed.Positional positional))
-                        throw new RuntimeException("Expected positional parameters for array initialization");
-                    yield evaluate(new Expression.ArrayValue(array, positional.expressions()), null);
-                } else if (explicitType instanceof Type.Map map) {
-                    // Map
-                    if (!(initializationBlock.parameters() instanceof Parameter.Passed.Mapped mapped))
-                        throw new RuntimeException("Expected mapped parameters for map initialization");
-                    yield evaluate(new Expression.MapValue(map, mapped), null);
-                }
-                throw new RuntimeException("Expected struct, got: " + explicitType);
+            case Expression.Initialization initialization -> {
+                final Type type = Objects.requireNonNullElse(initialization.type(), explicitType);
+                final Parameter.Passed passed = initialization.parameters();
+                yield switch (type) {
+                    case Type.Identifier identifier -> {
+                        final String name = identifier.name();
+                        final Value.StructDecl struct = (Value.StructDecl) walker.find(name);
+                        final List<Parameter> parameters = struct.parameters();
+                        Map<String, Value> evaluated = new HashMap<>();
+                        for (Parameter param : struct.parameters()) {
+                            final Expression value = passed.find(parameters, param);
+                            if (value == null) throw new RuntimeException("Missing field: " + param.name());
+                            evaluated.put(param.name(), evaluate(value, param.type()));
+                        }
+                        yield new Value.Struct(name, evaluated);
+                    }
+                    case Type.Array arrayType -> ValueCompute.computeArray(executor, arrayType, passed.expressions());
+                    case Type.Map mapType -> {
+                        if (!(passed instanceof Parameter.Passed.Mapped mapped))
+                            throw new RuntimeException("Expected mapped parameters, got: " + passed);
+                        Map<Value, Value> evaluatedEntries = new HashMap<>();
+                        for (var entry : mapped.entries().entrySet()) {
+                            final Value key = evaluate(entry.getKey(), mapType.key());
+                            final Value value = evaluate(entry.getValue(), mapType.value());
+                            evaluatedEntries.put(key, value);
+                        }
+                        yield new Value.Map(mapType, evaluatedEntries);
+                    }
+                    default ->
+                            throw new RuntimeException("Invalid initialization: " + initialization + " " + explicitType);
+                };
             }
             case Expression.Range init -> new Value.Range(evaluate(init.start(), null),
                     evaluate(init.end(), null),

@@ -31,16 +31,7 @@ public sealed interface Expression {
     record Select(List<Statement.Block> blocks) implements Expression {
     }
 
-    record StructValue(String name, Parameter.Passed fields) implements Expression {
-    }
-
-    record ArrayValue(Type.Array arrayType, @Nullable List<Expression> expressions) implements Expression {
-    }
-
-    record MapValue(Type.Map mapType, Parameter.Passed.Mapped parameters) implements Expression {
-    }
-
-    record InitializationBlock(Parameter.Passed parameters) implements Expression {
+    record Initialization(@Nullable Type type, Parameter.Passed parameters) implements Expression {
     }
 
     record Range(Expression start, Expression end, Expression step) implements Expression {
