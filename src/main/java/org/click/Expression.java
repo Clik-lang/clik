@@ -16,13 +16,10 @@ public sealed interface Expression {
     record Variable(String name) implements Expression {
     }
 
-    record Field(Expression object, AccessPoint accessPoint) implements Expression {
+    record Access(Expression object, AccessPoint accessPoint) implements Expression {
     }
 
     record VariableAwait(String name) implements Expression {
-    }
-
-    record ArrayAccess(Expression array, Expression index, @Nullable Type transmuteType) implements Expression {
     }
 
     record Call(String name, Parameter.Passed arguments) implements Expression {

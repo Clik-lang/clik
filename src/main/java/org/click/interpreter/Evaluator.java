@@ -60,7 +60,7 @@ public final class Evaluator {
                 }
                 yield value;
             }
-            case Expression.Field field -> {
+            case Expression.Access field -> {
                 final Value expression = evaluate(field.object(), null);
                 final AccessPoint accessPoint = field.accessPoint();
                 Value result = expression;
@@ -86,8 +86,30 @@ public final class Evaluator {
                             if (!(access instanceof AccessPoint.Index indexAccess)) {
                                 throw new RuntimeException("Invalid array access: " + access);
                             }
-                            final int index = (int) ((Value.IntegerLiteral) evaluate(indexAccess.expression(), null)).value();
-                            yield arrayRef.elements().get(index);
+                            final Value index = evaluate(indexAccess.expression(), null);
+                            if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
+                                throw new RuntimeException("Expected constant, got: " + index);
+                            }
+                            final int integer = (int) integerLiteral.value();
+                            final List<Value> content = arrayRef.elements();
+                            if (integer < 0 || integer >= content.size())
+                                throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
+                            yield content.get(integer);
+                        }
+                        case Value.ArrayValue arrayValue -> {
+                            if (!(access instanceof AccessPoint.Index indexAccess)) {
+                                throw new RuntimeException("Invalid array access: " + access);
+                            }
+                            final Value indexValue = evaluate(indexAccess.expression(), null);
+                            if (!(indexValue instanceof Value.IntegerLiteral integerLiteral)) {
+                                throw new RuntimeException("Expected constant, got: " + indexValue);
+                            }
+                            final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.arrayType().type());
+                            final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.arrayType().type());
+                            final MemorySegment data = arrayValue.data();
+                            if (index < 0 || index >= data.byteSize())
+                                throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
+                            yield ValueCompute.lookupArrayBuffer(type, data, index);
                         }
                         case Value.Map map -> {
                             if (!(access instanceof AccessPoint.Index indexAccess)) {
@@ -110,47 +132,6 @@ public final class Evaluator {
                 final Executor.SharedMutation sharedMutation = executor.sharedMutations.get(name);
                 if (sharedMutation == null) throw new RuntimeException("Variable not shared: " + name);
                 yield sharedMutation.await(value);
-            }
-            case Expression.ArrayAccess arrayAccess -> {
-                final Type transmuteType = arrayAccess.transmuteType();
-                final Value array = evaluate(arrayAccess.array(), null);
-                if (transmuteType != null && ((array instanceof Value.ArrayRef) ||
-                        (array instanceof Value.ArrayValue arrayValue) &&
-                                !(arrayValue.arrayType().type() instanceof Type.Primitive))) {
-                    throw new RuntimeException("Invalid transmute type: " + transmuteType + " for " + array);
-                }
-                yield switch (array) {
-                    case Value.ArrayRef arrayRef -> {
-                        final Value index = evaluate(arrayAccess.index(), null);
-                        if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
-                            throw new RuntimeException("Expected constant, got: " + index);
-                        }
-                        final int integer = (int) integerLiteral.value();
-                        final List<Value> content = arrayRef.elements();
-                        if (integer < 0 || integer >= content.size())
-                            throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
-                        yield content.get(integer);
-                    }
-                    case Value.ArrayValue arrayValue -> {
-                        final Value indexValue = evaluate(arrayAccess.index(), null);
-                        if (!(indexValue instanceof Value.IntegerLiteral integerLiteral)) {
-                            throw new RuntimeException("Expected constant, got: " + indexValue);
-                        }
-                        final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.arrayType().type());
-                        final Type type = Objects.requireNonNullElse(transmuteType, arrayValue.arrayType().type());
-                        final MemorySegment data = arrayValue.data();
-                        if (index < 0 || index >= data.byteSize())
-                            throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
-                        yield ValueCompute.lookupArrayBuffer(type, data, index);
-                    }
-                    case Value.Map mapValue -> {
-                        final Value index = evaluate(arrayAccess.index(), mapValue.mapType().key());
-                        final Value result = mapValue.entries().get(index);
-                        if (result == null) throw new RuntimeException("Key not found: " + index);
-                        yield result;
-                    }
-                    default -> throw new RuntimeException("Expected array/map, got: " + array);
-                };
             }
             case Expression.Call call -> {
                 final String name = call.name();

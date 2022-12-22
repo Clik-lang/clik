@@ -222,7 +222,7 @@ public final class Parser {
             final Token identifier = advance();
             final Expression expression = new Expression.Variable(identifier.input());
             final AccessPoint accessPoint = nextAccessPoint();
-            return new Expression.Field(expression, accessPoint);
+            return new Expression.Access(expression, accessPoint);
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
@@ -256,13 +256,11 @@ public final class Parser {
                     this.index = index;
                     return new Expression.Variable(identifier.input());
                 }
-            } else if (match(LEFT_BRACKET)) {
+            } else if (check(LEFT_BRACKET)) {
                 // Array
                 final Expression.Variable expression = new Expression.Variable(identifier.input());
-                final Expression index = nextExpression();
-                consume(RIGHT_BRACKET, "Expected ']' after index.");
-                final Type transmutedType = check(IDENTIFIER) ? nextType() : null;
-                return new Expression.ArrayAccess(expression, index, transmutedType);
+                final AccessPoint accessPoint = nextAccessPoint();
+                return new Expression.Access(expression, accessPoint);
             } else {
                 return new Expression.Variable(identifier.input());
             }
