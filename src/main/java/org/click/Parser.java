@@ -186,7 +186,7 @@ public final class Parser {
                 consume(LEFT_PAREN, "Expected '(' after expression.");
                 final Expression expression = nextExpression();
                 consume(RIGHT_PAREN, "Expected ')' after expression.");
-                return new Expression.Group(expression);
+                return expression;
             }
         } else if (check(STRUCT)) {
             return nextStruct();

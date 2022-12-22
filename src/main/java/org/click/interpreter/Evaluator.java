@@ -72,7 +72,6 @@ public final class Evaluator {
                 }
                 yield value;
             }
-            case Expression.Group group -> evaluate(group.expression(), explicitType);
             case Expression.Field field -> {
                 final Value expression = evaluate(field.object(), null);
                 final AccessPoint accessPoint = field.accessPoint();
