@@ -181,7 +181,7 @@ public final class Parser {
     private Expression nextPrimary() {
         if (check(LEFT_PAREN)) {
             if (checkNext(RIGHT_PAREN) || checkNext(IDENTIFIER) && checkNextNext(COLON)) {
-                return nextFunction();
+                return new Expression.Constant(nextFunction());
             } else {
                 consume(LEFT_PAREN, "Expected '(' after expression.");
                 final Expression expression = nextExpression();
@@ -401,7 +401,7 @@ public final class Parser {
         return Type.of(identifier.input());
     }
 
-    Expression.Function nextFunction() {
+    Value.FunctionDecl nextFunction() {
         consume(LEFT_PAREN, "Expect '('.");
         final List<Parameter> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
@@ -419,7 +419,7 @@ public final class Parser {
         consume(RIGHT_PAREN, "Expect ')'.");
         final Type returnType = Objects.requireNonNullElse(nextType(), Type.VOID);
         final List<Statement> body = nextBlock();
-        return new Expression.Function(parameters, returnType, body);
+        return new Value.FunctionDecl(parameters, returnType, body, null);
     }
 
     private Value.StructDecl nextStruct() {

@@ -26,7 +26,15 @@ public final class Evaluator {
         final Value rawValue = switch (argument) {
             case Expression.Constant constant -> {
                 final Value value = constant.value();
-                if (value instanceof Value.UnionDecl unionDecl) {
+                if (value instanceof Value.FunctionDecl functionDecl) {
+                    // Handle local function
+                    if (this.executor.currentFunction() != null) {
+                        // Local function
+                        final Executor lambdaExecutor = this.executor.fork(executor.async, executor.insideLoop);
+                        yield new Value.FunctionDecl(functionDecl.parameters(),
+                                functionDecl.returnType(), functionDecl.body(), lambdaExecutor);
+                    }
+                } else if (value instanceof Value.UnionDecl unionDecl) {
                     // Register inline structs
                     for (Map.Entry<String, Value.StructDecl> entry : unionDecl.entries().entrySet()) {
                         final String name = entry.getKey();
@@ -35,17 +43,6 @@ public final class Evaluator {
                     }
                 }
                 yield value;
-            }
-            case Expression.Function functionDeclaration -> {
-                Executor lambdaExecutor = null;
-                if (this.executor.currentFunction() != null) {
-                    // Local function
-                    lambdaExecutor = this.executor.fork(executor.async, executor.insideLoop);
-                }
-                final List<Parameter> params = functionDeclaration.parameters();
-                final Type returnType = functionDeclaration.returnType();
-                final List<Statement> body = functionDeclaration.body();
-                yield new Value.FunctionDecl(params, returnType, body, lambdaExecutor);
             }
             case Expression.Enum enumDeclaration -> {
                 final Type type = enumDeclaration.type();

@@ -10,10 +10,6 @@ public sealed interface Expression {
     record Constant(Value value) implements Expression {
     }
 
-    record Function(List<Parameter> parameters, Type returnType,
-                    List<Statement> body) implements Expression {
-    }
-
     record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
     }
 
