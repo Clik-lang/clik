@@ -29,19 +29,27 @@ public class Compiler {
 
     public Compiler(List<Ast.Statement> astStatements) {
         // Find global functions
+        Map<String, Program.Struct> structs = new HashMap<>();
         Map<String, Type.Function> globalFunctions = new HashMap<>();
         for (Ast.Statement statement : astStatements) {
-            if (statement instanceof Ast.Statement.Declare declare &&
-                    declare.initializer() instanceof Ast.Expression.Constant constant &&
-                    constant.value() instanceof Value.FunctionDecl functionDecl) {
-                final String name = declare.names().get(0);
-                final Type.Function type = new Type.Function(functionDecl.parameters(), functionDecl.returnType());
-                globalFunctions.put(name, type);
+            if (statement instanceof Ast.Statement.Declare declare) {
+                if (declare.initializer() instanceof Ast.Expression.Constant constant) {
+                    if (constant.value() instanceof Value.FunctionDecl functionDecl) {
+                        final String name = declare.names().get(0);
+                        final Type.Function type = new Type.Function(functionDecl.parameters(), functionDecl.returnType());
+                        globalFunctions.put(name, type);
+                    } else if (constant.value() instanceof Value.StructDecl structDecl) {
+                        final String name = declare.names().get(0);
+                        final List<TypedName> params = structDecl.parameters().stream()
+                                .map(parameter -> new TypedName(parameter.name(), parameter.type())).toList();
+                        structs.put(name, new Program.Struct(params));
+                    }
+                }
             }
         }
         // Start analyzing
         ScopeWalker<TrackedVariable> walker = new ScopeWalker<>();
-        this.context = new Context(walker, new HashMap<>(), new HashMap<>(), new HashMap<>(), globalFunctions);
+        this.context = new Context(walker, new HashMap<>(), structs, new HashMap<>(), globalFunctions);
 
         walker.enterBlock();
         var comp = new StatementCompiler(context, null);
@@ -109,14 +117,14 @@ public class Compiler {
                             functions.put(names.get(0), new Program.Function(
                                     functionType, scope.captures, scope.statements
                             ));
-                            if(!scope.captures.isEmpty()){
+                            if (!scope.captures.isEmpty()) {
                                 this.scope.statements.add(new Program.Statement.Capture(names.get(0), scope.captures));
                             }
                             special = true;
                         } else if (constant.value() instanceof Value.StructDecl structDecl) {
-                            final List<Program.TypedName> fields = new ArrayList<>();
+                            final List<TypedName> fields = new ArrayList<>();
                             for (Ast.Parameter parameter : structDecl.parameters()) {
-                                fields.add(new Program.TypedName(parameter.name(), parameter.type()));
+                                fields.add(new TypedName(parameter.name(), parameter.type()));
                             }
                             structs.put(names.get(0), new Program.Struct(fields));
                             special = true;
@@ -170,9 +178,9 @@ public class Compiler {
             }
         }
 
-        private Program.Expression compileExpression(Ast.Expression expression, @Nullable Type explicitType) {
+        private Program.Expression compileExpression(Ast.Expression evaluatedExpression, @Nullable Type explicitType) {
             ScopeWalker<TrackedVariable> walker = context.walker();
-            final Program.Expression result = switch (expression) {
+            final Program.Expression result = switch (evaluatedExpression) {
                 case Ast.Expression.Constant constant -> new Program.Expression.Constant(constant.value());
                 case Ast.Expression.Variable variable -> {
                     final String name = variable.name();
@@ -221,8 +229,13 @@ public class Compiler {
                             throw error("Variable '" + name + "' is not a function");
                         functionType = type;
                     }
-                    final List<Program.Expression> params = call.arguments().expressions().stream()
-                            .map(e -> compileExpression(e, null)).toList();
+                    var expressions = call.arguments().expressions();
+                    List<Program.Expression> params = new ArrayList<>();
+                    for (int i = 0; i < expressions.size(); i++) {
+                        final Type paramType = functionType.parameters().get(i).type();
+                        final Program.Expression expression = compileExpression(expressions.get(i), paramType);
+                        params.add(expression);
+                    }
                     yield new Program.Expression.Call(functionType.returnType(), name, params);
                 }
                 case Ast.Expression.Initialization initialization -> {
@@ -233,13 +246,13 @@ public class Compiler {
                             if (passed instanceof Ast.Parameter.Passed.Positional positional) {
                                 final List<Program.Expression> expressions = positional.expressions().stream()
                                         .map(e -> compileExpression(e, null)).toList();
-                                yield new Program.Expression.Struct(identifier, new Program.TypedName.Passed.Positional(expressions));
+                                yield new Program.Expression.Struct(identifier, new Program.Passed.Positional(expressions));
                             } else if (passed instanceof Ast.Parameter.Passed.Named named) {
                                 Map<String, Program.Expression> entries = new HashMap<>();
                                 for (Map.Entry<String, Ast.Expression> entry : named.entries().entrySet()) {
                                     entries.put(entry.getKey(), compileExpression(entry.getValue(), null));
                                 }
-                                yield new Program.Expression.Struct(identifier, new Program.TypedName.Passed.Named(entries));
+                                yield new Program.Expression.Struct(identifier, new Program.Passed.Named(entries));
                             } else {
                                 throw error("Expected positional or named parameters, got: " + passed);
                             }
@@ -248,7 +261,7 @@ public class Compiler {
                             if (passed instanceof Ast.Parameter.Passed.Positional positional) {
                                 final List<Program.Expression> expressions = positional.expressions().stream()
                                         .map(e -> compileExpression(e, null)).toList();
-                                yield new Program.Expression.Array(arrayType, new Program.TypedName.Passed.Positional(expressions));
+                                yield new Program.Expression.Array(arrayType, new Program.Passed.Positional(expressions));
                             } else {
                                 throw error("Expected positional parameters, got: " + passed);
                             }
@@ -261,7 +274,7 @@ public class Compiler {
                                     var value = compileExpression(entry.getValue(), null);
                                     entries.put(key, value);
                                 }
-                                yield new Program.Expression.Map(mapType, new Program.TypedName.Passed.Mapped(entries));
+                                yield new Program.Expression.Map(mapType, new Program.Passed.Mapped(entries));
                             } else {
                                 throw error("Expected mapped parameters, got: " + passed);
                             }
@@ -270,7 +283,7 @@ public class Compiler {
                             if (passed instanceof Ast.Parameter.Passed.Positional positional) {
                                 final List<Program.Expression> expressions = positional.expressions().stream()
                                         .map(e -> compileExpression(e, null)).toList();
-                                yield new Program.Expression.Table(tableType, new Program.TypedName.Passed.Positional(expressions));
+                                yield new Program.Expression.Table(tableType, new Program.Passed.Positional(expressions));
                             } else {
                                 throw new RuntimeException("Expected positional parameters, got: " + passed);
                             }
@@ -279,11 +292,40 @@ public class Compiler {
                                 throw new RuntimeException("Invalid initialization: " + initialization + " " + explicitType);
                     };
                 }
-                default -> throw error("Unknown expression type " + expression.getClass().getName());
+                case Ast.Expression.Access access -> {
+                    final Program.Expression target = compileExpression(access.object(), null);
+                    Type type = target.expressionType();
+                    for (Ast.AccessPoint accessPoint : access.accessPoints()) {
+                        type = switch (type) {
+                            case Type.Identifier identifier -> {
+                                if (!(accessPoint instanceof Ast.AccessPoint.Field fieldAccess))
+                                    throw error("Invalid struct access: " + access);
+                                final String structName = identifier.name();
+                                final Program.Struct struct = context.structs.get(structName);
+                                if (struct == null) throw error("Struct '" + structName + "' not found");
+                                final String name = fieldAccess.component();
+                                final TypedName typedName = struct.fields().stream()
+                                        .filter(f -> f.name().equals(name))
+                                        .findFirst()
+                                        .orElseThrow(() -> error("Struct " + structName + " does not have a field named " + name));
+                                yield typedName.type();
+                            }
+                            default -> throw error("Expected struct, got: " + type);
+                        };
+                    }
+
+                    List<Program.AccessPoint> converted = access.accessPoints().stream().map(accessPoint -> (Program.AccessPoint) switch (accessPoint) {
+                        case Ast.AccessPoint.Field field -> new Program.AccessPoint.Field(field.component());
+                        case Ast.AccessPoint.Index index ->
+                                new Program.AccessPoint.Index(compileExpression(index.expression(), null), index.transmuteType());
+                    }).toList();
+                    yield new Program.Expression.Access(type, target, converted);
+                }
+                default -> throw error("Unknown expression type " + evaluatedExpression.getClass().getName());
             };
             final Type type = result.expressionType();
             if (explicitType != null && !explicitType.equals(type)) {
-                throw error("Type mismatch, expected " + explicitType + " but got " + type + " -> " + expression);
+                throw error("Type mismatch, expected " + explicitType + " but got " + type + " -> " + evaluatedExpression);
             }
             return result;
         }

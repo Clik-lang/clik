@@ -71,6 +71,7 @@ public interface Program {
                     case Value.BooleanLiteral ignored -> Type.BOOL;
                     case Value.StringLiteral ignored -> Type.STRING;
                     case Value.RuneLiteral ignored -> Type.RUNE;
+                    case Value.Struct struct -> Type.of(struct.name());
                     case Value.Function function -> function.functionType();
                     default -> throw new UnsupportedOperationException("Unsupported value: " + value);
                 };
@@ -106,45 +107,58 @@ public interface Program {
             }
         }
 
-        record Array(Type.Array arrayType, TypedName.Passed.Positional positional) implements Expression {
+        record Array(Type.Array arrayType, Passed.Positional positional) implements Expression {
             @Override
             public Type expressionType() {
                 return arrayType;
             }
         }
 
-        record Struct(Type.Identifier structType, TypedName.Passed passed) implements Expression {
+        record Struct(Type.Identifier structType, Passed passed) implements Expression {
             @Override
             public Type expressionType() {
                 return structType;
             }
         }
 
-        record Map(Type.Map mapType, TypedName.Passed.Mapped mapped) implements Expression {
+        record Map(Type.Map mapType, Passed.Mapped mapped) implements Expression {
             @Override
             public Type expressionType() {
                 return mapType;
             }
         }
 
-        record Table(Type.Table tableType, TypedName.Passed.Positional positional) implements Expression {
+        record Table(Type.Table tableType, Passed.Positional positional) implements Expression {
             @Override
             public Type expressionType() {
                 return tableType;
             }
         }
+
+        record Access(Type type, Expression target, List<AccessPoint> accessPoints) implements Expression {
+            @Override
+            public Type expressionType() {
+                return type;
+            }
+        }
     }
 
-    record TypedName(String name, Type type) {
-        public sealed interface Passed {
-            record Positional(List<Expression> expressions) implements Passed {
-            }
+    interface Passed {
+        record Positional(List<Expression> expressions) implements Passed {
+        }
 
-            record Named(Map<String, Expression> entries) implements Passed {
-            }
+        record Named(Map<String, Expression> entries) implements Passed {
+        }
 
-            record Mapped(Map<Expression, Expression> entries) implements Passed {
-            }
+        record Mapped(Map<Expression, Expression> entries) implements Passed {
+        }
+    }
+
+    sealed interface AccessPoint {
+        record Field(String component) implements AccessPoint {
+        }
+
+        record Index(Expression expression, @Nullable Type transmuteType) implements AccessPoint {
         }
     }
 }

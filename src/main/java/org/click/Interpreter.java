@@ -1,12 +1,16 @@
 package org.click;
 
 import org.click.value.Value;
+import org.click.value.ValueCompute;
 import org.click.value.ValueOperator;
+import org.click.value.ValueType;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.foreign.MemorySegment;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Interpreter {
     private final Program program;
@@ -112,8 +116,8 @@ public final class Interpreter {
         return result;
     }
 
-    private Value evaluate(ScopeWalker<Value> walker, Program.Expression expression) {
-        return switch (expression) {
+    private Value evaluate(ScopeWalker<Value> walker, Program.Expression evaluatedExpression) {
+        return switch (evaluatedExpression) {
             case Program.Expression.Constant constant -> constant.value();
             case Program.Expression.Variable variable -> {
                 final Value value = walker.find(variable.name());
@@ -137,16 +141,16 @@ public final class Interpreter {
             case Program.Expression.Struct struct -> {
                 final String name = struct.structType().name();
                 final Program.Struct structDef = program.structs().get(name);
-                final Program.TypedName.Passed passed = struct.passed();
+                final Program.Passed passed = struct.passed();
                 Map<String, Value> fields = new HashMap<>();
-                if (passed instanceof Program.TypedName.Passed.Positional positional) {
+                if (passed instanceof Program.Passed.Positional positional) {
                     int index = 0;
                     for (var field : positional.expressions()) {
-                        Program.TypedName fieldName = structDef.fields().get(index++);
+                        TypedName fieldName = structDef.fields().get(index++);
                         final Value evaluated = evaluate(walker, field);
                         fields.put(fieldName.name(), evaluated);
                     }
-                } else if (passed instanceof Program.TypedName.Passed.Named named) {
+                } else if (passed instanceof Program.Passed.Named named) {
                     for (var entry : named.entries().entrySet()) {
                         final String name1 = entry.getKey();
                         final Program.Expression expression1 = entry.getValue();
@@ -172,7 +176,63 @@ public final class Interpreter {
                     throw new RuntimeException("Unsupported unary operator: " + unary.operator());
                 }
             }
-            default -> throw new IllegalArgumentException("Unknown expression " + expression);
+            case Program.Expression.Access access -> {
+                final Value expression = evaluate(walker, access.target());
+                Value result = expression;
+                for (Program.AccessPoint accessPoint : access.accessPoints()) {
+                    result = switch (result) {
+                        case Value.Struct struct -> {
+                            if (!(accessPoint instanceof Program.AccessPoint.Field fieldAccess))
+                                throw new RuntimeException("Invalid struct access: " + access);
+                            final String name = fieldAccess.component();
+                            yield struct.parameters().get(name);
+                        }
+                        case Value.EnumDecl enumDecl -> {
+                            if (!(accessPoint instanceof Program.AccessPoint.Field fieldAccess))
+                                throw new RuntimeException("Invalid enum access: " + access);
+                            final String component = fieldAccess.component();
+                            final Value value = enumDecl.entries().get(component);
+                            if (value == null) throw new RuntimeException("Enum entry not found: " + component);
+                            yield value;
+                        }
+                        case Value.ArrayRef arrayRef -> {
+                            if (!(accessPoint instanceof Program.AccessPoint.Index indexAccess))
+                                throw new RuntimeException("Invalid array access: " + access);
+                            final Value index = evaluate(walker, indexAccess.expression());
+                            if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
+                                throw new RuntimeException("Expected constant, got: " + index);
+                            }
+                            final int integer = (int) integerLiteral.value();
+                            final List<Value> content = arrayRef.elements();
+                            if (integer < 0 || integer >= content.size())
+                                throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
+                            yield content.get(integer);
+                        }
+                        case Value.ArrayValue arrayValue -> {
+                            if (!(accessPoint instanceof Program.AccessPoint.Index indexAccess))
+                                throw new RuntimeException("Invalid array access: " + access);
+                            final Value indexValue = evaluate(walker, indexAccess.expression());
+                            if (!(indexValue instanceof Value.IntegerLiteral integerLiteral))
+                                throw new RuntimeException("Expected constant, got: " + indexValue);
+                            final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.arrayType().type());
+                            final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.arrayType().type());
+                            final MemorySegment data = arrayValue.data();
+                            if (index < 0 || index >= data.byteSize())
+                                throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
+                            yield ValueCompute.lookupArrayBuffer(type, data, index);
+                        }
+                        case Value.Map map -> {
+                            if (!(accessPoint instanceof Program.AccessPoint.Index indexAccess))
+                                throw new RuntimeException("Invalid map access: " + access);
+                            final Value key = evaluate(walker, indexAccess.expression());
+                            yield map.entries().get(key);
+                        }
+                        default -> throw new RuntimeException("Expected struct, got: " + expression);
+                    };
+                }
+                yield result;
+            }
+            default -> throw new IllegalArgumentException("Unknown expression " + evaluatedExpression);
         };
     }
 }
