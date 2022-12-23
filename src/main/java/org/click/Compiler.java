@@ -194,12 +194,13 @@ public class Compiler {
                     }
                 }
                 case Ast.Expression.Binary binary -> {
-                    final Program.Expression left = compileExpression(binary.left(), explicitType);
-                    final Program.Expression right = compileExpression(binary.right(), explicitType);
-                    final Type type = left.expressionType();
-                    if (!type.equals(right.expressionType())) {
-                        throw error("Type mismatch, expected " + type + " but got " + right.expressionType());
+                    final Program.Expression left = compileExpression(binary.left(), null);
+                    final Program.Expression right = compileExpression(binary.right(), null);
+                    if (!left.expressionType().equals(right.expressionType())) {
+                        throw error("Type mismatch, expected " + left.expressionType() + " but got " + right.expressionType());
                     }
+                    final Token.Type operator = binary.operator();
+                    final Type type = operator == Token.Type.EQUAL_EQUAL ? Type.BOOL : left.expressionType();
                     yield new Program.Expression.Binary(
                             type,
                             left,
