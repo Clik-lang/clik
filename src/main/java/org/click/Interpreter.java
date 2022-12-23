@@ -87,8 +87,14 @@ public final class Interpreter {
             case Program.Expression.Call call -> {
                 this.walker.enterBlock();
                 final String name = call.name();
-                final Program.Function function = program.functions().get(name);
-                assert function != null : "Function " + name + " not found: " + program.functions().keySet();
+                Program.Function function = program.functions().get(name);
+                if (function == null) {
+                    final Value tracked = walker.find(name);
+                    assert tracked != null : "Function " + name + " not found: " + program.functions().keySet();
+                    if (!(tracked instanceof Value.Function valueFunction))
+                        throw new IllegalArgumentException("Function " + name + " not found");
+                    function = program.functions().get(valueFunction.name());
+                }
                 int index = 0;
                 for (var param : function.functionType().parameters()) {
                     var paramName = param.name();
