@@ -140,7 +140,6 @@ public class Compiler {
                     if (tracked == null) throw error("Variable " + assign.targets().get(0).name() + " not declared");
                     if (tracked.declarationType() == DeclarationType.CONSTANT)
                         throw error("Cannot assign to constant " + assign.targets().get(0).name());
-                    if (scope.previousWalker.find(name) != null) this.scope.captures.add(name);
                     final Program.Expression expression = compileExpression(assign.expression(), tracked.type());
                     this.scope.statements.add(new Program.Statement.Assign(assign.targets().get(0).name(), expression));
                 }
@@ -176,6 +175,7 @@ public class Compiler {
                     final String name = variable.name();
                     final TrackedVariable tracked = walker.find(name);
                     if (tracked == null) throw error("Variable " + name + " not declared");
+                    if (scope.previousWalker.find(name) != null) this.scope.captures.add(name);
                     if (tracked.type() instanceof Type.Function functionType) {
                         yield new Program.Expression.Constant(new Value.Function(functionType, name));
                     } else {

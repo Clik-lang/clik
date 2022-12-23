@@ -20,7 +20,7 @@ public class Main {
         var program = new Compiler(statements).compile();
         System.out.println("Variables: " + program.variables());
         System.out.println("Structs: " + program.structs());
-        System.out.println("Functions: " + program.functions());
+        System.out.println("Functions: " + program.functions().size() + " " + program.functions());
 
         var result = new Interpreter(program).interpret("main", List.of());
         System.out.println("Result: " + result);
