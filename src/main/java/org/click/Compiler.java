@@ -244,14 +244,26 @@ public class Compiler {
                     final Ast.Parameter.Passed passed = initialization.parameters();
                     yield switch (type) {
                         case Type.Identifier identifier -> {
+                            final Program.Struct struct = context.structs.get(identifier.name());
+                            final List<TypedName> fields = struct.fields();
                             if (passed instanceof Ast.Parameter.Passed.Positional positional) {
-                                final List<Program.Expression> expressions = positional.expressions().stream()
-                                        .map(e -> compileExpression(e, null)).toList();
+                                var passedExpressions = positional.expressions();
+                                if (passedExpressions.size() != fields.size())
+                                    throw error("Expected " + fields.size() + " arguments but got " + passedExpressions.size());
+                                List<Program.Expression> expressions = new ArrayList<>();
+                                for (int i = 0; i < passedExpressions.size(); i++) {
+                                    final Program.Expression expression = compileExpression(passedExpressions.get(i), fields.get(i).type());
+                                    expressions.add(expression);
+                                }
                                 yield new Program.Expression.Struct(identifier, new Program.Passed.Positional(expressions));
                             } else if (passed instanceof Ast.Parameter.Passed.Named named) {
                                 Map<String, Program.Expression> entries = new HashMap<>();
                                 for (Map.Entry<String, Ast.Expression> entry : named.entries().entrySet()) {
-                                    entries.put(entry.getKey(), compileExpression(entry.getValue(), null));
+                                    final String key = entry.getKey();
+                                    final Ast.Expression value = entry.getValue();
+                                    final Program.Expression expression = compileExpression(value, fields.stream()
+                                            .filter(f -> f.name().equals(key)).findFirst().get().type());
+                                    entries.put(key, expression);
                                 }
                                 yield new Program.Expression.Struct(identifier, new Program.Passed.Named(entries));
                             } else {
@@ -261,7 +273,7 @@ public class Compiler {
                         case Type.Array arrayType -> {
                             if (passed instanceof Ast.Parameter.Passed.Positional positional) {
                                 final List<Program.Expression> expressions = positional.expressions().stream()
-                                        .map(e -> compileExpression(e, null)).toList();
+                                        .map(e -> compileExpression(e, arrayType.type())).toList();
                                 yield new Program.Expression.Array(arrayType, new Program.Passed.Positional(expressions));
                             } else {
                                 throw error("Expected positional parameters, got: " + passed);
@@ -271,8 +283,8 @@ public class Compiler {
                             if (passed instanceof Ast.Parameter.Passed.Mapped mapped) {
                                 Map<Program.Expression, Program.Expression> entries = new HashMap<>();
                                 for (var entry : mapped.entries().entrySet()) {
-                                    var key = compileExpression(entry.getKey(), null);
-                                    var value = compileExpression(entry.getValue(), null);
+                                    final Program.Expression key = compileExpression(entry.getKey(), mapType.key());
+                                    final Program.Expression value = compileExpression(entry.getValue(), mapType.value());
                                     entries.put(key, value);
                                 }
                                 yield new Program.Expression.Map(mapType, new Program.Passed.Mapped(entries));
@@ -283,7 +295,7 @@ public class Compiler {
                         case Type.Table tableType -> {
                             if (passed instanceof Ast.Parameter.Passed.Positional positional) {
                                 final List<Program.Expression> expressions = positional.expressions().stream()
-                                        .map(e -> compileExpression(e, null)).toList();
+                                        .map(e -> compileExpression(e, tableType.type())).toList();
                                 yield new Program.Expression.Table(tableType, new Program.Passed.Positional(expressions));
                             } else {
                                 throw new RuntimeException("Expected positional parameters, got: " + passed);
