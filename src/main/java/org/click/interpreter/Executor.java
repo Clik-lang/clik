@@ -175,8 +175,8 @@ public final class Executor {
         return interpreter.evaluate(expression, explicitType);
     }
 
-    public void registerMulti(List<String> names, Statement.DeclarationType declarationType, Value value) {
-        final boolean isShared = declarationType == Statement.DeclarationType.SHARED;
+    public void registerMulti(List<String> names, Statement.Declare.Type declarationType, Value value) {
+        final boolean isShared = declarationType == Statement.Declare.Type.SHARED;
         if (names.size() == 1) {
             // Single return
             final String name = names.get(0);
@@ -197,7 +197,7 @@ public final class Executor {
         for (Statement statement : statements) {
             if (statement instanceof Statement.Declare declare) {
                 final Value value = evaluate(declare.initializer(), declare.explicitType());
-                registerMulti(declare.names(), declare.type(), value);
+                registerMulti(declare.names(), declare.declarationType(), value);
             } else if (statement instanceof Statement.Directive directive) {
                 if (directive.directive() instanceof Directive.Statement.Load) {
                     interpret(directive);
@@ -228,7 +228,7 @@ public final class Executor {
                 final Expression initializer = declare.initializer();
                 final Value evaluated = interpreter.evaluate(initializer, declare.explicitType());
                 assert evaluated != null;
-                registerMulti(names, declare.type(), evaluated);
+                registerMulti(names, declare.declarationType(), evaluated);
                 yield null;
             }
             case Statement.Assign assign -> {

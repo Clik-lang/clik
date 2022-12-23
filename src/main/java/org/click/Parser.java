@@ -35,13 +35,13 @@ public final class Parser {
             } else if (match(COLON)) {
                 // Declare
                 final Type explicitType = nextType();
-                Statement.DeclarationType declarationType;
+                Statement.Declare.Type declarationType;
                 if (match(COLON)) {
-                    declarationType = Statement.DeclarationType.CONSTANT;
+                    declarationType = Statement.Declare.Type.CONSTANT;
                 } else if (match(EQUAL)) {
-                    declarationType = Statement.DeclarationType.VARIABLE;
+                    declarationType = Statement.Declare.Type.VARIABLE;
                 } else if (match(TILDE)) {
-                    declarationType = Statement.DeclarationType.SHARED;
+                    declarationType = Statement.Declare.Type.SHARED;
                 } else {
                     throw error("Expected declaration type");
                 }

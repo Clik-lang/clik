@@ -5,8 +5,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public sealed interface Statement {
-    record Declare(List<String> names, DeclarationType type, Expression initializer,
-                   @Nullable Type explicitType) implements Statement {
+    record Declare(List<String> names, Type declarationType, Expression initializer,
+                   @Nullable org.click.Type explicitType) implements Statement {
+        public enum Type {
+            CONSTANT, VARIABLE, SHARED
+        }
     }
 
     record Assign(List<Target> targets, Expression expression) implements Statement {
@@ -46,9 +49,5 @@ public sealed interface Statement {
     }
 
     record Return(@Nullable Expression expression) implements Statement {
-    }
-
-    enum DeclarationType {
-        CONSTANT, VARIABLE, SHARED
     }
 }
