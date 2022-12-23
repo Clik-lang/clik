@@ -446,7 +446,7 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: () Point {
                           array :: [1]Point {
                             Point {.x: 1, .y: 2},
                           }
@@ -456,7 +456,7 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: () Point {
                           array :: [1]Point {{1,2}}
                           return array[0];
                         }

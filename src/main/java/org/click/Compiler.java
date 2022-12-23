@@ -308,6 +308,7 @@ public class Compiler {
                 case Ast.Expression.Access access -> {
                     final Program.Expression target = compileExpression(access.object(), null);
                     Type type = target.expressionType();
+                    List<Type> accessTypes = new ArrayList<>();
                     for (Ast.AccessPoint accessPoint : access.accessPoints()) {
                         type = switch (type) {
                             case Type.Identifier identifier -> {
@@ -321,17 +322,38 @@ public class Compiler {
                                         .filter(f -> f.name().equals(name))
                                         .findFirst()
                                         .orElseThrow(() -> error("Struct " + structName + " does not have a field named " + name));
+                                accessTypes.add(null);
                                 yield typedName.type();
+                            }
+                            case Type.Array arrayType -> {
+                                if (!(accessPoint instanceof Ast.AccessPoint.Index indexAccess))
+                                    throw error("Invalid array access: " + access);
+                                compileExpression(indexAccess.expression(), Type.Primitive.INT);
+                                accessTypes.add(Type.INT);
+                                yield arrayType.type();
+                            }
+                            case Type.Map mapType -> {
+                                if (!(accessPoint instanceof Ast.AccessPoint.Index indexAccess))
+                                    throw error("Invalid map access: " + access);
+                                compileExpression(indexAccess.expression(), mapType.key());
+                                accessTypes.add(mapType.key());
+                                yield mapType.value();
                             }
                             default -> throw error("Expected struct, got: " + type);
                         };
                     }
 
-                    List<Program.AccessPoint> converted = access.accessPoints().stream().map(accessPoint -> (Program.AccessPoint) switch (accessPoint) {
-                        case Ast.AccessPoint.Field field -> new Program.AccessPoint.Field(field.component());
-                        case Ast.AccessPoint.Index index ->
-                                new Program.AccessPoint.Index(compileExpression(index.expression(), null), index.transmuteType());
-                    }).toList();
+                    List<Program.AccessPoint> converted = new ArrayList<>(accessTypes.size());
+                    for (int i = 0; i < accessTypes.size(); i++) {
+                        final Type t = accessTypes.get(i);
+                        final Ast.AccessPoint accessPoint = access.accessPoints().get(i);
+                        final Program.AccessPoint conv = switch (accessPoint) {
+                            case Ast.AccessPoint.Field field -> new Program.AccessPoint.Field(field.component());
+                            case Ast.AccessPoint.Index index ->
+                                    new Program.AccessPoint.Index(compileExpression(index.expression(), t), index.transmuteType());
+                        };
+                        converted.add(conv);
+                    }
                     yield new Program.Expression.Access(type, target, converted);
                 }
                 default -> throw error("Unknown expression type " + evaluatedExpression.getClass().getName());

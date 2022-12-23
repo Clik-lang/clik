@@ -1,16 +1,14 @@
 package org.click;
 
 import org.click.value.Value;
-import org.click.value.ValueCompute;
 import org.click.value.ValueOperator;
 import org.click.value.ValueType;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.foreign.MemorySegment;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.stream.LongStream;
 
 public final class Interpreter {
     private final Program program;
@@ -138,6 +136,21 @@ public final class Interpreter {
                 final List<Value> arguments = call.arguments().stream().map(arg -> evaluate(walker, arg)).toList();
                 yield fork(capture, function, arguments);
             }
+            case Program.Expression.Array array -> {
+                final Type.Array arrayType = array.arrayType();
+                final List<Program.Expression> expressions = array.positional().expressions();
+                final List<Value> evaluated;
+                if (!expressions.isEmpty()) {
+                    // Initialized array
+                    evaluated = expressions.stream().map(expression -> evaluate(walker, expression)).toList();
+                } else {
+                    // Default value
+                    final long length = arrayType.length();
+                    final Value defaultValue = ValueType.defaultValue(arrayType.type());
+                    evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
+                }
+                yield new Value.ArrayRef(arrayType, evaluated);
+            }
             case Program.Expression.Struct struct -> {
                 final String name = struct.structType().name();
                 final Program.Struct structDef = program.structs().get(name);
@@ -161,6 +174,17 @@ public final class Interpreter {
                     assert false;
                 }
                 yield new Value.Struct(name, fields);
+            }
+            case Program.Expression.Map map -> {
+                final Type.Map mapType = map.mapType();
+                final Program.Passed.Mapped mapped = map.mapped();
+                Map<Value, Value> evaluatedEntries = new HashMap<>();
+                for (var entry : mapped.entries().entrySet()) {
+                    final Value key = evaluate(walker, entry.getKey());
+                    final Value value = evaluate(walker, entry.getValue());
+                    evaluatedEntries.put(key, value);
+                }
+                yield new Value.Map(mapType, evaluatedEntries);
             }
             case Program.Expression.Binary binary -> {
                 final Value left = evaluate(walker, binary.left());
@@ -208,26 +232,13 @@ public final class Interpreter {
                                 throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
                             yield content.get(integer);
                         }
-                        case Value.ArrayValue arrayValue -> {
-                            if (!(accessPoint instanceof Program.AccessPoint.Index indexAccess))
-                                throw new RuntimeException("Invalid array access: " + access);
-                            final Value indexValue = evaluate(walker, indexAccess.expression());
-                            if (!(indexValue instanceof Value.IntegerLiteral integerLiteral))
-                                throw new RuntimeException("Expected constant, got: " + indexValue);
-                            final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.arrayType().type());
-                            final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.arrayType().type());
-                            final MemorySegment data = arrayValue.data();
-                            if (index < 0 || index >= data.byteSize())
-                                throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
-                            yield ValueCompute.lookupArrayBuffer(type, data, index);
-                        }
                         case Value.Map map -> {
                             if (!(accessPoint instanceof Program.AccessPoint.Index indexAccess))
                                 throw new RuntimeException("Invalid map access: " + access);
                             final Value key = evaluate(walker, indexAccess.expression());
                             yield map.entries().get(key);
                         }
-                        default -> throw new RuntimeException("Expected struct, got: " + expression);
+                        default -> throw new RuntimeException("Unsupported access type: " + expression);
                     };
                 }
                 yield result;
