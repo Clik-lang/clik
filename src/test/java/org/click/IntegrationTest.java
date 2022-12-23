@@ -95,9 +95,20 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         shared :~ 0;
-                        main :: () {
+                        main :: () int {
                           compute();
                           return shared;
+                        }
+                        compute :: () {
+                          shared = 1;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        shared :~ 0;
+                        main :: () int {
+                          compute();
+                          return $shared;
                         }
                         compute :: () {
                           shared = 1;

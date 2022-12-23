@@ -81,6 +81,9 @@ public sealed interface Value {
     record RuneLiteral(String character) implements Value {
     }
 
+    record Capture(java.util.Map<String, Value> values) implements Value {
+    }
+
     record Function(Type.Function functionType, String name) implements Value {
     }
 

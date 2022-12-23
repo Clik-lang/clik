@@ -33,6 +33,9 @@ public interface Program {
         record Assign(String name, Expression expression) implements Statement {
         }
 
+        record Capture(String name, Set<String> names) implements Statement {
+        }
+
         record Run(Expression expression) implements Statement {
         }
 
