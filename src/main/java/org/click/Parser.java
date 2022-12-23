@@ -19,19 +19,19 @@ public final class Parser {
         final Statement statement;
 
         if (check(IDENTIFIER)) {
-            List<Statement.AssignTarget> assignTargets = new ArrayList<>();
+            List<Statement.Assign.Target> targets = new ArrayList<>();
             // Read all identifiers separated by commas
             do {
                 final Token identifier = consume(IDENTIFIER, "Expected identifier");
                 final String name = identifier.input();
                 final List<AccessPoint> accessPoint = nextAccessPoint();
-                assignTargets.add(new Statement.AssignTarget(name, accessPoint));
+                targets.add(new Statement.Assign.Target(name, accessPoint));
             } while (match(COMMA));
-            final List<String> names = assignTargets.stream().map(Statement.AssignTarget::name).toList();
+            final List<String> names = targets.stream().map(Statement.Assign.Target::name).toList();
             if (match(EQUAL)) {
                 // Assign
                 final Expression expression = nextExpression();
-                statement = new Statement.Assign(assignTargets, expression);
+                statement = new Statement.Assign(targets, expression);
             } else if (match(COLON)) {
                 // Declare
                 final Type explicitType = nextType();
