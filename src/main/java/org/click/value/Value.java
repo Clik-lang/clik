@@ -7,7 +7,9 @@ import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public sealed interface Value {
     // DECLARATIONS
@@ -111,6 +113,24 @@ public sealed interface Value {
     record Table(Type.Table tableType, List<Value> values) implements Value {
         public Table {
             values = java.util.List.copyOf(values);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Table table)) return false;
+            if (!tableType.equals(table.tableType)) return false;
+            // Unordered comparison
+            java.util.Map<Value, Integer> thisOccurrences = new HashMap<>();
+            java.util.Map<Value, Integer> otherOccurrences = new HashMap<>();
+            for (Value value : values) thisOccurrences.merge(value, 1, Integer::sum);
+            for (Value value : table.values) otherOccurrences.merge(value, 1, Integer::sum);
+            return thisOccurrences.equals(otherOccurrences);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(tableType, values);
         }
     }
 

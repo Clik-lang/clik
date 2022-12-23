@@ -47,7 +47,7 @@ public final class Executor {
             if (executor.async) {
                 final Value current = ref.get();
                 final Value delta = ValueCompute.delta(previous, next);
-                final Value merged = ValueCompute.merge(current, delta);
+                final Value merged = ValueCompute.mergeDelta(current, delta);
                 ref.set(merged);
             } else {
                 ref.set(next);
@@ -260,6 +260,18 @@ public final class Executor {
                         if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
                     }
                 }
+                yield null;
+            }
+            case Statement.Output output -> {
+                final String name = output.name();
+                if (!(walker.find(name) instanceof Value.Table table))
+                    throw new RuntimeException("Output not found: " + name);
+                final Value evaluated = interpreter.evaluate(output.expression(), null);
+                if (evaluated instanceof Value.Interrupt) yield evaluated;
+                List<Value> updatedList = new ArrayList<>(table.values());
+                updatedList.add(evaluated);
+                final Value updatedTable = new Value.Table(table.tableType(), updatedList);
+                walker.update(name, updatedTable);
                 yield null;
             }
             case Statement.Run run -> interpreter.evaluate(run.expression(), null);

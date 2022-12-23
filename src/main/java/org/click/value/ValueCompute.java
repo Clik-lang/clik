@@ -27,36 +27,44 @@ public final class ValueCompute {
     }
 
     public static void merge(ScopeWalker<Value> walker, List<ScopeWalker<Value>> copies) {
-        Map<String, Value> initials = walker.currentScope().tracked();
-        Map<String, Value> changes = new HashMap<>();
-        for (ScopeWalker<Value> copy : copies) {
-            for (Map.Entry<String, Value> entry : copy.currentScope().tracked().entrySet()) {
-                final String name = entry.getKey();
-                final Value value = entry.getValue();
-                final Value initial = initials.get(name);
-                if (initial != null && !initial.equals(value)) {
-                    final Value current = changes.computeIfAbsent(name, s -> initial);
-                    final Value merged = ValueCompute.merge(current, value);
-                    changes.put(name, merged);
+        Map<String, List<Value>> deltas = new HashMap<>();
+        // Compute deltas
+        for (Map.Entry<String, Value> entry : walker.currentScope().tracked().entrySet()) {
+            final String name = entry.getKey();
+            final Value value = entry.getValue();
+            for (ScopeWalker<Value> copy : copies) {
+                final Value copyValue = copy.find(name);
+                if (!Objects.equals(value, copyValue)) {
+                    final Value delta = ValueCompute.delta(value, copyValue);
+                    deltas.computeIfAbsent(name, k -> new ArrayList<>()).add(delta);
                 }
             }
         }
-        for (Map.Entry<String, Value> entry : changes.entrySet()) {
+        // Apply deltas
+        for (Map.Entry<String, List<Value>> entry : deltas.entrySet()) {
             final String name = entry.getKey();
-            final Value value = entry.getValue();
+            final List<Value> values = entry.getValue();
+            Value value = walker.find(name);
+            for (Value delta : values) {
+                value = ValueCompute.mergeDelta(value, delta);
+            }
             walker.update(name, value);
         }
     }
 
-    public static Value merge(Value initial, Value next) {
-        if (initial instanceof Value.IntegerLiteral initialConstant && next instanceof Value.IntegerLiteral nextConstant) {
+    public static Value mergeDelta(Value initial, Value delta) {
+        if (initial instanceof Value.IntegerLiteral initialConstant && delta instanceof Value.IntegerLiteral nextConstant) {
             final long value = initialConstant.value() + nextConstant.value();
             return new Value.IntegerLiteral(initialConstant.type(), value);
-        } else if (initial instanceof Value.BooleanLiteral initialConstant && next instanceof Value.BooleanLiteral nextConstant) {
+        } else if (initial instanceof Value.BooleanLiteral initialConstant && delta instanceof Value.BooleanLiteral nextConstant) {
             final boolean value = initialConstant.value() || nextConstant.value();
             return new Value.BooleanLiteral(value);
+        } else if (initial instanceof Value.Table initialTable && delta instanceof Value.Table nextTable) {
+            List<Value> values = new ArrayList<>(initialTable.values());
+            values.addAll(nextTable.values());
+            return new Value.Table(initialTable.tableType(), values);
         } else {
-            throw new RuntimeException("Unknown types: " + initial + " and " + next);
+            throw new RuntimeException("Unknown types: " + initial + " and " + delta);
         }
     }
 
@@ -67,6 +75,25 @@ public final class ValueCompute {
         } else if (initial instanceof Value.BooleanLiteral initialConstant && next instanceof Value.BooleanLiteral nextConstant) {
             final boolean value = initialConstant.value() || nextConstant.value();
             return new Value.BooleanLiteral(value);
+        } else if (initial instanceof Value.Table initialTable && next instanceof Value.Table nextTable) {
+            // Value/Occurrence
+            Map<Value, Integer> valueInitOccurrences = new HashMap<>();
+            Map<Value, Integer> valueNextOccurrences = new HashMap<>();
+            for (Value value : initialTable.values()) valueInitOccurrences.merge(value, 1, Integer::sum);
+            for (Value value : nextTable.values()) valueNextOccurrences.merge(value, 1, Integer::sum);
+            Set<Value> keys = new HashSet<>();
+            keys.addAll(valueInitOccurrences.keySet());
+            keys.addAll(valueNextOccurrences.keySet());
+            List<Value> values = new ArrayList<>();
+            for (Value key : keys) {
+                final Integer initOccurrences = valueInitOccurrences.getOrDefault(key, 0);
+                final Integer nextOccurrences = valueNextOccurrences.getOrDefault(key, 0);
+                final int occurrences = nextOccurrences - initOccurrences;
+                for (int i = 0; i < occurrences; i++) {
+                    values.add(key);
+                }
+            }
+            return new Value.Table(initialTable.tableType(), values);
         } else {
             throw new RuntimeException("Unknown types: " + initial + " and " + next);
         }

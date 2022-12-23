@@ -32,6 +32,10 @@ public final class Parser {
                 // Assign
                 final Expression expression = nextExpression();
                 statement = new Statement.Assign(targets, expression);
+            } else if (match(OUTPUT)) {
+                // Output
+                final Expression expression = nextExpression();
+                statement = new Statement.Output(names.get(0), expression);
             } else if (match(COLON)) {
                 // Declare
                 final Type explicitType = nextType();

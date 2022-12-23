@@ -74,7 +74,17 @@ public final class Scanner {
         else if (c == '}') type = Token.Type.RIGHT_BRACE;
         else if (c == '[') type = Token.Type.LEFT_BRACKET;
         else if (c == ']') type = Token.Type.RIGHT_BRACKET;
-        else if (c == ',') type = Token.Type.COMMA;
+        else if (c == '<') {
+            if (peek() == '=') {
+                advance();
+                type = Token.Type.LESS_EQUAL;
+            } else if (peek() == '<') {
+                advance();
+                type = Token.Type.OUTPUT;
+            } else {
+                type = Token.Type.LESS;
+            }
+        } else if (c == ',') type = Token.Type.COMMA;
         else if (c == '.') {
             if (peek() == '.') {
                 advance();

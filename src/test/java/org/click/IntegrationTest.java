@@ -909,6 +909,61 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void tableMutation() {
+        assertProgram(new Value.Table(new Type.Table(Type.INT), List.of(
+                        new Value.IntegerLiteral(Type.INT, 1),
+                        new Value.IntegerLiteral(Type.INT, 2),
+                        new Value.IntegerLiteral(Type.INT, 3),
+                        new Value.IntegerLiteral(Type.INT, 4)
+                )),
+                """
+                        main :: () int {
+                          value :: table[]int {1, 2, 3};
+                          value << 4;
+                          return value;
+                        }
+                        """);
+    }
+
+    @Test
+    public void tableShared() {
+        assertProgram(new Value.Table(new Type.Table(Type.INT), List.of(
+                        new Value.IntegerLiteral(Type.INT, 1),
+                        new Value.IntegerLiteral(Type.INT, 2),
+                        new Value.IntegerLiteral(Type.INT, 3),
+                        new Value.IntegerLiteral(Type.INT, 4),
+                        new Value.IntegerLiteral(Type.INT, 5)
+                )),
+                """
+                        main :: () int {
+                          value :~ table[]int {1, 2, 3};
+                          join {
+                            spawn value << 4;
+                            spawn value << 5;
+                          }
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.Table(new Type.Table(Type.INT), List.of(
+                        new Value.IntegerLiteral(Type.INT, 1),
+                        new Value.IntegerLiteral(Type.INT, 2),
+                        new Value.IntegerLiteral(Type.INT, 3),
+                        new Value.IntegerLiteral(Type.INT, 3),
+                        new Value.IntegerLiteral(Type.INT, 3)
+                )),
+                """
+                        main :: () int {
+                          value :~ table[]int {1, 2, 3};
+                          join {
+                            spawn value << 3;
+                            spawn value << 3;
+                          }
+                          return value;
+                        }
+                        """);
+    }
+
+    @Test
     public void branch() {
         assertProgram(ONE,
                 """
