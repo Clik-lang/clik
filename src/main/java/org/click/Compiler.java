@@ -117,7 +117,7 @@ public class Compiler {
                             functions.put(names.get(0), new Program.Function(
                                     functionType, scope.captures, scope.statements
                             ));
-                            if (!scope.captures.isEmpty()) {
+                            if (this.scope != null && !scope.captures.isEmpty()) {
                                 this.scope.statements.add(new Program.Statement.Capture(names.get(0), scope.captures));
                             }
                             special = true;

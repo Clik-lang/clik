@@ -5,6 +5,7 @@ import org.click.value.ValueOperator;
 import org.click.value.ValueType;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -185,6 +186,16 @@ public final class Interpreter {
                     evaluatedEntries.put(key, value);
                 }
                 yield new Value.Map(mapType, evaluatedEntries);
+            }
+            case Program.Expression.Table table -> {
+                final Type.Table tableType = table.tableType();
+                final Program.Passed.Positional positional = table.positional();
+                List<Value> evaluatedEntries = new ArrayList<>();
+                for (var entry : positional.expressions()) {
+                    final Value value = evaluate(walker, entry);
+                    evaluatedEntries.add(value);
+                }
+                yield new Value.Table(tableType, evaluatedEntries);
             }
             case Program.Expression.Binary binary -> {
                 final Value left = evaluate(walker, binary.left());
