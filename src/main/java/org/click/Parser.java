@@ -282,8 +282,12 @@ public final class Parser {
             return new Expression.Initialization(type, passed);
         } else if (check(MAP)) {
             final Type.Map type = (Type.Map) nextType();
-            final Parameter.Passed.Mapped mapped = nextPassedParameters(Parameter.Passed.Mapped.class);
-            return new Expression.Initialization(type, mapped);
+            final Parameter.Passed.Mapped passed = nextPassedParameters(Parameter.Passed.Mapped.class);
+            return new Expression.Initialization(type, passed);
+        } else if (check(TABLE)) {
+            final Type.Table type = (Type.Table) nextType();
+            final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
+            return new Expression.Initialization(type, passed);
         } else if (check(LEFT_BRACE)) {
             // Inline block
             final Parameter.Passed passed = nextPassedParameters(null);
@@ -357,7 +361,7 @@ public final class Parser {
 
     Type nextType() {
         if (!(check(IDENTIFIER) || check(LEFT_BRACKET) ||
-                check(MAP) || check(LEFT_PAREN))) return null;
+                check(MAP) || check(LEFT_PAREN) || check(TABLE))) return null;
         if (match(LEFT_BRACKET)) {
             // Array
             long length = -1;
@@ -377,6 +381,13 @@ public final class Parser {
             consume(RIGHT_BRACKET, "Expected ']' after key type.");
             final Type valueType = nextType();
             return new Type.Map(keyType, valueType);
+        }
+        if (match(TABLE)) {
+            // Table
+            consume(LEFT_BRACKET, "Expected '[' after table.");
+            consume(RIGHT_BRACKET, "Expected ']' after key type.");
+            final Type tableType = nextType();
+            return new Type.Table(tableType);
         }
         if (match(LEFT_PAREN)) {
             // Function

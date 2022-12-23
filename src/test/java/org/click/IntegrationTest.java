@@ -883,6 +883,32 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void table() {
+        assertProgram(new Value.Table(new Type.Table(Type.INT), List.of(
+                        new Value.IntegerLiteral(Type.INT, 1),
+                        new Value.IntegerLiteral(Type.INT, 2),
+                        new Value.IntegerLiteral(Type.INT, 3)
+                )),
+                """
+                        main :: () int {
+                          value :: table[]int {1, 2, 3};
+                          return value;
+                        }
+                        """);
+        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
+                """
+                        main :: () int {
+                          value :: table[]int {1, 2, 3};
+                          number := 0;
+                          for n: value {
+                            number = number + n;
+                          }
+                          return number;
+                        }
+                        """);
+    }
+
+    @Test
     public void branch() {
         assertProgram(ONE,
                 """

@@ -173,6 +173,16 @@ public final class Evaluator {
                         }
                         yield new Value.Map(mapType, evaluatedEntries);
                     }
+                    case Type.Table tableType -> {
+                        if (!(passed instanceof Parameter.Passed.Positional positional))
+                            throw new RuntimeException("Expected positional parameters, got: " + passed);
+                        final List<Value> evaluatedEntries = new ArrayList<>();
+                        for (Expression expression : positional.expressions()) {
+                            final Value value = evaluate(expression, tableType.type());
+                            evaluatedEntries.add(value);
+                        }
+                        yield new Value.Table(tableType, evaluatedEntries);
+                    }
                     default ->
                             throw new RuntimeException("Invalid initialization: " + initialization + " " + explicitType);
                 };

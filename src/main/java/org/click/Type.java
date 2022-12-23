@@ -41,6 +41,13 @@ public interface Type {
         }
     }
 
+    record Table(Type type) implements Type {
+        @Override
+        public String name() {
+            return "table[]" + type.name();
+        }
+    }
+
     record Function(List<Parameter> parameters, Type returnType) implements Type {
         @Override
         public String name() {

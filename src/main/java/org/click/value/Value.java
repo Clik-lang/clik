@@ -108,6 +108,12 @@ public sealed interface Value {
         }
     }
 
+    record Table(Type.Table tableType, List<Value> values) implements Value {
+        public Table {
+            values = java.util.List.copyOf(values);
+        }
+    }
+
     record Range(Value start, Value end, Value step) implements Value {
     }
 
