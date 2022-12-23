@@ -18,7 +18,7 @@ public final class VM {
     public VM(Path directory, List<Statement> statements) {
         this.context = new Context(directory, new ScopeWalker<>());
         this.executor = new Executor(context);
-        this.context.walker.enterBlock(executor);
+        this.context.walker.enterBlock();
         this.executor.interpretGlobal(statements);
     }
 

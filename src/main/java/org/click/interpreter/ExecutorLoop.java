@@ -47,7 +47,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         final long start = ((Value.IntegerLiteral) range.start()).value();
         final long end = ((Value.IntegerLiteral) range.end()).value();
         final long step = ((Value.IntegerLiteral) range.step()).value();
-        walker.enterBlock(executor);
+        walker.enterBlock();
         if (!declarations.isEmpty()) {
             assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
             // Index declared
@@ -68,7 +68,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
 
     private void rangeArrayRef(Statement.Loop loop, Value.ArrayRef arrayRef) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
-        walker.enterBlock(executor);
+        walker.enterBlock();
         final List<Value> values = arrayRef.elements();
         if (!declarations.isEmpty()) {
             if (declarations.size() == 1 && !declarations.get(0).ref()) {
@@ -127,7 +127,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     private void tableLoop(Statement.Loop loop, Value.Table table) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
         final List<Value> values = table.values();
-        walker.enterBlock(executor);
+        walker.enterBlock();
         if (!declarations.isEmpty()) {
             assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
             // Loop over rows

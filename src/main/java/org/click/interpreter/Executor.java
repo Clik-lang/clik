@@ -120,13 +120,13 @@ public final class Executor {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
         final VM.Context context = new VM.Context(this.context.directory(), copy);
         final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
-        copy.enterBlock(executor);
+        copy.enterBlock();
         this.walker.currentScope().tracked().forEach(copy::register);
         return executor;
     }
 
     public Value interpret(String name, Value.FunctionDecl declaration, List<Value> parameters) {
-        walker.enterBlock(this);
+        walker.enterBlock();
         for (int i = 0; i < parameters.size(); i++) {
             final Parameter parameter = declaration.parameters().get(i);
             final Value value = parameters.get(i);
@@ -177,8 +177,8 @@ public final class Executor {
         return interpreter.evaluate(expression, explicitType);
     }
 
-    public void registerMulti(List<String> names, Statement.Declare.Type declarationType, Value value) {
-        final boolean isShared = declarationType == Statement.Declare.Type.SHARED;
+    public void registerMulti(List<String> names, DeclarationType declarationType, Value value) {
+        final boolean isShared = declarationType == DeclarationType.SHARED;
         if (names.size() == 1) {
             // Single return
             final String name = names.get(0);
@@ -308,7 +308,7 @@ public final class Executor {
             }
             case Statement.Spawn spawn -> this.interpreterSpawn.interpret(spawn);
             case Statement.Block block -> {
-                this.walker.enterBlock(this);
+                this.walker.enterBlock();
                 Value result = null;
                 for (Statement inner : block.statements()) {
                     result = interpret(inner);

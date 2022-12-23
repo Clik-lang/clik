@@ -4,8 +4,8 @@ import org.click.value.Value;
 
 import java.util.*;
 
-import static org.click.Token.Type.*;
 import static org.click.Ast.*;
+import static org.click.Token.Type.*;
 
 public final class Parser {
     private final List<Token> tokens;
@@ -40,13 +40,13 @@ public final class Parser {
             } else if (match(COLON)) {
                 // Declare
                 final Type explicitType = nextType();
-                Statement.Declare.Type declarationType;
+                DeclarationType declarationType;
                 if (match(COLON)) {
-                    declarationType = Statement.Declare.Type.CONSTANT;
+                    declarationType = DeclarationType.CONSTANT;
                 } else if (match(EQUAL)) {
-                    declarationType = Statement.Declare.Type.VARIABLE;
+                    declarationType = DeclarationType.VARIABLE;
                 } else if (match(TILDE)) {
-                    declarationType = Statement.Declare.Type.SHARED;
+                    declarationType = DeclarationType.SHARED;
                 } else {
                     throw error("Expected declaration type");
                 }

@@ -1,6 +1,5 @@
 package org.click;
 
-import org.click.interpreter.Executor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -13,12 +12,12 @@ import java.util.Objects;
 public final class ScopeWalker<T> {
     final ArrayDeque<Scope> scopes = new ArrayDeque<>();
 
-    public void enterBlock(Executor executor) {
+    public void enterBlock() {
         final Scope currentScope = scopes.peek();
         if (currentScope == null) {
-            this.scopes.push(new Scope(executor, new HashMap<>()));
+            this.scopes.push(new Scope(new HashMap<>()));
         } else {
-            this.scopes.push(new Scope(executor, currentScope));
+            this.scopes.push(new Scope(currentScope));
         }
     }
 
@@ -45,18 +44,15 @@ public final class ScopeWalker<T> {
     }
 
     public final class Scope {
-        final Executor executor;
         final @Nullable Scope parent;
         final @NotNull Map<String, T> tracked;
 
-        public Scope(Executor executor, @NotNull Map<String, T> tracked) {
-            this.executor = executor;
+        public Scope(@NotNull Map<String, T> tracked) {
             this.parent = null;
             this.tracked = tracked;
         }
 
-        Scope(Executor executor, Scope scope) {
-            this.executor = executor;
+        Scope(Scope scope) {
             this.parent = scope;
             this.tracked = new HashMap<>(scope.tracked);
         }

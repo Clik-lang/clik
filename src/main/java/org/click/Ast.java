@@ -8,6 +8,8 @@ import java.util.Map;
 
 /**
  * Context-free representation of a program.
+ * <p>
+ * Must be validated before being interpreted.
  */
 public interface Ast {
     sealed interface Expression {
@@ -46,11 +48,8 @@ public interface Ast {
     }
 
     sealed interface Statement {
-        record Declare(List<String> names, Statement.Declare.Type declarationType, Expression initializer,
+        record Declare(List<String> names, DeclarationType declarationType, Expression initializer,
                        @Nullable org.click.Type explicitType) implements Statement {
-            public enum Type {
-                CONSTANT, VARIABLE, SHARED
-            }
         }
 
         record Assign(List<Statement.Assign.Target> targets, Expression expression) implements Statement {
