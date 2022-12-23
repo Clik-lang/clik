@@ -1,6 +1,5 @@
 package org.click;
 
-import org.click.interpreter.VM;
 import org.click.value.Value;
 import org.junit.jupiter.api.Test;
 
@@ -64,30 +63,30 @@ public final class IntegrationTest {
     public void param() {
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: () int {
                             return get();
                         }
-                        get :: () -> 1;
+                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: () int {
                             value :: get();
                             return value;
                         }
-                        get :: () -> 1;
+                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: () int {
                             get();
                         }
-                        get :: () -> 1;
+                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () -> get();
-                        get :: () -> 1;
+                        main :: () int -> get();
+                        get :: () int -> 1;
                         """);
     }
 
@@ -294,7 +293,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           function :: () int -> 1;
-                          forward :: (function: () int) -> function();
+                          forward :: (function: () int) int -> function();
                           value :: forward(function);
                           return value;
                         }
@@ -303,7 +302,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           add :: (a: int, b: int) int -> a + b;
-                          forward :: (a: int, b: int, function: (c: int, d: int) int) -> function(a, b);
+                          forward :: (a: int, b: int, function: (c: int, d: int) int) int -> function(a, b);
                           value :: forward(5, 6, add);
                           return value;
                         }
@@ -890,7 +889,7 @@ public final class IntegrationTest {
                         new Value.IntegerLiteral(Type.INT, 3)
                 )),
                 """
-                        main :: () int {
+                        main :: () table[]int {
                           value :: table[]int {1, 2, 3};
                           return value;
                         }
@@ -1496,9 +1495,8 @@ public final class IntegrationTest {
     private static void assertProgram(Value expected, String name, String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
-        var interpreter = new VM(null, statements);
-        var actual = interpreter.interpret(name, List.of());
-        interpreter.stop();
+        var program = new Compiler(statements).compile();
+        var actual = new Interpreter(program).interpret(name, List.of());
         assertEquals(expected, actual);
     }
 }

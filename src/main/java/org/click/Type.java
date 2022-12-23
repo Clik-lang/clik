@@ -29,6 +29,17 @@ public interface Type {
     record Identifier(String name) implements Type {
     }
 
+    record Struct(List<Parameter> parameters) implements Type {
+        public Struct {
+            parameters = List.copyOf(parameters);
+        }
+
+        @Override
+        public String name() {
+            return "{ " + parameters.stream().map(parameter -> parameter.type().name() + " " + parameter.name()).collect(Collectors.joining(", ")) + " }";
+        }
+    }
+
     record Array(Type type, long length) implements Type {
         @Override
         public String name() {

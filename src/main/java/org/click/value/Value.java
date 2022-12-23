@@ -81,6 +81,9 @@ public sealed interface Value {
     record RuneLiteral(String character) implements Value {
     }
 
+    record Function(Type.Function functionType, String name) implements Value {
+    }
+
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
         public Struct {
             parameters = java.util.Map.copyOf(parameters);
