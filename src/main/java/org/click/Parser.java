@@ -5,6 +5,7 @@ import org.click.value.Value;
 import java.util.*;
 
 import static org.click.Token.Type.*;
+import static org.click.Ast.*;
 
 public final class Parser {
     private final List<Token> tokens;

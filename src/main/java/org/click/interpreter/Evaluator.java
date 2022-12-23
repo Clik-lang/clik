@@ -1,6 +1,8 @@
 package org.click.interpreter;
 
-import org.click.*;
+import org.click.ScopeWalker;
+import org.click.Token;
+import org.click.Type;
 import org.click.value.Value;
 import org.click.value.ValueCompute;
 import org.click.value.ValueOperator;
@@ -8,6 +10,8 @@ import org.click.value.ValueType;
 
 import java.lang.foreign.MemorySegment;
 import java.util.*;
+
+import static org.click.Ast.*;
 
 public final class Evaluator {
     private final Executor executor;

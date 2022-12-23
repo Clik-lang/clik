@@ -1,7 +1,5 @@
 package org.click.value;
 
-import org.click.AccessPoint;
-import org.click.Expression;
 import org.click.ScopeWalker;
 import org.click.Type;
 import org.click.interpreter.Executor;
@@ -12,6 +10,9 @@ import java.lang.foreign.SegmentScope;
 import java.lang.foreign.ValueLayout;
 import java.util.*;
 import java.util.stream.LongStream;
+
+import static org.click.Ast.AccessPoint;
+import static org.click.Ast.Expression;
 
 public final class ValueCompute {
     public static void update(ScopeWalker<Value> walker, ScopeWalker<Value> updated) {

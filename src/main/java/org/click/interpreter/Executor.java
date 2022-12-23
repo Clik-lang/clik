@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.click.Ast.*;
+
 public final class Executor {
     private final VM.Context context;
     private final ScopeWalker<Value> walker;

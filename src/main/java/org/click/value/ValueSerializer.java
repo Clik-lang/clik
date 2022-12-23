@@ -1,9 +1,10 @@
 package org.click.value;
 
-import org.click.Parameter;
 import org.click.ScopeWalker;
 
 import java.util.List;
+
+import static org.click.Ast.Parameter;
 
 public final class ValueSerializer {
     public static String serialize(ScopeWalker<Value> walker, Value expression) {

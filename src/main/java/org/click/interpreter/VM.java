@@ -1,11 +1,12 @@
 package org.click.interpreter;
 
 import org.click.ScopeWalker;
-import org.click.Statement;
 import org.click.value.Value;
 
 import java.nio.file.Path;
 import java.util.List;
+
+import static org.click.Ast.Statement;
 
 public final class VM {
     private final Context context;

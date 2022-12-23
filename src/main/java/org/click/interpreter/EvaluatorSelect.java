@@ -1,8 +1,6 @@
 package org.click.interpreter;
 
-import org.click.Expression;
 import org.click.ScopeWalker;
-import org.click.Statement;
 import org.click.Type;
 import org.click.value.Value;
 import org.click.value.ValueCompute;
@@ -11,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static org.click.Ast.Expression;
+import static org.click.Ast.Statement;
 
 public record EvaluatorSelect(Executor executor, ScopeWalker<Value> walker) {
     Value evaluate(Expression.Select select, @Nullable Type explicitType) {

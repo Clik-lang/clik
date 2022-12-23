@@ -3,6 +3,8 @@ package org.click;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.click.Ast.Parameter;
+
 public interface Type {
     Type VOID = new Primitive("void");
     Type BOOL = new Primitive("bool");

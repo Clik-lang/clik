@@ -1,10 +1,11 @@
 package org.click.interpreter;
 
 import org.click.ScopeWalker;
-import org.click.Statement;
 import org.click.value.Value;
 
 import java.util.concurrent.Phaser;
+
+import static org.click.Ast.Statement;
 
 public record ExecutorSpawn(Executor executor, ScopeWalker<Value> walker) {
     Value interpret(Statement.Spawn spawn) {

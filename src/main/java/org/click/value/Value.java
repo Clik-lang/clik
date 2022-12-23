@@ -1,7 +1,5 @@
 package org.click.value;
 
-import org.click.Parameter;
-import org.click.Statement;
 import org.click.Type;
 import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +8,9 @@ import java.lang.foreign.MemorySegment;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+
+import static org.click.Ast.Parameter;
+import static org.click.Ast.Statement;
 
 public sealed interface Value {
     // DECLARATIONS
