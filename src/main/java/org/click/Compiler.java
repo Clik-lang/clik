@@ -102,6 +102,7 @@ public class Compiler {
                     }
 
                     final List<String> names = declare.names();
+                    if (names.isEmpty()) throw error("Expected at least one name");
                     // Check for duplicates
                     for (String name : names) {
                         final TrackedVariable present = walker.find(name);
@@ -113,6 +114,7 @@ public class Compiler {
                     if (expression instanceof Program.Expression.Constant constant) {
                         if (constant.value() instanceof Value.FunctionDecl functionDecl) {
                             if (declarationType != DeclarationType.CONSTANT) throw error("Function must be constant");
+                            if (names.size() != 1) throw error("Function must be named and cannot be destructured");
                             final Scope scope = compileFunction(functionDecl);
                             final Type.Function functionType = new Type.Function(scope.functionDecl.parameters(), scope.functionDecl.returnType());
                             functions.put(names.get(0), new Program.Function(
@@ -124,6 +126,7 @@ public class Compiler {
                             special = true;
                         } else if (constant.value() instanceof Value.StructDecl structDecl) {
                             if (declarationType != DeclarationType.CONSTANT) throw error("Struct must be constant");
+                            if (names.size() != 1) throw error("Struct must be named and cannot be destructured");
                             final List<TypedName> fields = new ArrayList<>();
                             for (Ast.Parameter parameter : structDecl.parameters()) {
                                 fields.add(new TypedName(parameter.name(), parameter.type()));

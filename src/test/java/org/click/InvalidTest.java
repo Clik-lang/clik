@@ -36,6 +36,19 @@ public class InvalidTest {
                 """);
     }
 
+    @Test
+    public void deconstruct() {
+        assertInvalidProgram("""
+                value, value2 :: 5;
+                """);
+        assertInvalidProgram("""
+                main, main2 :: () {}
+                """);
+        assertInvalidProgram("""
+                Point, Point2 :: struct {x: int, y: int}
+                """);
+    }
+
     private static void assertInvalidProgram(String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
