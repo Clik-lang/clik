@@ -64,30 +64,30 @@ public final class IntegrationTest {
     public void param() {
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: () int {
                             return get();
                         }
-                        get :: () -> 1;
+                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () {
+                        main :: () int {
                             value :: get();
                             return value;
                         }
-                        get :: () -> 1;
+                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () {
-                            get();
+                        main :: () int {
+                          return get();
                         }
-                        get :: () -> 1;
+                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () -> get();
-                        get :: () -> 1;
+                        main :: () int -> get();
+                        get :: () int -> 1;
                         """);
     }
 
@@ -96,7 +96,7 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         shared :~ 0;
-                        main :: () {
+                        main :: () int {
                           compute();
                           return shared;
                         }
@@ -294,7 +294,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           function :: () int -> 1;
-                          forward :: (function: () int) -> function();
+                          forward :: (function: () int) int -> function();
                           value :: forward(function);
                           return value;
                         }
@@ -303,7 +303,7 @@ public final class IntegrationTest {
                 """
                         main :: () int {
                           add :: (a: int, b: int) int -> a + b;
-                          forward :: (a: int, b: int, function: (c: int, d: int) int) -> function(a, b);
+                          forward :: (a: int, b: int, function: (c: int, d: int) int) int -> function(a, b);
                           value :: forward(5, 6, add);
                           return value;
                         }
@@ -436,7 +436,7 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: () Point {
                           array :: [1]Point {
                             Point {.x: 1, .y: 2},
                           }
@@ -446,7 +446,7 @@ public final class IntegrationTest {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () int {
+                        main :: () Point {
                           array :: [1]Point {{1,2}}
                           return array[0];
                         }
@@ -890,7 +890,7 @@ public final class IntegrationTest {
                         new Value.IntegerLiteral(Type.INT, 3)
                 )),
                 """
-                        main :: () int {
+                        main :: () table[]int {
                           value :: table[]int {1, 2, 3};
                           return value;
                         }
