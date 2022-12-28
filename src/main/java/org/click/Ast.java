@@ -102,9 +102,6 @@ public interface Ast {
 
             record Named(Map<String, Expression> entries) implements Parameter.Passed {
             }
-
-            record Mapped(Map<Expression, Expression> entries) implements Parameter.Passed {
-            }
         }
     }
 

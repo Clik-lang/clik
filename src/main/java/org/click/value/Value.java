@@ -61,14 +61,14 @@ public sealed interface Value {
         public IntegerLiteral {
             if (type != Type.U8 && type != Type.U16 && type != Type.U32 && type != Type.U64 &&
                     type != Type.I8 && type != Type.I16 && type != Type.I32 && type != Type.I64 && type != Type.INT)
-                throw new RuntimeException("Invalid integer type: " + type);
+                throw new IllegalArgumentException("Invalid integer type: " + type);
         }
     }
 
     record FloatLiteral(Type type, double value) implements Value {
         public FloatLiteral {
-            if (type != Type.FLOAT && type != Type.F32 && type != Type.F64)
-                throw new IllegalArgumentException("Constant type must be f32 or f64");
+            if (type != Type.F32 && type != Type.F64 && type != Type.FLOAT)
+                throw new IllegalArgumentException("Invalid float type: " + type);
         }
     }
 
@@ -102,12 +102,6 @@ public sealed interface Value {
     record ArrayValue(Type.Array arrayType, MemorySegment data) implements Value {
         public ArrayValue {
             data = data.asReadOnly();
-        }
-    }
-
-    record Map(Type.Map mapType, java.util.Map<Value, Value> entries) implements Value {
-        public Map {
-            entries = java.util.Map.copyOf(entries);
         }
     }
 

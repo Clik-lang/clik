@@ -242,17 +242,6 @@ public final class ValueCompute {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }
             }
-            case Value.Map map -> {
-                if (access instanceof AccessPoint.Index indexAccess) {
-                    final Expression indexExpression = indexAccess.expression();
-                    final HashMap<Value, Value> newParams = new HashMap<>(map.entries());
-                    final Value index = executor.evaluate(indexExpression, map.mapType().key());
-                    newParams.put(index, updated);
-                    yield new Value.Map(map.mapType(), newParams);
-                } else {
-                    throw new RuntimeException("Cannot update variable: " + variable);
-                }
-            }
             default -> throw new RuntimeException("Cannot update: " + variable + " " + accesses);
         };
     }

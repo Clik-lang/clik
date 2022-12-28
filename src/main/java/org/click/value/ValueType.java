@@ -8,7 +8,7 @@ public final class ValueType {
                 type == Type.I8 || type == Type.I16 || type == Type.I32 || type == Type.I64 || type == Type.INT) {
             return new Value.IntegerLiteral(type, 0);
         }
-        if (type == Type.F32 || type == Type.F64) {
+        if (type == Type.F32 || type == Type.F64 || type == Type.FLOAT) {
             return new Value.FloatLiteral(type, 0);
         }
         if (type == Type.BOOL) {
@@ -44,7 +44,6 @@ public final class ValueType {
             case Value.Struct struct -> Type.of(struct.name());
             case Value.ArrayRef arrayRef -> arrayRef.arrayType();
             case Value.ArrayValue arrayValue -> arrayValue.arrayType();
-            case Value.Map map -> map.mapType();
             default -> throw new RuntimeException("Unknown type: " + expression);
         };
     }

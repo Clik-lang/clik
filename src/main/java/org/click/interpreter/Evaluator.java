@@ -109,12 +109,6 @@ public final class Evaluator {
                                 throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
                             yield ValueCompute.lookupArrayBuffer(type, data, index);
                         }
-                        case Value.Map map -> {
-                            if (!(accessPoint instanceof AccessPoint.Index indexAccess))
-                                throw new RuntimeException("Invalid map access: " + access);
-                            final Value key = evaluate(indexAccess.expression(), map.mapType().key());
-                            yield map.entries().get(key);
-                        }
                         default -> throw new RuntimeException("Expected struct, got: " + expression);
                     };
                 }
@@ -178,17 +172,6 @@ public final class Evaluator {
                     }
                     case Type.Array arrayType ->
                             ValueCompute.computeArray(executor, arrayType, ((Parameter.Passed.Positional) passed).expressions());
-                    case Type.Map mapType -> {
-                        if (!(passed instanceof Parameter.Passed.Mapped mapped))
-                            throw new RuntimeException("Expected mapped parameters, got: " + passed);
-                        Map<Value, Value> evaluatedEntries = new HashMap<>();
-                        for (var entry : mapped.entries().entrySet()) {
-                            final Value key = evaluate(entry.getKey(), mapType.key());
-                            final Value value = evaluate(entry.getValue(), mapType.value());
-                            evaluatedEntries.put(key, value);
-                        }
-                        yield new Value.Map(mapType, evaluatedEntries);
-                    }
                     case Type.Table tableType -> {
                         if (!(passed instanceof Parameter.Passed.Positional positional))
                             throw new RuntimeException("Expected positional parameters, got: " + passed);

@@ -285,10 +285,6 @@ public final class Parser {
             final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
             assert type.length() == passed.expressions().size() : "Array length does not match passed parameters.";
             return new Expression.Initialization(type, passed);
-        } else if (check(MAP)) {
-            final Type.Map type = (Type.Map) nextType();
-            final Parameter.Passed.Mapped passed = nextPassedParameters(Parameter.Passed.Mapped.class);
-            return new Expression.Initialization(type, passed);
         } else if (check(TABLE)) {
             final Type.Table type = (Type.Table) nextType();
             final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
@@ -303,32 +299,15 @@ public final class Parser {
     }
 
     private <T extends Parameter.Passed> T nextPassedParameters(Class<T> preferred) {
-        final boolean colon = checkTrailing(COLON);
         consume(LEFT_BRACE, "Expected '{' after struct name.");
         if (preferred == null) {
-            if (!check(DOT) && colon) {
-                preferred = (Class<T>) Parameter.Passed.Mapped.class;
-            } else if (check(DOT)) {
+            if (check(DOT)) {
                 preferred = (Class<T>) Parameter.Passed.Named.class;
             } else {
                 preferred = (Class<T>) Parameter.Passed.Positional.class;
             }
         }
-        if (preferred == Parameter.Passed.Mapped.class) {
-            // Mapped
-            Map<Expression, Expression> entries = new HashMap<>();
-            while (!check(RIGHT_BRACE)) {
-                final Expression key = nextExpression();
-                consume(COLON, "Expected ':' after key.");
-                final Expression value = nextExpression();
-                entries.put(key, value);
-                if (check(COMMA)) {
-                    consume(COMMA, "Expected ',' after entry.");
-                }
-            }
-            consume(RIGHT_BRACE, "Expected '}' after map.");
-            return (T) new Parameter.Passed.Mapped(entries);
-        } else if (preferred == Parameter.Passed.Named.class) {
+        if (preferred == Parameter.Passed.Named.class) {
             // Named struct
             final Map<String, Expression> fields = new HashMap<>();
             do {
@@ -366,7 +345,7 @@ public final class Parser {
 
     Type nextType() {
         if (!(check(IDENTIFIER) || check(LEFT_BRACKET) ||
-                check(MAP) || check(LEFT_PAREN) || check(TABLE))) return null;
+                check(LEFT_PAREN) || check(TABLE))) return null;
         if (match(LEFT_BRACKET)) {
             // Array
             long length = -1;
@@ -378,14 +357,6 @@ public final class Parser {
             consume(RIGHT_BRACKET, "Expected ']'.");
             final Type arrayType = nextType();
             return new Type.Array(arrayType, length);
-        }
-        if (match(MAP)) {
-            // Map
-            consume(LEFT_BRACKET, "Expected '[' after map.");
-            final Type keyType = nextType();
-            consume(RIGHT_BRACKET, "Expected ']' after key type.");
-            final Type valueType = nextType();
-            return new Type.Map(keyType, valueType);
         }
         if (match(TABLE)) {
             // Table

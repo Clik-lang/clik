@@ -518,71 +518,6 @@ public final class IntegrationTest {
     }
 
     @Test
-    public void map() {
-        assertProgram(new Value.IntegerLiteral(Type.INT, 5),
-                """
-                        main :: () int {
-                          values :: map[string]int {"test": 5};
-                          return values["test"];
-                        }
-                        """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
-                """
-                        main :: () int {
-                          values := map[string]int {"test": 5};
-                          values = map[string]int {"test": 6};
-                          return values["test"];
-                        }
-                        """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
-                """
-                        main :: () int {
-                          values := map[string]int {"test": 5};
-                          values = {"test": 6};
-                          return values["test"];
-                        }
-                        """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 5),
-                """
-                        Point :: struct {x: int, y: int}
-                        main :: () int {
-                          values :: map[Point]int {{1, 2}: 5};
-                          return values[{1,2}];
-                        }
-                        """);
-    }
-
-    @Test
-    public void mapMutation() {
-        assertProgram(ONE,
-                """
-                        main :: () int {
-                          values := map[string]int {"test": 5};
-                          values["test"] = 1;
-                          return values["test"];
-                        }
-                        """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 5),
-                """
-                        main :: () int {
-                          values := map[string]int {"test": 5};
-                          values2 := values;
-                          values["test"] = 1;
-                          return values2["test"];
-                        }
-                        """);
-        assertProgram(ONE,
-                """
-                        main :: () int {
-                          values := map[string]int {"test": 5};
-                          values2 := values;
-                          values["test"] = 1;
-                          return values["test"];
-                        }
-                        """);
-    }
-
-    @Test
     public void struct() {
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
@@ -733,22 +668,22 @@ public final class IntegrationTest {
 
         assertProgram(ONE,
                 """
-                        Player :: struct {test: map[string]int}
+                        Player :: struct {test: [1]int}
                         main :: () Point {
-                            value := Player{map[string]int{"test": 1}};
+                            value := Player{[1]int{1}};
                             value2 := value;
-                            value.test["test"] = 2;
-                            return value2.test["test"];
+                            value.test[0] = 2;
+                            return value2.test[0];
                         }
                         """);
         assertProgram(TWO,
                 """
-                        Player :: struct {test: map[string]int}
+                        Player :: struct {test: [1]int}
                         main :: () Point {
-                            value := Player{map[string]int{"test": 1}};
+                            value := Player{[1]int{1}};
                             value2 := value;
-                            value.test["test"] = 2;
-                            return value.test["test"];
+                            value.test[0] = 2;
+                            return value.test[0];
                         }
                         """);
     }
