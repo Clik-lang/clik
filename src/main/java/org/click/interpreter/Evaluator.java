@@ -135,10 +135,10 @@ public final class Evaluator {
                 final Value.FunctionDecl functionDecl = (Value.FunctionDecl) executor.walker().find(name);
                 assert functionDecl != null : "Function " + name + " not found";
                 final List<Parameter> params = functionDecl.parameters();
-                final List<Expression> expressions = call.arguments().expressions();
+                final List<Expression> expressions = ((Parameter.Passed.Positional) call.arguments()).expressions();
                 assert params.size() == expressions.size() : name + ": Expected " + params.size() + " arguments, got " + expressions.size();
                 List<Value> evaluated = new ArrayList<>();
-                for (int i = 0; i < call.arguments().expressions().size(); i++) {
+                for (int i = 0; i < expressions.size(); i++) {
                     final Parameter param = params.get(i);
                     final Expression expression = expressions.get(i);
                     final Value value = executor.evaluate(expression, param.type());
@@ -158,14 +158,26 @@ public final class Evaluator {
                         final Value.StructDecl struct = (Value.StructDecl) walker.find(name);
                         final List<Parameter> parameters = struct.parameters();
                         Map<String, Value> evaluated = new HashMap<>();
-                        for (Parameter param : struct.parameters()) {
-                            final Expression value = passed.find(parameters, param);
-                            if (value == null) throw new RuntimeException("Missing field: " + param.name());
-                            evaluated.put(param.name(), evaluate(value, param.type()));
+                        if (passed instanceof Parameter.Passed.Named named) {
+                            for (Map.Entry<String, Expression> entry : named.entries().entrySet()) {
+                                final String key = entry.getKey();
+                                final Expression value = entry.getValue();
+                                final Value evaluatedValue = evaluate(value, parameters.stream().filter(p -> p.name().equals(key)).findFirst().get().type());
+                                evaluated.put(key, evaluatedValue);
+                            }
+                        } else if (passed instanceof Parameter.Passed.Positional positional) {
+                            final List<Expression> expressions = positional.expressions();
+                            for (int i = 0; i < expressions.size(); i++) {
+                                final Expression expression = expressions.get(i);
+                                final Parameter parameter = parameters.get(i);
+                                final Value evaluatedValue = evaluate(expression, parameter.type());
+                                evaluated.put(parameter.name(), evaluatedValue);
+                            }
                         }
                         yield new Value.Struct(name, evaluated);
                     }
-                    case Type.Array arrayType -> ValueCompute.computeArray(executor, arrayType, passed.expressions());
+                    case Type.Array arrayType ->
+                            ValueCompute.computeArray(executor, arrayType, ((Parameter.Passed.Positional) passed).expressions());
                     case Type.Map mapType -> {
                         if (!(passed instanceof Parameter.Passed.Mapped mapped))
                             throw new RuntimeException("Expected mapped parameters, got: " + passed);
