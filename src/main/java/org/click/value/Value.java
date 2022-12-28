@@ -103,9 +103,6 @@ public sealed interface Value {
         }
     }
 
-    record Range(Value start, Value end, Value step) implements Value {
-    }
-
     // TODO is this really necessary?
     record JavaObject(Object object) implements Value {
     }

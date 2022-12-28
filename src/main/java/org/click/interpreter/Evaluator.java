@@ -176,9 +176,25 @@ public final class Evaluator {
                             throw new RuntimeException("Invalid initialization: " + initialization + " " + explicitType);
                 };
             }
-            case Expression.Range init -> new Value.Range(evaluate(init.start(), null),
-                    evaluate(init.end(), null),
-                    evaluate(init.step(), null));
+            case Expression.Range init -> {
+                final Value start = evaluate(init.start(), null);
+                final Value end = evaluate(init.end(), null);
+                final Value step = evaluate(init.step(), null);
+                if (!(start instanceof Value.IntegerLiteral startLiteral))
+                    throw new RuntimeException("Expected constant, got: " + start);
+                if (!(end instanceof Value.IntegerLiteral endLiteral))
+                    throw new RuntimeException("Expected constant, got: " + end);
+                if (!(step instanceof Value.IntegerLiteral stepLiteral))
+                    throw new RuntimeException("Expected constant, got: " + step);
+                final long startValue = startLiteral.value();
+                final long endValue = endLiteral.value();
+                final long stepValue = stepLiteral.value();
+                final List<Value> values = new ArrayList<>();
+                for (long i = startValue; i < endValue; i += stepValue) {
+                    values.add(new Value.IntegerLiteral(Type.INT, i));
+                }
+                yield new Value.ArrayRef(new Type.Array(Type.INT, values.size()), values);
+            }
             case Expression.Binary binary -> {
                 final Value left = evaluate(binary.left(), explicitType);
                 final Value right = evaluate(binary.right(), explicitType);

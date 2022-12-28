@@ -10,64 +10,36 @@ import static org.click.Ast.Statement;
 
 public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
     Value interpret(Statement.Loop loop) {
+        var previousLoop = executor.insideLoop;
+        executor.insideLoop = true;
+        this.walker.enterBlock();
         if (loop.iterable() == null) {
             // Infinite loop
             while (true) {
                 if (!iterate(loop)) break;
             }
-            return null;
+        } else {
+            final Value iterable = executor.evaluate(loop.iterable(), null);
+            if (iterable instanceof Value.ArrayRef arrayRef) {
+                loop(loop, arrayRef);
+            } else {
+                throw new RuntimeException("Expected iterable, got: " + iterable);
+            }
         }
-        final Value iterable = executor.evaluate(loop.iterable(), null);
-        switch (iterable) {
-            case Value.Range range -> rangeLoop(loop, range);
-            case Value.ArrayRef arrayRef -> rangeArrayRef(loop, arrayRef);
-            default -> throw new RuntimeException("Expected iterable, got: " + iterable);
-        }
+        executor.insideLoop = previousLoop;
+        this.walker.exitBlock();
         return null;
     }
 
     private boolean iterate(Statement.Loop loop) {
         final Statement body = loop.body();
-        var previousLoop = executor.insideLoop;
-        executor.insideLoop = true;
-        final boolean result = iterateBody(executor, body);
-        executor.insideLoop = previousLoop;
-        return result;
-    }
-
-    private boolean iterateBody(Executor executor, Statement body) {
         final Value value = executor.interpret(body);
         if (value instanceof Value.Continue) return true;
         return !(value instanceof Value.Break) && !(value instanceof Value.Interrupt);
     }
 
-    private void rangeLoop(Statement.Loop loop, Value.Range range) {
+    private void loop(Statement.Loop loop, Value.ArrayRef arrayRef) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
-        final long start = ((Value.IntegerLiteral) range.start()).value();
-        final long end = ((Value.IntegerLiteral) range.end()).value();
-        final long step = ((Value.IntegerLiteral) range.step()).value();
-        walker.enterBlock();
-        if (!declarations.isEmpty()) {
-            assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
-            // Index declared
-            final String variableName = declarations.get(0).name();
-            walker.register(variableName, new Value.IntegerLiteral(Type.INT, start));
-            for (long i = start; i < end; i += step) {
-                walker.update(variableName, new Value.IntegerLiteral(Type.INT, i));
-                if (!iterate(loop)) break;
-            }
-        } else {
-            // No declaration
-            for (long i = start; i < end; i += step) {
-                if (!iterate(loop)) break;
-            }
-        }
-        walker.exitBlock();
-    }
-
-    private void rangeArrayRef(Statement.Loop loop, Value.ArrayRef arrayRef) {
-        final List<Statement.Loop.Declaration> declarations = loop.declarations();
-        walker.enterBlock();
         final List<Value> values = arrayRef.elements();
         if (!declarations.isEmpty()) {
             if (declarations.size() == 1 && !declarations.get(0).ref()) {
@@ -116,10 +88,9 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             }
         } else {
             // No declaration
-            for (Value value : values) {
+            for (Value ignored : values) {
                 if (!iterate(loop)) break;
             }
         }
-        walker.exitBlock();
     }
 }
