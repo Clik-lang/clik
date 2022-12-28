@@ -84,6 +84,13 @@ public final class Scanner {
             } else {
                 type = Token.Type.LESS;
             }
+        } else if (c == '>') {
+            if (peek() == '=') {
+                advance();
+                type = Token.Type.GREATER_EQUAL;
+            } else {
+                type = Token.Type.GREATER;
+            }
         } else if (c == ',') type = Token.Type.COMMA;
         else if (c == '.') {
             if (peek() == '.') {
