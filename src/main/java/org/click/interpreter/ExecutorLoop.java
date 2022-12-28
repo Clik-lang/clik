@@ -21,7 +21,6 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         switch (iterable) {
             case Value.Range range -> rangeLoop(loop, range);
             case Value.ArrayRef arrayRef -> rangeArrayRef(loop, arrayRef);
-            case Value.Table table -> tableLoop(loop, table);
             default -> throw new RuntimeException("Expected iterable, got: " + iterable);
         }
         return null;
@@ -114,28 +113,6 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                     }
                     if (!iterate(loop)) break;
                 }
-            }
-        } else {
-            // No declaration
-            for (Value value : values) {
-                if (!iterate(loop)) break;
-            }
-        }
-        walker.exitBlock();
-    }
-
-    private void tableLoop(Statement.Loop loop, Value.Table table) {
-        final List<Statement.Loop.Declaration> declarations = loop.declarations();
-        final List<Value> values = table.values();
-        walker.enterBlock();
-        if (!declarations.isEmpty()) {
-            assert declarations.size() == 1 && !declarations.get(0).ref() : "Invalid loop declaration: " + declarations;
-            // Loop over rows
-            final String variableName = declarations.get(0).name();
-            walker.register(variableName, null);
-            for (Value value : values) {
-                walker.update(variableName, value);
-                if (!iterate(loop)) break;
             }
         } else {
             // No declaration

@@ -61,11 +61,6 @@ public final class ValueCompute {
                 final boolean value = initialConstant.value() || nextConstant.value();
                 return new Value.BooleanLiteral(value);
             }
-            case Value.Table initialTable when delta instanceof Value.Table nextTable -> {
-                List<Value> values = new ArrayList<>(initialTable.values());
-                values.addAll(nextTable.values());
-                return new Value.Table(initialTable.tableType(), values);
-            }
             default -> throw new RuntimeException("Unknown types: " + initial + " and " + delta);
         }
     }
@@ -79,26 +74,6 @@ public final class ValueCompute {
             case Value.BooleanLiteral initialConstant when next instanceof Value.BooleanLiteral nextConstant -> {
                 final boolean value = initialConstant.value() || nextConstant.value();
                 return new Value.BooleanLiteral(value);
-            }
-            case Value.Table initialTable when next instanceof Value.Table nextTable -> {
-                // Value/Occurrence
-                Map<Value, Integer> valueInitOccurrences = new HashMap<>();
-                Map<Value, Integer> valueNextOccurrences = new HashMap<>();
-                for (Value value : initialTable.values()) valueInitOccurrences.merge(value, 1, Integer::sum);
-                for (Value value : nextTable.values()) valueNextOccurrences.merge(value, 1, Integer::sum);
-                Set<Value> keys = new HashSet<>();
-                keys.addAll(valueInitOccurrences.keySet());
-                keys.addAll(valueNextOccurrences.keySet());
-                List<Value> values = new ArrayList<>();
-                for (Value key : keys) {
-                    final Integer initOccurrences = valueInitOccurrences.getOrDefault(key, 0);
-                    final Integer nextOccurrences = valueNextOccurrences.getOrDefault(key, 0);
-                    final int occurrences = nextOccurrences - initOccurrences;
-                    for (int i = 0; i < occurrences; i++) {
-                        values.add(key);
-                    }
-                }
-                return new Value.Table(initialTable.tableType(), values);
             }
             default -> throw new RuntimeException("Unknown types: " + initial + " and " + next);
         }

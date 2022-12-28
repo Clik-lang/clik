@@ -57,9 +57,6 @@ public interface Ast {
             }
         }
 
-        record Output(String name, Expression expression) implements Statement {
-        }
-
         record Run(Expression expression) implements Statement {
         }
 

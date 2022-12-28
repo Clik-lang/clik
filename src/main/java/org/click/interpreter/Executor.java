@@ -264,18 +264,6 @@ public final class Executor {
                 }
                 yield null;
             }
-            case Statement.Output output -> {
-                final String name = output.name();
-                if (!(walker.find(name) instanceof Value.Table table))
-                    throw new RuntimeException("Output not found: " + name);
-                final Value evaluated = interpreter.evaluate(output.expression(), null);
-                if (evaluated instanceof Value.Interrupt) yield evaluated;
-                List<Value> updatedList = new ArrayList<>(table.values());
-                updatedList.add(evaluated);
-                final Value updatedTable = new Value.Table(table.tableType(), updatedList);
-                walker.update(name, updatedTable);
-                yield null;
-            }
             case Statement.Run run -> interpreter.evaluate(run.expression(), null);
             case Statement.Branch branch -> {
                 final Value condition = interpreter.evaluate(branch.condition(), null);
