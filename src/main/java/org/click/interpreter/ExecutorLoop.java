@@ -15,9 +15,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         this.walker.enterBlock();
         if (loop.iterable() == null) {
             // Infinite loop
-            while (true) {
-                if (!iterate(loop)) break;
-            }
+            while (iterate(loop.body())) ;
         } else {
             final Value iterable = executor.evaluate(loop.iterable(), null);
             if (iterable instanceof Value.ArrayRef arrayRef) {
@@ -31,8 +29,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         return null;
     }
 
-    private boolean iterate(Statement.Loop loop) {
-        final Statement body = loop.body();
+    private boolean iterate(Statement body) {
         final Value value = executor.interpret(body);
         if (value instanceof Value.Continue) return true;
         return !(value instanceof Value.Break) && !(value instanceof Value.Interrupt);
@@ -40,6 +37,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
 
     private void loop(Statement.Loop loop, Value.ArrayRef arrayRef) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
+        final Statement body = loop.body();
         final List<Value> values = arrayRef.elements();
         if (!declarations.isEmpty()) {
             if (declarations.size() == 1 && !declarations.get(0).ref()) {
@@ -48,7 +46,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (Value value : values) {
                     walker.update(variableName, value);
-                    if (!iterate(loop)) break;
+                    if (!iterate(body)) break;
                 }
             } else if (declarations.size() == 2 && !declarations.get(0).ref() && !declarations.get(1).ref()) {
                 // for-each counted loop
@@ -60,14 +58,12 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                     final Value value = values.get(i);
                     walker.update(indexName, new Value.IntegerLiteral(Type.INT, i));
                     walker.update(variableName, value);
-                    if (!iterate(loop)) break;
+                    if (!iterate(body)) break;
                 }
             } else {
                 // Ref loop
-                final Type arrayType = arrayRef.arrayType();
-                if (!(arrayType instanceof Type.Array typeArray))
-                    throw new RuntimeException("Expected array of structures, got: " + arrayType);
-                final Value tracked = walker.find(typeArray.type().name());
+                final Type.Array arrayType = arrayRef.arrayType();
+                final Value tracked = walker.find(arrayType.type().name());
                 assert declarations.stream().allMatch(Statement.Loop.Declaration::ref) : "Invalid loop declaration: " + declarations;
                 List<String> refs = declarations.stream().map(Statement.Loop.Declaration::name).toList();
                 for (Statement.Loop.Declaration declaration : declarations) {
@@ -83,13 +79,13 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                         final Value refValue = ((Value.Struct) value).parameters().get(refName);
                         walker.update(refName, refValue);
                     }
-                    if (!iterate(loop)) break;
+                    if (!iterate(body)) break;
                 }
             }
         } else {
             // No declaration
             for (Value ignored : values) {
-                if (!iterate(loop)) break;
+                if (!iterate(body)) break;
             }
         }
     }
