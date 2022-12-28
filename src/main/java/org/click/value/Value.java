@@ -67,7 +67,7 @@ public sealed interface Value {
 
     record FloatLiteral(Type type, double value) implements Value {
         public FloatLiteral {
-            if (type != Type.F32 && type != Type.F64)
+            if (type != Type.FLOAT && type != Type.F32 && type != Type.F64)
                 throw new IllegalArgumentException("Constant type must be f32 or f64");
         }
     }

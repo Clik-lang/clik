@@ -125,17 +125,17 @@ public final class IntegrationTest {
                         main :: () u8 -> 1u8;
                         """);
 
-        assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
+        assertProgram(new Value.FloatLiteral(Type.FLOAT, 5.5),
                 """
-                        main :: () f64 -> 5.5;
+                        main :: () float -> 5.5;
                         """);
-        assertProgram(new Value.FloatLiteral(Type.F64, 5000.5),
+        assertProgram(new Value.FloatLiteral(Type.FLOAT, 5000.5),
                 """
-                        main :: () f64 -> 5_000.5;
+                        main :: () float -> 5_000.5;
                         """);
-        assertProgram(new Value.FloatLiteral(Type.F64, 5000.55),
+        assertProgram(new Value.FloatLiteral(Type.FLOAT, 5000.55),
                 """
-                        main :: () f64 -> 5_000.5_5;
+                        main :: () float -> 5_000.5_5;
                         """);
         assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
                 """

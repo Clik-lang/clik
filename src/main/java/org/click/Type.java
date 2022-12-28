@@ -16,10 +16,11 @@ public interface Type {
     Type U32 = new Primitive("u32");
     Type I64 = new Primitive("i64");
     Type U64 = new Primitive("u64");
-    Type F32 = new Primitive("f32");
-    Type F64 = new Primitive("f64");
     Type INT = new Primitive("int");
     Type UINT = new Primitive("uint");
+    Type F32 = new Primitive("f32");
+    Type F64 = new Primitive("f64");
+    Type FLOAT = new Primitive("float");
     Type RUNE = new Primitive("rune");
 
     Type STRING = new BuiltIn("string");
@@ -81,10 +82,11 @@ public interface Type {
             case "u32" -> U32;
             case "i64" -> I64;
             case "u64" -> U64;
-            case "f32" -> F32;
-            case "f64" -> F64;
             case "int" -> INT;
             case "uint" -> UINT;
+            case "f32" -> F32;
+            case "f64" -> F64;
+            case "float" -> FLOAT;
             case "rune" -> RUNE;
             case "string" -> STRING;
             default -> new Identifier(name);

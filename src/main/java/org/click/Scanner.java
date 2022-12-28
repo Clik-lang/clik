@@ -220,7 +220,7 @@ public final class Scanner {
         } while (Character.isDigit(peek()) || peek() == '_');
         final String text = input.substring(start, index).replace("_", "");
         final double value = Double.parseDouble(text);
-        final Type type = nextNumberSuffix(Type.F64, 'f');
+        final Type type = nextNumberSuffix(Type.FLOAT, 'f');
         return new Token.Literal(type, value);
     }
 
