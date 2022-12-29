@@ -455,6 +455,33 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void range() {
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          array :[10]int: 0..10;
+                          return array[1];
+                        }
+                        """);
+    }
+
+    @Test
+    public void arrayFilter() {
+        assertProgram(new Value.Array(new Type.Array(Type.INT, 3), List.of(
+                        new Value.IntegerLiteral(Type.INT, 3),
+                        new Value.IntegerLiteral(Type.INT, 4),
+                        new Value.IntegerLiteral(Type.INT, 5))
+                ),
+                """
+                        main :: () []int {
+                          array := [5]int {1, 2, 3, 4, 5};
+                          array = array where @ > 2;
+                          return array;
+                        }
+                        """);
+    }
+
+    @Test
     public void arrayMutation() {
         assertProgram(ZERO,
                 """
@@ -480,22 +507,6 @@ public final class IntegrationTest {
                           array2 := array;
                           array[0] = 0;
                           return array[0];
-                        }
-                        """);
-    }
-
-    @Test
-    public void arrayFilter() {
-        assertProgram(new Value.Array(new Type.Array(Type.INT, 3), List.of(
-                        new Value.IntegerLiteral(Type.INT, 3),
-                        new Value.IntegerLiteral(Type.INT, 4),
-                        new Value.IntegerLiteral(Type.INT, 5))
-                ),
-                """
-                        main :: () []int {
-                          array := [5]int {1, 2, 3, 4, 5};
-                          array = array where @ > 2;
-                          return array;
                         }
                         """);
     }
