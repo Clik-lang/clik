@@ -89,7 +89,8 @@ public final class Scanner {
             } else {
                 type = Token.Type.GREATER;
             }
-        } else if (c == ',') type = Token.Type.COMMA;
+        } else if (c == '@') type = Token.Type.AT;
+        else if (c == ',') type = Token.Type.COMMA;
         else if (c == '.') {
             if (peek() == '.') {
                 advance();

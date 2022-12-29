@@ -16,7 +16,7 @@ public record Token(Type type, int line, String input,
         LEFT_PAREN, RIGHT_PAREN,
         LEFT_BRACE, RIGHT_BRACE,
         LEFT_BRACKET, RIGHT_BRACKET,
-        OUTPUT,
+        OUTPUT, AT,
         COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR, MODULO,
         DOLLAR, HASH,
 
