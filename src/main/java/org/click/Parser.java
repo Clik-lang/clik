@@ -139,7 +139,7 @@ public final class Parser {
 
     List<AccessPoint> nextAccessPoint() {
         List<AccessPoint> accesses = new ArrayList<>();
-        while (check(DOT) || check(LEFT_BRACKET)) {
+        while (check(DOT) || check(LEFT_BRACKET) || check(WHERE)) {
             if (match(DOT)) {
                 // Field access
                 accesses.add(new AccessPoint.Field(advance().input()));
@@ -149,6 +149,10 @@ public final class Parser {
                 consume(RIGHT_BRACKET, "Expected ']' after array index.");
                 final Type transmutedType = check(IDENTIFIER) ? nextType() : null;
                 accesses.add(new AccessPoint.Index(expression, transmutedType));
+            } else if (match(WHERE)) {
+                // Constraint access
+                final Expression expression = nextExpression();
+                accesses.add(new AccessPoint.Constraint(expression));
             }
         }
         return accesses;
@@ -218,6 +222,8 @@ public final class Parser {
         } else if (match(EXCLAMATION)) {
             final Expression expression = nextExpression();
             return new Expression.Unary(EXCLAMATION, expression);
+        } else if (match(AT)) {
+            return new Expression.Contextual();
         } else if (check(IDENTIFIER) && checkNext(DOT)) {
             // Field
             final Token identifier = advance();
@@ -262,6 +268,11 @@ public final class Parser {
                 final Expression.Variable expression = new Expression.Variable(identifier.input());
                 final List<AccessPoint> accessPoint = nextAccessPoint();
                 return new Expression.Access(expression, accessPoint);
+            } else if (check(WHERE)) {
+                // Constraint
+                final Expression.Variable expression = new Expression.Variable(identifier.input());
+                final List<AccessPoint> accessPoint = nextAccessPoint();
+                return new Expression.Access(expression, accessPoint);
             } else {
                 return new Expression.Variable(identifier.input());
             }
@@ -286,7 +297,7 @@ public final class Parser {
             final Parameter.Passed passed = nextPassedParameters(null);
             return new Expression.Initialization(null, passed);
         } else {
-            throw error("Expect expression.");
+            throw error("Expect expression: " + peek());
         }
     }
 
@@ -585,7 +596,7 @@ public final class Parser {
 
     boolean checkNext(Token.Type type) {
         if (isAtEnd()) return false;
-        return tokens.get(index + 1).type() == type;
+        return peekNext().type() == type;
     }
 
     boolean checkNextNext(Token.Type type) {
@@ -599,6 +610,10 @@ public final class Parser {
 
     Token peek() {
         return tokens.get(index);
+    }
+
+    Token peekNext() {
+        return tokens.get(index + 1);
     }
 
     private RuntimeException error(String message) {

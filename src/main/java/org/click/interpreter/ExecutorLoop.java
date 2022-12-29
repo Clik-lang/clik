@@ -18,7 +18,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
             while (iterate(loop.body())) ;
         } else {
             final Value iterable = executor.evaluate(loop.iterable(), null);
-            if (iterable instanceof Value.ArrayRef arrayRef) {
+            if (iterable instanceof Value.Array arrayRef) {
                 loop(loop, arrayRef);
             } else {
                 throw new RuntimeException("Expected iterable, got: " + iterable);
@@ -35,10 +35,11 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         return !(value instanceof Value.Break) && !(value instanceof Value.Interrupt);
     }
 
-    private void loop(Statement.Loop loop, Value.ArrayRef arrayRef) {
+    private void loop(Statement.Loop loop, Value.Array array) {
         final List<Statement.Loop.Declaration> declarations = loop.declarations();
         final Statement body = loop.body();
-        final List<Value> values = arrayRef.elements();
+        final Type.Array arrayType = array.arrayType();
+        final List<Value> values = array.elements();
         if (!declarations.isEmpty()) {
             if (declarations.size() == 1 && !declarations.get(0).ref()) {
                 // for-each loop
@@ -62,7 +63,6 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 }
             } else {
                 // Ref loop
-                final Type.Array arrayType = arrayRef.arrayType();
                 final Value tracked = walker.find(arrayType.type().name());
                 assert declarations.stream().allMatch(Statement.Loop.Declaration::ref) : "Invalid loop declaration: " + declarations;
                 List<String> refs = declarations.stream().map(Statement.Loop.Declaration::name).toList();

@@ -3,12 +3,13 @@ package org.click.value;
 import org.click.ScopeWalker;
 import org.click.Type;
 import org.click.interpreter.Executor;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentScope;
 import java.lang.foreign.ValueLayout;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.LongStream;
 
 import static org.click.Ast.AccessPoint;
@@ -127,36 +128,20 @@ public final class ValueCompute {
         }
     }
 
-    public static Value computeArray(Executor executor, Type.Array arrayType, @Nullable List<Expression> expressions) {
+    public static Value computeArray(Executor executor, Type.Array arrayType, List<Expression> expressions) {
         final Type elementType = arrayType.type();
         final long length = arrayType.length();
-        if (elementType instanceof Type.Primitive) {
-            // Primitive types are stored in a single segment
-            final long sizeof = ValueType.sizeOf(elementType);
-            MemorySegment segment = MemorySegment.allocateNative(length * sizeof, SegmentScope.auto());
-            if (expressions != null) {
-                for (int i = 0; i < expressions.size(); i++) {
-                    final Expression expression = expressions.get(i);
-                    final Value value = executor.evaluate(expression, elementType);
-                    final long index = i * sizeof;
-                    assignArrayBuffer(elementType, value, segment, index);
-                }
-            }
-            return new Value.ArrayValue(arrayType, segment);
+        final List<Value> evaluated;
+        if (!expressions.isEmpty()) {
+            // Initialized array
+            evaluated = expressions.stream()
+                    .map(expression -> executor.evaluate(expression, elementType)).toList();
         } else {
-            // Reference type
-            final List<Value> evaluated;
-            if (expressions != null) {
-                // Initialized array
-                evaluated = expressions.stream()
-                        .map(expression -> executor.evaluate(expression, elementType)).toList();
-            } else {
-                // Default value
-                final Value defaultValue = ValueType.defaultValue(elementType);
-                evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
-            }
-            return new Value.ArrayRef(arrayType, evaluated);
+            // Default value
+            final Value defaultValue = ValueType.defaultValue(elementType);
+            evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
         }
+        return new Value.Array(arrayType, evaluated);
     }
 
     public static Value deconstruct(ScopeWalker<Value> walker, Value expression, int index) {
@@ -191,28 +176,14 @@ public final class ValueCompute {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }
             }
-            case Value.ArrayRef arrayRef -> {
+            case Value.Array array -> {
                 if (access instanceof AccessPoint.Index indexAccess) {
                     final Expression indexExpression = indexAccess.expression();
-                    final List<Value> newParams = new ArrayList<>(arrayRef.elements());
+                    final List<Value> newParams = new ArrayList<>(array.elements());
                     final Value index = executor.evaluate(indexExpression, null);
                     final int targetIndex = (int) ((Value.IntegerLiteral) index).value();
                     newParams.set(targetIndex, updated);
-                    yield new Value.ArrayRef(arrayRef.arrayType(), newParams);
-                } else {
-                    throw new RuntimeException("Cannot update variable: " + variable);
-                }
-            }
-            case Value.ArrayValue arrayValue -> {
-                if (access instanceof AccessPoint.Index indexAccess) {
-                    final Expression indexExpression = indexAccess.expression();
-                    final MemorySegment newData = MemorySegment.allocateNative(arrayValue.data().byteSize(), SegmentScope.auto());
-                    newData.copyFrom(arrayValue.data());
-                    final Value indexExpr = executor.evaluate(indexExpression, null);
-                    final long index = ((Value.IntegerLiteral) indexExpr).value() * ValueType.sizeOf(arrayValue.arrayType().type());
-                    final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.arrayType().type());
-                    ValueCompute.assignArrayBuffer(type, updated, newData, index);
-                    yield new Value.ArrayValue(arrayValue.arrayType(), newData);
+                    yield new Value.Array(array.arrayType(), newParams);
                 } else {
                     throw new RuntimeException("Cannot update variable: " + variable);
                 }

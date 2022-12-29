@@ -2,6 +2,7 @@ package org.click;
 
 import org.click.interpreter.VM;
 import org.click.value.Value;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -484,6 +485,23 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void arrayFilter() {
+        assertProgram(new Value.Array(new Type.Array(Type.INT, 3), List.of(
+                        new Value.IntegerLiteral(Type.INT, 3),
+                        new Value.IntegerLiteral(Type.INT, 4),
+                        new Value.IntegerLiteral(Type.INT, 5))
+                ),
+                """
+                        main :: () []int {
+                          array := [5]int {1, 2, 3, 4, 5};
+                          array = array where @ > 2;
+                          return array;
+                        }
+                        """);
+    }
+
+    @Test
+    @Disabled
     public void arrayTransmute() {
         assertProgram(new Value.IntegerLiteral(Type.I16, 256),
                 """

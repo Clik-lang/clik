@@ -23,8 +23,8 @@ public final class Intrinsics {
             entry("open_server", Intrinsics::openServer),
             entry("connect_server", Intrinsics::connectServer),
             entry("accept_client", Intrinsics::acceptClient),
-            entry("recv", Intrinsics::recv),
-            entry("send", Intrinsics::send),
+            //entry("recv", Intrinsics::recv),
+            //entry("send", Intrinsics::send),
             entry("close", Intrinsics::close)
     );
 
@@ -91,48 +91,48 @@ public final class Intrinsics {
         }
     }
 
-    public static Value recv(Executor executor, List<Value> evaluated) {
-        if (!(evaluated.get(0) instanceof Value.JavaObject javaObject &&
-                javaObject.object() instanceof SocketChannel socketChannel)) {
-            throw new RuntimeException("Expected socket, got " + evaluated.get(0));
-        }
-        if (!(evaluated.get(1) instanceof Value.ArrayValue arrayValue)) {
-            throw new RuntimeException("Expected array, got " + evaluated.get(1));
-        }
-        try {
-            final MemorySegment data = arrayValue.data();
-            final ByteBuffer buffer = data.asByteBuffer();
-            final int length = socketChannel.read(buffer);
-            if (length > 0) {
-                return new Value.Struct("RecvResult", Map.of(
-                        "length", new Value.IntegerLiteral(Type.INT, length),
-                        "success", new Value.BooleanLiteral(true)
-                ));
-            }
-        } catch (IOException ignored) {
-        }
-        return new Value.Struct("RecvResult", Map.of(
-                "length", new Value.IntegerLiteral(Type.INT, 0),
-                "success", new Value.BooleanLiteral(false)
-        ));
-    }
-
-    public static Value send(Executor executor, List<Value> evaluated) {
-        if (!(evaluated.get(0) instanceof Value.JavaObject javaObject &&
-                javaObject.object() instanceof SocketChannel socketChannel)) {
-            throw new RuntimeException("Expected client, got " + evaluated.get(0));
-        }
-        final Value.ArrayValue arrayValue = (Value.ArrayValue) evaluated.get(1);
-        final Value.IntegerLiteral lengthValue = (Value.IntegerLiteral) evaluated.get(2);
-        final MemorySegment data = arrayValue.data();
-        try {
-            final ByteBuffer buffer = data.asByteBuffer().limit((int) lengthValue.value());
-            socketChannel.write(buffer);
-            return new Value.BooleanLiteral(true);
-        } catch (IOException e) {
-            return new Value.BooleanLiteral(false);
-        }
-    }
+    //public static Value recv(Executor executor, List<Value> evaluated) {
+    //    if (!(evaluated.get(0) instanceof Value.JavaObject javaObject &&
+    //            javaObject.object() instanceof SocketChannel socketChannel)) {
+    //        throw new RuntimeException("Expected socket, got " + evaluated.get(0));
+    //    }
+    //    if (!(evaluated.get(1) instanceof Value.ArrayValue arrayValue)) {
+    //        throw new RuntimeException("Expected array, got " + evaluated.get(1));
+    //    }
+    //    try {
+    //        final MemorySegment data = arrayValue.data();
+    //        final ByteBuffer buffer = data.asByteBuffer();
+    //        final int length = socketChannel.read(buffer);
+    //        if (length > 0) {
+    //            return new Value.Struct("RecvResult", Map.of(
+    //                    "length", new Value.IntegerLiteral(Type.INT, length),
+    //                    "success", new Value.BooleanLiteral(true)
+    //            ));
+    //        }
+    //    } catch (IOException ignored) {
+    //    }
+    //    return new Value.Struct("RecvResult", Map.of(
+    //            "length", new Value.IntegerLiteral(Type.INT, 0),
+    //            "success", new Value.BooleanLiteral(false)
+    //    ));
+    //}
+//
+    //public static Value send(Executor executor, List<Value> evaluated) {
+    //    if (!(evaluated.get(0) instanceof Value.JavaObject javaObject &&
+    //            javaObject.object() instanceof SocketChannel socketChannel)) {
+    //        throw new RuntimeException("Expected client, got " + evaluated.get(0));
+    //    }
+    //    final Value.ArrayValue arrayValue = (Value.ArrayValue) evaluated.get(1);
+    //    final Value.IntegerLiteral lengthValue = (Value.IntegerLiteral) evaluated.get(2);
+    //    final MemorySegment data = arrayValue.data();
+    //    try {
+    //        final ByteBuffer buffer = data.asByteBuffer().limit((int) lengthValue.value());
+    //        socketChannel.write(buffer);
+    //        return new Value.BooleanLiteral(true);
+    //    } catch (IOException e) {
+    //        return new Value.BooleanLiteral(false);
+    //    }
+    //}
 
     public static Value close(Executor executor, List<Value> evaluated) {
         if (evaluated.size() != 1) throw new RuntimeException("Expected 1 argument, got " + evaluated.size());

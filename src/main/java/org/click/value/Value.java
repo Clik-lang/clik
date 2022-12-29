@@ -4,7 +4,6 @@ import org.click.Type;
 import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.foreign.MemorySegment;
 import java.util.List;
 
 import static org.click.Ast.Parameter;
@@ -91,15 +90,9 @@ public sealed interface Value {
     record Union(String name, Value value) implements Value {
     }
 
-    record ArrayRef(Type.Array arrayType, List<Value> elements) implements Value {
-        public ArrayRef {
+    record Array(Type.Array arrayType, List<Value> elements) implements Value {
+        public Array {
             elements = java.util.List.copyOf(elements);
-        }
-    }
-
-    record ArrayValue(Type.Array arrayType, MemorySegment data) implements Value {
-        public ArrayValue {
-            data = data.asReadOnly();
         }
     }
 

@@ -22,6 +22,9 @@ public interface Ast {
         record Variable(String name) implements Expression {
         }
 
+        record Contextual() implements Expression {
+        }
+
         record Access(Expression object, List<AccessPoint> accessPoints) implements Expression {
         }
 
@@ -107,6 +110,9 @@ public interface Ast {
         }
 
         record Index(Expression expression, @Nullable Type transmuteType) implements AccessPoint {
+        }
+
+        record Constraint(Expression expression) implements AccessPoint {
         }
     }
 }

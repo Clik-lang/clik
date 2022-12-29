@@ -6,9 +6,7 @@ import org.click.Type;
 import org.click.value.Value;
 import org.click.value.ValueCompute;
 import org.click.value.ValueOperator;
-import org.click.value.ValueType;
 
-import java.lang.foreign.MemorySegment;
 import java.util.*;
 
 import static org.click.Ast.*;
@@ -16,6 +14,7 @@ import static org.click.Ast.*;
 public final class Evaluator {
     private final Executor executor;
     private final ScopeWalker<Value> walker;
+    private Value contextual;
 
     private final EvaluatorSelect evaluatorSelect;
 
@@ -64,6 +63,7 @@ public final class Evaluator {
                 }
                 yield value;
             }
+            case Expression.Contextual ignored -> this.contextual;
             case Expression.Access access -> {
                 final Value expression = evaluate(access.object(), null);
                 Value result = expression;
@@ -83,31 +83,33 @@ public final class Evaluator {
                             if (value == null) throw new RuntimeException("Enum entry not found: " + component);
                             yield value;
                         }
-                        case Value.ArrayRef arrayRef -> {
-                            if (!(accessPoint instanceof AccessPoint.Index indexAccess))
+                        case Value.Array array -> {
+                            if (accessPoint instanceof AccessPoint.Index indexAccess) {
+                                final Value index = evaluate(indexAccess.expression(), null);
+                                if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
+                                    throw new RuntimeException("Expected constant, got: " + index);
+                                }
+                                final int integer = (int) integerLiteral.value();
+                                final List<Value> content = array.elements();
+                                if (integer < 0 || integer >= content.size())
+                                    throw new RuntimeException("Index out of bounds: " + integer + " in " + content + " -> " + indexAccess.expression());
+                                yield content.get(integer);
+                            } else if (accessPoint instanceof AccessPoint.Constraint constraintAccess) {
+                                List<Value> filtered = new ArrayList<>();
+                                for (Value element : array.elements()) {
+                                    this.contextual = element;
+                                    final Value condition = evaluate(constraintAccess.expression(), null);
+                                    if (!(condition instanceof Value.BooleanLiteral booleanLiteral)) {
+                                        throw new RuntimeException("Expected constant, got: " + condition);
+                                    }
+                                    if (booleanLiteral.value()) filtered.add(element);
+                                }
+                                this.contextual = null;
+                                final Type.Array arrayType = new Type.Array(array.arrayType().type(), filtered.size());
+                                yield new Value.Array(arrayType, filtered);
+                            } else {
                                 throw new RuntimeException("Invalid array access: " + access);
-                            final Value index = evaluate(indexAccess.expression(), null);
-                            if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
-                                throw new RuntimeException("Expected constant, got: " + index);
                             }
-                            final int integer = (int) integerLiteral.value();
-                            final List<Value> content = arrayRef.elements();
-                            if (integer < 0 || integer >= content.size())
-                                throw new RuntimeException("Index out of bounds: " + integer + " in " + content);
-                            yield content.get(integer);
-                        }
-                        case Value.ArrayValue arrayValue -> {
-                            if (!(accessPoint instanceof AccessPoint.Index indexAccess))
-                                throw new RuntimeException("Invalid array access: " + access);
-                            final Value indexValue = evaluate(indexAccess.expression(), null);
-                            if (!(indexValue instanceof Value.IntegerLiteral integerLiteral))
-                                throw new RuntimeException("Expected constant, got: " + indexValue);
-                            final long index = integerLiteral.value() * ValueType.sizeOf(arrayValue.arrayType().type());
-                            final Type type = Objects.requireNonNullElse(indexAccess.transmuteType(), arrayValue.arrayType().type());
-                            final MemorySegment data = arrayValue.data();
-                            if (index < 0 || index >= data.byteSize())
-                                throw new RuntimeException("Index out of bounds: " + index + " in " + data.byteSize());
-                            yield ValueCompute.lookupArrayBuffer(type, data, index);
                         }
                         default -> throw new RuntimeException("Expected struct, got: " + expression);
                     };
@@ -193,7 +195,7 @@ public final class Evaluator {
                 for (long i = startValue; i < endValue; i += stepValue) {
                     values.add(new Value.IntegerLiteral(Type.INT, i));
                 }
-                yield new Value.ArrayRef(new Type.Array(Type.INT, values.size()), values);
+                yield new Value.Array(new Type.Array(Type.INT, values.size()), values);
             }
             case Expression.Binary binary -> {
                 final Value left = evaluate(binary.left(), explicitType);
