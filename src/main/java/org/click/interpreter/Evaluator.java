@@ -56,11 +56,6 @@ public final class Evaluator {
                 }
                 yield new Value.EnumDecl(type, evaluated);
             }
-            case Expression.Distinct distinct -> {
-                final Type type = distinct.type();
-                final Expression constraint = distinct.constraint();
-                yield new Value.DistinctDecl(type, constraint);
-            }
             case Expression.Variable variable -> {
                 final String name = variable.name();
                 final Value value = walker.find(name);

@@ -203,7 +203,7 @@ public final class Parser {
             final Type type = nextType();
             consume(WHERE, "Expected 'where' after distinct type.");
             final Expression constraint = nextExpression();
-            return new Expression.Distinct(type, constraint);
+            return new Expression.Constant(new Value.DistinctDecl(type, constraint));
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.literal().value();

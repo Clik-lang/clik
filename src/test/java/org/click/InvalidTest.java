@@ -1,6 +1,9 @@
 package org.click;
 
+import org.click.interpreter.VM;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -49,12 +52,23 @@ public class InvalidTest {
                 """);
     }
 
+    @Test
+    public void distinct() {
+        assertInvalidProgram("""
+                positive_int :: distinct int where @ > 1;
+                main :: () positive_int {
+                  return 1;
+                }
+                """);
+    }
+
     private static void assertInvalidProgram(String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
         try {
-            //var program = new Compiler(statements).compile();
-            //fail("Expected compilation to fail: " + program);
+            var interpreter = new VM(null, statements);
+            interpreter.interpret("main", List.of());
+            fail("Expected compilation to fail.");
         } catch (RuntimeException ignored) {
         }
     }
