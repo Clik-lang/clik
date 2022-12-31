@@ -735,6 +735,17 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void typeConstraint() {
+        assertProgram(TWO,
+                """
+                        positive_int :: distinct int where @ > 0;
+                        main :: () positive_int {
+                          return 2;
+                        }
+                        """);
+    }
+
+    @Test
     public void enumDecl() {
         assertProgram(ZERO,
                 """

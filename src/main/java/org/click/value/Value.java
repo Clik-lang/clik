@@ -1,5 +1,6 @@
 package org.click.value;
 
+import org.click.Ast;
 import org.click.Type;
 import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
@@ -41,6 +42,9 @@ public sealed interface Value {
     }
 
     record UnionDecl(java.util.Map<String, @Nullable StructDecl> entries) implements Value {
+    }
+
+    record DistinctDecl(Type type, Ast.Expression constraint) implements Value {
     }
 
     // VALUES

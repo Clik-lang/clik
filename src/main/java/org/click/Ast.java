@@ -19,6 +19,9 @@ public interface Ast {
         record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
         }
 
+        record Distinct(Type type, Expression constraint) implements Expression {
+        }
+
         record Variable(String name) implements Expression {
         }
 

@@ -29,7 +29,8 @@ public final class Scanner {
             entry("struct", Token.Type.STRUCT),
             entry("enum", Token.Type.ENUM),
             entry("union", Token.Type.UNION),
-            entry("where", Token.Type.WHERE)
+            entry("where", Token.Type.WHERE),
+            entry("distinct", Token.Type.DISTINCT)
     );
 
     public Scanner(String input) {

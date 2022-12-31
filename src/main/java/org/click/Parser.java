@@ -199,6 +199,11 @@ public final class Parser {
             return nextEnum();
         } else if (check(UNION)) {
             return new Expression.Constant(nextUnion());
+        } else if (match(DISTINCT)) {
+            final Type type = nextType();
+            consume(WHERE, "Expected 'where' after distinct type.");
+            final Expression constraint = nextExpression();
+            return new Expression.Distinct(type, constraint);
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.literal().value();
