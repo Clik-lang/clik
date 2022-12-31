@@ -496,6 +496,18 @@ public final class IntegrationTest {
                           return filtered;
                         }
                         """);
+        assertProgram(new Value.Array(new Type.Array(Type.of("Point"), -1), List.of(
+                        new Value.Struct("Point", Map.of("x", new Value.IntegerLiteral(Type.INT, 3), "y", new Value.IntegerLiteral(Type.INT, 4))),
+                        new Value.Struct("Point", Map.of("x", new Value.IntegerLiteral(Type.INT, 5), "y", new Value.IntegerLiteral(Type.INT, 6)))
+                )),
+                """
+                        Point :: struct {x: int, y: int}
+                        main :: () []int {
+                          array := [3]Point {{1,2}, {3,4}, {5,6}};
+                          filtered :: array where @.x > 2;
+                          return filtered;
+                        }
+                        """);
     }
 
     @Test

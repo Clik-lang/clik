@@ -228,7 +228,13 @@ public final class Parser {
             final Expression expression = nextExpression();
             return new Expression.Unary(EXCLAMATION, expression);
         } else if (match(AT)) {
-            return new Expression.Contextual();
+            final Expression.Contextual contextual = new Expression.Contextual();
+            if (check(DOT) || check(LEFT_BRACKET)) {
+                final List<AccessPoint> accessPoint = nextAccessPoint();
+                return new Expression.Access(contextual, accessPoint);
+            } else {
+                return contextual;
+            }
         } else if (check(IDENTIFIER) && checkNext(DOT)) {
             // Field
             final Token identifier = advance();
