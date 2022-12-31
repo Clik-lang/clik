@@ -235,32 +235,25 @@ public final class Executor {
             case Statement.Assign assign -> {
                 final List<Statement.Assign.Target> assignTargets = assign.targets();
                 final int count = assignTargets.size();
+                Type explicitType = null;
                 if (count == 1) {
                     final Statement.Assign.Target target = assignTargets.get(0);
                     final String name = target.name();
+                    final Value targetValue = evaluate(new Expression.Access(new Expression.Variable(name), target.accessPoints()), null);
+                    explicitType = ValueType.extractAssignmentType(targetValue);
+                }
+                final Value evaluated = interpreter.evaluate(assign.expression(), explicitType);
+                if (evaluated instanceof Value.Interrupt) yield evaluated;
+                for (int i = 0; i < count; i++) {
+                    final Statement.Assign.Target target = assignTargets.get(i);
+                    final String name = target.name();
                     final Value tracked = walker.find(name);
                     assert tracked != null : "Variable not found: " + name;
-                    final Value targetValue = evaluate(new Expression.Access(new Expression.Variable(name), target.accessPoints()), null);
-                    final Type variableType = ValueType.extractAssignmentType(targetValue);
-                    final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
-                    if (evaluated instanceof Value.Interrupt) yield evaluated;
-                    final Value updatedVariable = ValueCompute.updateVariable(this, tracked, target.accessPoints(), evaluated);
+                    final Value deconstructed = count > 1 ? ValueCompute.deconstruct(walker, evaluated, i) : evaluated;
+                    final Value updatedVariable = ValueCompute.updateVariable(this, tracked, target.accessPoints(), deconstructed);
                     walker.update(name, updatedVariable);
                     var sharedMutation = sharedMutations.get(name);
                     if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
-                } else {
-                    final Value evaluated = interpreter.evaluate(assign.expression(), null);
-                    if (evaluated instanceof Value.Interrupt) yield evaluated;
-                    for (int i = 0; i < count; i++) {
-                        final Statement.Assign.Target target = assignTargets.get(i);
-                        final String name = target.name();
-                        final Value tracked = walker.find(name);
-                        final Value deconstructed = ValueCompute.deconstruct(walker, evaluated, i);
-                        final Value updatedVariable = ValueCompute.updateVariable(this, tracked, target.accessPoints(), deconstructed);
-                        walker.update(name, updatedVariable);
-                        var sharedMutation = sharedMutations.get(name);
-                        if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
-                    }
                 }
                 yield null;
             }
