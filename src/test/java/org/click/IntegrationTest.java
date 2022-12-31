@@ -475,7 +475,7 @@ public final class IntegrationTest {
                         new Value.IntegerLiteral(Type.INT, 5))
                 ),
                 """
-                        main :: () []int {
+                        main :: () [5]int {
                           array := [5]int @ + 1;
                           return array;
                         }

@@ -88,7 +88,7 @@ public sealed interface Value {
         }
     }
 
-    record Enum(String name, String enumName) implements Value {
+    record Enum(String name, String entry) implements Value {
     }
 
     record Union(String name, Value value) implements Value {

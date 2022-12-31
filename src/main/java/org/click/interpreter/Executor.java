@@ -178,20 +178,19 @@ public final class Executor {
     }
 
     public void registerMulti(List<String> names, DeclarationType declarationType, Value value) {
-        final boolean isShared = declarationType == DeclarationType.SHARED;
-        if (names.size() == 1) {
-            // Single return
-            final String name = names.get(0);
-            walker.register(name, value);
-            if (isShared) this.sharedMutations.put(name, new SharedMutation(value));
-        } else {
-            // Multiple return
-            for (int i = 0; i < names.size(); i++) {
-                final String name = names.get(i);
-                final Value deconstructed = ValueCompute.deconstruct(walker, value, i);
-                walker.register(name, deconstructed);
-                if (isShared) this.sharedMutations.put(name, new SharedMutation(value));
+        if (value instanceof Value.FunctionDecl || value instanceof Value.StructDecl ||
+                value instanceof Value.EnumDecl || value instanceof Value.UnionDecl) {
+            if (declarationType != DeclarationType.CONSTANT) {
+                throw new RuntimeException("Type declaration must be constant");
             }
+        }
+        for (int i = 0; i < names.size(); i++) {
+            final String name = names.get(i);
+            if (walker.find(name) != null)
+                throw new RuntimeException("Variable already declared: " + name);
+            final Value deconstructed = names.size() > 1 ? ValueCompute.deconstruct(walker, value, i) : value;
+            walker.register(name, deconstructed);
+            if (declarationType == DeclarationType.SHARED) this.sharedMutations.put(name, new SharedMutation(value));
         }
     }
 

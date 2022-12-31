@@ -106,7 +106,8 @@ public final class Evaluator {
                                     if (booleanLiteral.value()) filtered.add(element);
                                 }
                                 this.contextual = null;
-                                final Type.Array arrayType = new Type.Array(array.arrayType().type(), filtered.size());
+                                // Lose length information
+                                final Type.Array arrayType = new Type.Array(array.arrayType().type(), -1);
                                 yield new Value.Array(arrayType, filtered);
                             } else {
                                 throw new RuntimeException("Invalid array access: " + access);
@@ -229,8 +230,8 @@ public final class Evaluator {
                 yield new Value.Array(new Type.Array(Type.INT, values.size()), values);
             }
             case Expression.Binary binary -> {
-                final Value left = evaluate(binary.left(), explicitType);
-                final Value right = evaluate(binary.right(), explicitType);
+                final Value left = evaluate(binary.left(), null);
+                final Value right = evaluate(binary.right(), null);
                 yield ValueOperator.operate(binary.operator(), left, right);
             }
             case Expression.Unary unary -> {
@@ -254,10 +255,12 @@ public final class Evaluator {
             // No type defined, use inferred type
             return value;
         }
-        if (target instanceof Type.Primitive) {
-            // Primitive type, no conversion needed
-            // TODO: downcast
-            return value;
+        if (target instanceof Type.Array targetArray && value instanceof Value.Array arrayValue) {
+            final Type.Array valueArray = arrayValue.arrayType();
+            if (valueArray.length() != -1 && targetArray.length() == -1) {
+                // Lose length information
+                value = new Value.Array(new Type.Array(valueArray.type(), -1), arrayValue.elements());
+            }
         }
         if (target instanceof Type.Identifier identifier) {
             final String name = identifier.name();
@@ -271,8 +274,9 @@ public final class Evaluator {
             // Enum cast
             if (trackedType instanceof Value.EnumDecl enumDecl && !(value instanceof Value.Enum)) {
                 final Map<String, Value> entries = enumDecl.entries();
+                Value finalValue = value;
                 final String enumName = entries.entrySet().stream()
-                        .filter(entry -> entry.getValue().equals(value))
+                        .filter(entry -> entry.getValue().equals(finalValue))
                         .findFirst()
                         .orElseThrow()
                         .getKey();
@@ -290,6 +294,9 @@ public final class Evaluator {
                 return casted;
             }
         }
+        // TODO: Check if value is assignable to target
+        //final Type extractedType = ValueType.extractAssignmentType(value);
+        //if (!extractedType.equals(target)) throw new RuntimeException("Expected type " + target + ", got " + extractedType);
         // Valid type, no conversion needed
         return value;
     }

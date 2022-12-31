@@ -41,8 +41,13 @@ public final class ValueType {
             case Value.FloatLiteral floatLiteral -> floatLiteral.type();
             case Value.BooleanLiteral ignored -> Type.BOOL;
             case Value.StringLiteral ignored -> Type.STRING;
+            case Value.RuneLiteral ignored -> Type.RUNE;
             case Value.Struct struct -> Type.of(struct.name());
+            case Value.Enum en -> Type.of(en.name());
+            case Value.Union union -> Type.of(union.name());
             case Value.Array array -> array.arrayType();
+            case Value.FunctionDecl functionDecl ->
+                    new Type.Function(functionDecl.parameters(), functionDecl.returnType());
             default -> throw new RuntimeException("Unknown type: " + expression);
         };
     }
