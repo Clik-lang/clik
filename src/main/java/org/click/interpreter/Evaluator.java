@@ -4,10 +4,11 @@ import org.click.ScopeWalker;
 import org.click.Token;
 import org.click.Type;
 import org.click.value.Value;
-import org.click.value.ValueCompute;
 import org.click.value.ValueOperator;
+import org.click.value.ValueType;
 
 import java.util.*;
+import java.util.stream.LongStream;
 
 import static org.click.Ast.*;
 
@@ -172,8 +173,38 @@ public final class Evaluator {
                         }
                         yield new Value.Struct(name, evaluated);
                     }
-                    case Type.Array arrayType ->
-                            ValueCompute.computeArray(executor, arrayType, ((Parameter.Passed.Positional) passed).expressions());
+                    case Type.Array arrayType -> {
+                        final long length = arrayType.length();
+                        final List<Value> values = switch (passed) {
+                            case Parameter.Passed.Positional positional -> {
+                                final List<Expression> expressions = positional.expressions();
+                                final Type elementType = arrayType.type();
+                                final List<Value> evaluated;
+                                if (!expressions.isEmpty()) {
+                                    // Initialized array
+                                    evaluated = expressions.stream()
+                                            .map(expression -> executor.evaluate(expression, elementType)).toList();
+                                } else {
+                                    // Default value
+                                    final Value defaultValue = ValueType.defaultValue(elementType);
+                                    evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
+                                }
+                                yield evaluated;
+                            }
+                            case Parameter.Passed.Supplied supplied -> {
+                                final List<Value> evaluated = new ArrayList<>();
+                                for (int i = 0; i < length; i++) {
+                                    this.contextual = new Value.IntegerLiteral(Type.INT, i);
+                                    final Value value = evaluate(supplied.expression(), null);
+                                    evaluated.add(value);
+                                    this.contextual = null;
+                                }
+                                yield evaluated;
+                            }
+                            default -> throw new RuntimeException("Invalid array initialization: " + initialization);
+                        };
+                        yield new Value.Array(arrayType, values);
+                    }
                     default ->
                             throw new RuntimeException("Invalid initialization: " + initialization + " " + explicitType);
                 };

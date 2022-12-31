@@ -466,6 +466,23 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void arrayLazy() {
+        assertProgram(new Value.Array(new Type.Array(Type.INT, 5), List.of(
+                        new Value.IntegerLiteral(Type.INT, 1),
+                        new Value.IntegerLiteral(Type.INT, 2),
+                        new Value.IntegerLiteral(Type.INT, 3),
+                        new Value.IntegerLiteral(Type.INT, 4),
+                        new Value.IntegerLiteral(Type.INT, 5))
+                ),
+                """
+                        main :: () []int {
+                          array := [5]int @ + 1;
+                          return array;
+                        }
+                        """);
+    }
+
+    @Test
     public void arrayFilter() {
         assertProgram(new Value.Array(new Type.Array(Type.INT, 3), List.of(
                         new Value.IntegerLiteral(Type.INT, 3),

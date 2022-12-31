@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.LongStream;
 
 import static org.click.Ast.AccessPoint;
 import static org.click.Ast.Expression;
@@ -126,22 +125,6 @@ public final class ValueCompute {
         } else {
             throw new RuntimeException("Unknown type: " + type);
         }
-    }
-
-    public static Value computeArray(Executor executor, Type.Array arrayType, List<Expression> expressions) {
-        final Type elementType = arrayType.type();
-        final long length = arrayType.length();
-        final List<Value> evaluated;
-        if (!expressions.isEmpty()) {
-            // Initialized array
-            evaluated = expressions.stream()
-                    .map(expression -> executor.evaluate(expression, elementType)).toList();
-        } else {
-            // Default value
-            final Value defaultValue = ValueType.defaultValue(elementType);
-            evaluated = LongStream.range(0, length).mapToObj(i -> defaultValue).toList();
-        }
-        return new Value.Array(arrayType, evaluated);
     }
 
     public static Value deconstruct(ScopeWalker<Value> walker, Value expression, int index) {

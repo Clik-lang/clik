@@ -285,13 +285,19 @@ public final class Parser {
         } else if (check(LEFT_BRACKET)) {
             final Type.Array type = (Type.Array) nextType();
             assert type != null;
-            if (!check(LEFT_BRACE)) {
+            if (check(LEFT_BRACE)) {
+                // Array initialization
+                final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
+                assert type.length() == passed.expressions().size() : "Array length does not match passed parameters.";
+                return new Expression.Initialization(type, passed);
+            }
+            if (check(SEMICOLON)) {
                 // Empty array
                 return new Expression.Initialization(type, new Parameter.Passed.Positional(List.of()));
             }
-            final Parameter.Passed.Positional passed = nextPassedParameters(Parameter.Passed.Positional.class);
-            assert type.length() == passed.expressions().size() : "Array length does not match passed parameters.";
-            return new Expression.Initialization(type, passed);
+            // Array function
+            final Expression expression = nextExpression();
+            return new Expression.Initialization(type, new Parameter.Passed.Supplied(expression));
         } else if (check(LEFT_BRACE)) {
             // Inline block
             final Parameter.Passed passed = nextPassedParameters(null);
