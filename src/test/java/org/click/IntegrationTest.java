@@ -484,7 +484,7 @@ public final class IntegrationTest {
 
     @Test
     public void arrayFilter() {
-        assertProgram(new Value.Array(new Type.Array(Type.INT, 3), List.of(
+        assertProgram(new Value.Array(new Type.Array(Type.INT, -1), List.of(
                         new Value.IntegerLiteral(Type.INT, 3),
                         new Value.IntegerLiteral(Type.INT, 4),
                         new Value.IntegerLiteral(Type.INT, 5))
@@ -492,8 +492,8 @@ public final class IntegrationTest {
                 """
                         main :: () []int {
                           array := [5]int {1, 2, 3, 4, 5};
-                          array = array where @ > 2;
-                          return array;
+                          filtered :: array where @ > 2;
+                          return filtered;
                         }
                         """);
     }
@@ -1201,7 +1201,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
-                        main :: () int {
+                        main :: () Point {
                           Point :: struct {x: int, y: int}
                           value :Point: select {
                             -> {1, 2};

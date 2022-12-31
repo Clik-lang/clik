@@ -24,6 +24,47 @@ public class InvalidTest {
     }
 
     @Test
+    public void invalidType() {
+        assertInvalidProgram("""
+                main :: () int {
+                  value :int: "string";
+                  return 1;
+                }
+                """);
+        assertInvalidProgram("""
+                main :: () int {
+                  value :int: "string";
+                  return value;
+                }
+                """);
+        assertInvalidProgram("""
+                Point :: struct {x: int, y: int}
+                main :: () Point {
+                  value :Point: "string";
+                  return value;
+                }
+                """);
+        assertInvalidProgram("""
+                Point :: struct {x: int, y: int}
+                main :: () Point {
+                  value :int: Point {.x: 1, .y: 2};
+                  return value;
+                }
+                """);
+    }
+
+    @Test
+    public void alreadyDeclared() {
+        assertInvalidProgram("""
+                main :: () int {
+                  value :: 5;
+                  value :: 5;
+                  return value;
+                }
+                """);
+    }
+
+    @Test
     public void mutableType() {
         assertInvalidProgram("""
                 main := () {}
