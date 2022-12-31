@@ -671,6 +671,17 @@ public final class IntegrationTest {
                         }
                         """);
 
+        assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
+                """
+                        Player :: struct {name: string, point: Point}
+                        Point :: struct {x: int, y: int}
+                        main :: () Point {
+                            player := Player {"test", {3, 4}};
+                            player.point = {1, 2};
+                            return player.point;
+                        }
+                        """);
+
         assertProgram(TWO,
                 """
                         Player :: struct {name: string, point: Point}

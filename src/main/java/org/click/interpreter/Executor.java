@@ -240,7 +240,8 @@ public final class Executor {
                     final String name = target.name();
                     final Value tracked = walker.find(name);
                     assert tracked != null : "Variable not found: " + name;
-                    final Type variableType = ValueType.extractAssignmentType(tracked);
+                    final Value targetValue = evaluate(new Expression.Access(new Expression.Variable(name), target.accessPoints()), null);
+                    final Type variableType = ValueType.extractAssignmentType(targetValue);
                     final Value evaluated = interpreter.evaluate(assign.expression(), variableType);
                     if (evaluated instanceof Value.Interrupt) yield evaluated;
                     final Value updatedVariable = ValueCompute.updateVariable(this, tracked, target.accessPoints(), evaluated);
