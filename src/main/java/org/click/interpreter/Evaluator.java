@@ -251,39 +251,51 @@ public final class Evaluator {
                 }
             }
         };
+        return cast(rawValue, explicitType);
+    }
 
-        if (explicitType == null) {
+    Value cast(Value value, Type target) {
+        if (target == null) {
             // No type defined, use inferred type
-            return rawValue;
+            return value;
         }
-        if (explicitType instanceof Type.Primitive) {
+        if (target instanceof Type.Primitive) {
             // Primitive type, no conversion needed
             // TODO: downcast
-            return rawValue;
+            return value;
         }
-
-        if (explicitType instanceof Type.Identifier identifier) {
+        if (target instanceof Type.Identifier identifier) {
             final String name = identifier.name();
             final Value trackedType = walker.find(name);
             // Union cast
-            if (trackedType instanceof Value.UnionDecl unionDecl && rawValue instanceof Value.Struct struct) {
+            if (trackedType instanceof Value.UnionDecl unionDecl && value instanceof Value.Struct struct) {
                 // Put struct in union wrapper
                 assert unionDecl.entries().containsKey(struct.name()) : "Struct not found in union: " + struct.name();
-                return new Value.Union(name, rawValue);
+                return new Value.Union(name, value);
             }
             // Enum cast
-            if (trackedType instanceof Value.EnumDecl enumDecl && !(rawValue instanceof Value.Enum)) {
+            if (trackedType instanceof Value.EnumDecl enumDecl && !(value instanceof Value.Enum)) {
                 final Map<String, Value> entries = enumDecl.entries();
                 final String enumName = entries.entrySet().stream()
-                        .filter(entry -> entry.getValue().equals(rawValue))
+                        .filter(entry -> entry.getValue().equals(value))
                         .findFirst()
                         .orElseThrow()
                         .getKey();
                 // Put struct in enum wrapper
                 return new Value.Enum(name, enumName);
             }
+            // Constrained type check
+            if (trackedType instanceof Value.DistinctDecl distinctDecl) {
+                final Value casted = cast(value, distinctDecl.type());
+                this.contextual = casted;
+                final Value.BooleanLiteral constraintResult = (Value.BooleanLiteral) evaluate(distinctDecl.constraint(), null);
+                this.contextual = null;
+                if (!constraintResult.value())
+                    throw new RuntimeException("Value does not satisfy constraint: " + value);
+                return casted;
+            }
         }
         // Valid type, no conversion needed
-        return rawValue;
+        return value;
     }
 }
