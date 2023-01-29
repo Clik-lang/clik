@@ -1,13 +1,10 @@
 package org.click.interpreter;
 
-import org.click.Type;
 import org.click.value.Value;
 import org.click.value.ValueSerializer;
 
 import java.io.IOException;
-import java.lang.foreign.MemorySegment;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
@@ -17,7 +14,7 @@ import java.util.function.BiFunction;
 import static java.util.Map.entry;
 
 public final class Intrinsics {
-    private static final Map<String, BiFunction<Executor, List<Value>, Value>> FUNCTIONS = Map.ofEntries(
+    public static final Map<String, BiFunction<Executor, List<Value>, Value>> FUNCTIONS = Map.ofEntries(
             entry("print", Intrinsics::print),
             entry("sleep", Intrinsics::sleep),
             entry("open_server", Intrinsics::openServer),

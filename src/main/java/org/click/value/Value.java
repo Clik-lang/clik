@@ -13,6 +13,12 @@ import static org.click.Ast.Statement;
 public sealed interface Value {
     // DECLARATIONS
 
+    record ExternFunctionDecl(List<Parameter> parameters, Type returnType) implements Value {
+        public ExternFunctionDecl {
+            parameters = List.copyOf(parameters);
+        }
+    }
+
     record FunctionDecl(List<Parameter> parameters, Type returnType, List<Statement> body,
                         @Nullable Executor lambdaExecutor) implements Value {
         public FunctionDecl {

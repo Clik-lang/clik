@@ -118,7 +118,7 @@ public final class Executor {
 
     public Executor fork(boolean async, boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
-        final VM.Context context = new VM.Context(this.context.directory(), copy);
+        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals());
         final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
         copy.enterBlock();
         this.walker.currentScope().tracked().forEach(copy::register);
@@ -321,11 +321,6 @@ public final class Executor {
                         final List<Token> tokens = new Scanner(source).scanTokens();
                         final List<Statement> statements = new Parser(tokens).parse();
                         interpretGlobal(statements);
-                    }
-                    case Directive.Statement.Intrinsic ignored -> {
-                        final CurrentFunction currentFunction = this.currentFunction;
-                        assert currentFunction != null : "Intrinsic outside of function";
-                        yield Intrinsics.evaluate(this, currentFunction.name(), currentFunction.evaluatedParameters());
                     }
                 }
                 yield null;

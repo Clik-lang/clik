@@ -8,6 +8,7 @@ import org.click.value.ValueOperator;
 import org.click.value.ValueType;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.LongStream;
 
 import static org.click.Ast.*;
@@ -130,21 +131,41 @@ public final class Evaluator {
             }
             case Expression.Call call -> {
                 final String name = call.name();
-                final Value.FunctionDecl functionDecl = (Value.FunctionDecl) executor.walker().find(name);
-                assert functionDecl != null : "Function " + name + " not found";
-                final List<Parameter> params = functionDecl.parameters();
                 final List<Expression> expressions = ((Parameter.Passed.Positional) call.arguments()).expressions();
-                assert params.size() == expressions.size() : name + ": Expected " + params.size() + " arguments, got " + expressions.size();
+                final Value function = executor.walker().find(name);
+                assert function != null : "Function " + name + " not found";
+
+                final List<Type> types = switch (function) {
+                    case Value.FunctionDecl functionDecl ->
+                            functionDecl.parameters().stream().map(Parameter::type).toList();
+                    case Value.ExternFunctionDecl externFunctionDecl ->
+                            externFunctionDecl.parameters().stream().map(Parameter::type).toList();
+                    default -> throw new IllegalStateException("Unexpected value: " + function);
+                };
+                assert types.size() == expressions.size() : name + ": Expected " + types.size() + " arguments, got " + expressions.size();
+
                 List<Value> evaluated = new ArrayList<>();
                 for (int i = 0; i < expressions.size(); i++) {
-                    final Parameter param = params.get(i);
+                    final Type type = types.get(i);
                     final Expression expression = expressions.get(i);
-                    final Value value = executor.evaluate(expression, param.type());
+                    final Value value = executor.evaluate(expression, type);
                     evaluated.add(value);
                 }
-                final Executor callExecutor = Objects.requireNonNullElse(functionDecl.lambdaExecutor(), executor);
-                final Executor fork = callExecutor.fork(executor.async, executor.insideLoop);
-                yield fork.interpret(name, functionDecl, evaluated);
+
+                yield switch (function) {
+                    case Value.FunctionDecl functionDecl -> {
+                        final Executor callExecutor = Objects.requireNonNullElse(functionDecl.lambdaExecutor(), executor);
+                        final Executor fork = callExecutor.fork(executor.async, executor.insideLoop);
+                        yield fork.interpret(name, functionDecl, evaluated);
+                    }
+                    case Value.ExternFunctionDecl ignored -> {
+                        final Map<String, Function<List<Value>, Value>> functions = executor.context().externals();
+                        final Function<List<Value>, Value> builtin = functions.get(name);
+                        if (builtin == null) throw new RuntimeException("External function impl not found: " + name);
+                        yield builtin.apply(evaluated);
+                    }
+                    default -> throw new IllegalStateException("Unexpected value: " + function);
+                };
             }
             case Expression.Select select -> this.evaluatorSelect.evaluate(select, explicitType);
             case Expression.Initialization initialization -> {

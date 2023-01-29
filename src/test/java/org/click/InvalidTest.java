@@ -4,6 +4,7 @@ import org.click.interpreter.VM;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -107,7 +108,7 @@ public class InvalidTest {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
         try {
-            var interpreter = new VM(null, statements);
+            var interpreter = new VM(null, statements, Map.of());
             interpreter.interpret("main", List.of());
             fail("Expected compilation to fail.");
         } catch (RuntimeException ignored) {

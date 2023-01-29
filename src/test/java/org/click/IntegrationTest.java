@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,13 +41,6 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         main :: () int -> 0;
-                        """);
-
-        assertProgram(ZERO, "main_score",
-                """
-                        main_score :: () int {
-                            return 0;
-                        }
                         """);
     }
 
@@ -307,6 +301,18 @@ public final class IntegrationTest {
                           forward :: (a: int, b: int, function: (c: int, d: int) int) int -> function(a, b);
                           value :: forward(5, 6, add);
                           return value;
+                        }
+                        """);
+    }
+
+    @Test
+    public void external() {
+        assertProgram(TWO,
+                Map.of("get", values -> TWO),
+                """
+                        get :: () int;
+                        main :: () int {
+                          return get();
                         }
                         """);
     }
@@ -1424,14 +1430,14 @@ public final class IntegrationTest {
     }
 
     private static void assertProgram(Value expected, String input) {
-        assertProgram(expected, "main", input);
+        assertProgram(expected, Map.of(), input);
     }
 
-    private static void assertProgram(Value expected, String name, String input) {
+    private static void assertProgram(Value expected, Map<String, Function<List<Value>, Value>> externals, String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
-        var interpreter = new VM(null, statements);
-        var actual = interpreter.interpret(name, List.of());
+        var interpreter = new VM(null, statements, externals);
+        var actual = interpreter.interpret("main", List.of());
         interpreter.stop();
         assertEquals(expected, actual);
     }

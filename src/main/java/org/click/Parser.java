@@ -399,7 +399,7 @@ public final class Parser {
         return Type.of(identifier.input());
     }
 
-    Value.FunctionDecl nextFunction() {
+    Value nextFunction() {
         consume(LEFT_PAREN, "Expect '('.");
         final List<Parameter> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
@@ -416,6 +416,10 @@ public final class Parser {
         }
         consume(RIGHT_PAREN, "Expect ')'.");
         final Type returnType = Objects.requireNonNullElse(nextType(), Type.VOID);
+        if (match(SEMICOLON)) {
+            // External function
+            return new Value.ExternFunctionDecl(parameters, returnType);
+        }
         final List<Statement> body = nextBlock();
         return new Value.FunctionDecl(parameters, returnType, body, null);
     }
@@ -575,8 +579,6 @@ public final class Parser {
             final Token literal = consume(STRING_LITERAL, "Expect string literal.");
             final String path = (String) literal.literal().value();
             return new Directive.Statement.Load(path);
-        } else if (name.equals("intrinsic")) {
-            return new Directive.Statement.Intrinsic();
         } else {
             throw error("Unknown directive.");
         }
