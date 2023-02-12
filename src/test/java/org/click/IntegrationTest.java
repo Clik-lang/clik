@@ -1352,6 +1352,14 @@ public final class IntegrationTest {
                           return $shared;
                         }
                         """);
+        assertProgram(ONE,
+                """
+                        main :: () int {
+                          shared :~ 1;
+                          spawn shared = 1;
+                          return $shared;
+                        }
+                        """);
         assertProgram(TWO,
                 """
                         main :: () int {
