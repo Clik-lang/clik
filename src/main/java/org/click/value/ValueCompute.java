@@ -1,11 +1,9 @@
 package org.click.value;
 
 import org.click.ScopeWalker;
-import org.click.Type;
 import org.click.interpreter.Executor;
 
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,9 +51,9 @@ public final class ValueCompute {
 
     public static Value mergeDelta(Value initial, Value delta) {
         switch (initial) {
-            case Value.IntegerLiteral initialConstant when delta instanceof Value.IntegerLiteral nextConstant -> {
-                final long value = initialConstant.value() + nextConstant.value();
-                return new Value.IntegerLiteral(initialConstant.type(), value);
+            case Value.NumberLiteral initialConstant when delta instanceof Value.NumberLiteral nextConstant -> {
+                final BigDecimal value = initialConstant.value().add(nextConstant.value());
+                return new Value.NumberLiteral(initialConstant.type(), value);
             }
             case Value.BooleanLiteral initialConstant when delta instanceof Value.BooleanLiteral nextConstant -> {
                 final boolean value = initialConstant.value() || nextConstant.value();
@@ -67,63 +65,15 @@ public final class ValueCompute {
 
     public static Value delta(Value initial, Value next) {
         switch (initial) {
-            case Value.IntegerLiteral initialConstant when next instanceof Value.IntegerLiteral nextConstant -> {
-                final long delta = nextConstant.value() - initialConstant.value();
-                return new Value.IntegerLiteral(initialConstant.type(), delta);
+            case Value.NumberLiteral initialConstant when next instanceof Value.NumberLiteral nextConstant -> {
+                final BigDecimal delta = nextConstant.value().subtract(initialConstant.value());
+                return new Value.NumberLiteral(initialConstant.type(), delta);
             }
             case Value.BooleanLiteral initialConstant when next instanceof Value.BooleanLiteral nextConstant -> {
                 final boolean value = initialConstant.value() || nextConstant.value();
                 return new Value.BooleanLiteral(value);
             }
             default -> throw new RuntimeException("Unknown types: " + initial + " and " + next);
-        }
-    }
-
-    public static void assignArrayBuffer(Type type, Value value, MemorySegment segment, long index) {
-        if (value instanceof Value.IntegerLiteral literal) {
-            if (type == Type.I8) {
-                segment.set(ValueLayout.JAVA_BYTE, index, (byte) literal.value());
-            } else if (type == Type.I16) {
-                segment.set(ValueLayout.JAVA_SHORT_UNALIGNED, index, (short) literal.value());
-            } else if (type == Type.I32) {
-                segment.set(ValueLayout.JAVA_INT_UNALIGNED, index, (int) literal.value());
-            } else if (type == Type.I64) {
-                segment.set(ValueLayout.JAVA_LONG_UNALIGNED, index, literal.value());
-            } else if (type == Type.INT) {
-                segment.set(ValueLayout.JAVA_LONG_UNALIGNED, index, literal.value());
-            } else {
-                throw new RuntimeException("Unknown integer type: " + type);
-            }
-        } else if (value instanceof Value.FloatLiteral literal) {
-            if (type == Type.F32) {
-                segment.set(ValueLayout.JAVA_FLOAT_UNALIGNED, index, (float) literal.value());
-            } else if (type == Type.F64) {
-                segment.set(ValueLayout.JAVA_DOUBLE_UNALIGNED, index, literal.value());
-            } else {
-                throw new RuntimeException("Unknown float type: " + type);
-            }
-        } else {
-            throw new RuntimeException("Unknown type: " + value);
-        }
-    }
-
-    public static Value lookupArrayBuffer(Type type, MemorySegment data, long index) {
-        if (type == Type.I8) {
-            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_BYTE, index));
-        } else if (type == Type.I16) {
-            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_SHORT_UNALIGNED, index));
-        } else if (type == Type.I32) {
-            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_INT_UNALIGNED, index));
-        } else if (type == Type.I64) {
-            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_LONG_UNALIGNED, index));
-        } else if (type == Type.F32) {
-            return new Value.FloatLiteral(type, data.get(ValueLayout.JAVA_FLOAT_UNALIGNED, index));
-        } else if (type == Type.F64) {
-            return new Value.FloatLiteral(type, data.get(ValueLayout.JAVA_DOUBLE_UNALIGNED, index));
-        } else if (type == Type.INT) {
-            return new Value.IntegerLiteral(type, data.get(ValueLayout.JAVA_LONG_UNALIGNED, index));
-        } else {
-            throw new RuntimeException("Unknown type: " + type);
         }
     }
 
@@ -164,7 +114,7 @@ public final class ValueCompute {
                     final Expression indexExpression = indexAccess.expression();
                     final List<Value> newParams = new ArrayList<>(array.elements());
                     final Value index = executor.evaluate(indexExpression, null);
-                    final int targetIndex = (int) ((Value.IntegerLiteral) index).value();
+                    final int targetIndex = ((Value.NumberLiteral) index).value().intValue();
                     newParams.set(targetIndex, updated);
                     yield new Value.Array(array.arrayType(), newParams);
                 } else {

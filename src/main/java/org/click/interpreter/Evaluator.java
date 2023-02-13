@@ -88,10 +88,7 @@ public final class Evaluator {
                         case Value.Array array -> {
                             if (accessPoint instanceof AccessPoint.Index indexAccess) {
                                 final Value index = evaluate(indexAccess.expression(), null);
-                                if (!(index instanceof Value.IntegerLiteral integerLiteral)) {
-                                    throw new RuntimeException("Expected constant, got: " + index);
-                                }
-                                final int integer = (int) integerLiteral.value();
+                                final int integer = (int) ValueType.requireInteger(index);
                                 final List<Value> content = array.elements();
                                 if (integer < 0 || integer >= content.size())
                                     throw new RuntimeException("Index out of bounds: " + integer + " in " + content + " -> " + indexAccess.expression());
@@ -216,7 +213,7 @@ public final class Evaluator {
                             case Parameter.Passed.Supplied supplied -> {
                                 final List<Value> evaluated = new ArrayList<>();
                                 for (int i = 0; i < length; i++) {
-                                    this.contextual = new Value.IntegerLiteral(Type.INT, i);
+                                    this.contextual = new Value.NumberLiteral(Type.INT, i);
                                     final Value value = evaluate(supplied.expression(), null);
                                     evaluated.add(value);
                                     this.contextual = null;
@@ -235,18 +232,12 @@ public final class Evaluator {
                 final Value start = evaluate(init.start(), null);
                 final Value end = evaluate(init.end(), null);
                 final Value step = evaluate(init.step(), null);
-                if (!(start instanceof Value.IntegerLiteral startLiteral))
-                    throw new RuntimeException("Expected constant, got: " + start);
-                if (!(end instanceof Value.IntegerLiteral endLiteral))
-                    throw new RuntimeException("Expected constant, got: " + end);
-                if (!(step instanceof Value.IntegerLiteral stepLiteral))
-                    throw new RuntimeException("Expected constant, got: " + step);
-                final long startValue = startLiteral.value();
-                final long endValue = endLiteral.value();
-                final long stepValue = stepLiteral.value();
+                final long startValue = ValueType.requireInteger(start);
+                final long endValue = ValueType.requireInteger(end);
+                final long stepValue = ValueType.requireInteger(step);
                 final List<Value> values = new ArrayList<>();
                 for (long i = startValue; i < endValue; i += stepValue) {
-                    values.add(new Value.IntegerLiteral(Type.INT, i));
+                    values.add(new Value.NumberLiteral(Type.INT, i));
                 }
                 yield new Value.Array(new Type.Array(Type.INT, values.size()), values);
             }

@@ -9,8 +9,7 @@ import static org.click.Ast.Parameter;
 public final class ValueSerializer {
     public static String serialize(ScopeWalker<Value> walker, Value expression) {
         return switch (expression) {
-            case Value.IntegerLiteral integerLiteral -> String.valueOf(integerLiteral.value());
-            case Value.FloatLiteral floatLiteral -> String.valueOf(floatLiteral.value());
+            case Value.NumberLiteral numberLiteral -> String.valueOf(numberLiteral.value());
             case Value.BooleanLiteral booleanLiteral -> String.valueOf(booleanLiteral.value());
             case Value.StringLiteral stringLiteral -> stringLiteral.value();
             case Value.Struct struct -> {

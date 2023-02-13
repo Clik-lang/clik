@@ -152,6 +152,6 @@ public final class Intrinsics {
 
     private static int getInteger(List<Value> evaluated, int index) {
         final Value value = evaluated.get(index);
-        return (int) ((Value.IntegerLiteral) value).value();
+        return ((Value.NumberLiteral) value).value().intValue();
     }
 }

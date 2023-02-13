@@ -3,9 +3,11 @@ package org.click.value;
 import org.click.Token;
 import org.click.Type;
 
+import java.math.BigDecimal;
+
 public final class ValueOperator {
     public static Value operate(Token.Type operator, Value left, Value right) {
-        if (left instanceof Value.IntegerLiteral leftLiteral && right instanceof Value.IntegerLiteral rightLiteral) {
+        if (left instanceof Value.NumberLiteral leftLiteral && right instanceof Value.NumberLiteral rightLiteral) {
             assert leftLiteral.type().equals(rightLiteral.type()) : "leftLiteral.type() = " + leftLiteral.type() + ", rightLiteral.type() = " + rightLiteral.type();
 
             return operateInteger(operator, leftLiteral.type(), leftLiteral.value(), rightLiteral.value());
@@ -26,35 +28,35 @@ public final class ValueOperator {
         return new Value.BooleanLiteral(result);
     }
 
-    private static Value operateInteger(Token.Type operator, Type type, long left, long right) {
+    private static Value operateInteger(Token.Type operator, Type type, BigDecimal left, BigDecimal right) {
         boolean isComparison = false;
-        final long result = switch (operator) {
-            case PLUS -> left + right;
-            case MINUS -> left - right;
-            case STAR -> left * right;
-            case SLASH -> left / right;
+        final BigDecimal result = switch (operator) {
+            case PLUS -> left.add(right);
+            case MINUS -> left.subtract(right);
+            case STAR -> left.multiply(right);
+            case SLASH -> left.divide(right);
             case EQUAL_EQUAL -> {
                 isComparison = true;
-                yield left == right ? 1 : 0;
+                yield left.compareTo(right) == 0 ? BigDecimal.ONE : BigDecimal.ZERO;
             }
             case GREATER -> {
                 isComparison = true;
-                yield left > right ? 1 : 0;
+                yield left.compareTo(right) > 0 ? BigDecimal.ONE : BigDecimal.ZERO;
             }
             case GREATER_EQUAL -> {
                 isComparison = true;
-                yield left >= right ? 1 : 0;
+                yield left.compareTo(right) >= 0 ? BigDecimal.ONE : BigDecimal.ZERO;
             }
             case LESS -> {
                 isComparison = true;
-                yield left < right ? 1 : 0;
+                yield left.compareTo(right) < 0 ? BigDecimal.ONE : BigDecimal.ZERO;
             }
             case LESS_EQUAL -> {
                 isComparison = true;
-                yield left <= right ? 1 : 0;
+                yield left.compareTo(right) <= 0 ? BigDecimal.ONE : BigDecimal.ZERO;
             }
             default -> throw new RuntimeException("Unknown operator: " + operator);
         };
-        return isComparison ? new Value.BooleanLiteral(result == 1) : new Value.IntegerLiteral(type, result);
+        return isComparison ? new Value.BooleanLiteral(result.intValue() == 1) : new Value.NumberLiteral(type, result);
     }
 }

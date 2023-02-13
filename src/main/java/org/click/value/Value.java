@@ -5,6 +5,7 @@ import org.click.Type;
 import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.click.Ast.Parameter;
@@ -64,18 +65,13 @@ public sealed interface Value {
     record Interrupt() implements Value {
     }
 
-    record IntegerLiteral(Type type, long value) implements Value {
-        public IntegerLiteral {
-            if (type != Type.U8 && type != Type.U16 && type != Type.U32 && type != Type.U64 &&
-                    type != Type.I8 && type != Type.I16 && type != Type.I32 && type != Type.I64 && type != Type.INT)
-                throw new IllegalArgumentException("Invalid integer type: " + type);
+    record NumberLiteral(Type type, BigDecimal value) implements Value {
+        public NumberLiteral(Type type, Number value) {
+            this(type, new BigDecimal(value.toString()));
         }
-    }
 
-    record FloatLiteral(Type type, double value) implements Value {
-        public FloatLiteral {
-            if (type != Type.F32 && type != Type.F64 && type != Type.FLOAT)
-                throw new IllegalArgumentException("Invalid float type: " + type);
+        public NumberLiteral(Type type, String value) {
+            this(type, new BigDecimal(value));
         }
     }
 

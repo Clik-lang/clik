@@ -57,7 +57,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (int i = 0; i < values.size(); i++) {
                     final Value value = values.get(i);
-                    walker.update(indexName, new Value.IntegerLiteral(Type.INT, i));
+                    walker.update(indexName, new Value.NumberLiteral(Type.INT, i));
                     walker.update(variableName, value);
                     if (!iterate(body)) break;
                 }
@@ -72,7 +72,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                         case Value.StructDecl structDecl -> structDecl.get(name);
                         default -> throw new RuntimeException("Unknown type: " + tracked);
                     };
-                    walker.register(name, new Value.IntegerLiteral(referenceType, 0));
+                    walker.register(name, new Value.NumberLiteral(referenceType, 0));
                 }
                 for (Value value : values) {
                     for (String refName : refs) {

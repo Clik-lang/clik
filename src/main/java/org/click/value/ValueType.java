@@ -5,11 +5,9 @@ import org.click.Type;
 public final class ValueType {
     public static Value defaultValue(Type type) {
         if (type == Type.U8 || type == Type.U16 || type == Type.U32 || type == Type.U64 ||
-                type == Type.I8 || type == Type.I16 || type == Type.I32 || type == Type.I64 || type == Type.INT) {
-            return new Value.IntegerLiteral(type, 0);
-        }
-        if (type == Type.F32 || type == Type.F64 || type == Type.FLOAT) {
-            return new Value.FloatLiteral(type, 0);
+                type == Type.I8 || type == Type.I16 || type == Type.I32 || type == Type.I64 || type == Type.INT ||
+                type == Type.F32 || type == Type.F64 || type == Type.FLOAT) {
+            return new Value.NumberLiteral(type, 0);
         }
         if (type == Type.BOOL) {
             return new Value.BooleanLiteral(false);
@@ -35,10 +33,15 @@ public final class ValueType {
         throw new RuntimeException("Unknown type: " + type);
     }
 
+    public static long requireInteger(Value value) {
+        if (!(value instanceof Value.NumberLiteral))
+            throw new RuntimeException("Expected integer, got " + value);
+        return ((Value.NumberLiteral) value).value().longValue();
+    }
+
     public static Type extractAssignmentType(Value expression) {
         return switch (expression) {
-            case Value.IntegerLiteral integerLiteral -> integerLiteral.type();
-            case Value.FloatLiteral floatLiteral -> floatLiteral.type();
+            case Value.NumberLiteral numberLiteral -> numberLiteral.type();
             case Value.BooleanLiteral ignored -> Type.BOOL;
             case Value.StringLiteral ignored -> Type.STRING;
             case Value.RuneLiteral ignored -> Type.RUNE;

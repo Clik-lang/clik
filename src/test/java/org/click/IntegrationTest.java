@@ -15,9 +15,9 @@ public final class IntegrationTest {
     private static final Value TRUE = new Value.BooleanLiteral(true);
     private static final Value FALSE = new Value.BooleanLiteral(false);
 
-    private static final Value ZERO = new Value.IntegerLiteral(Type.INT, 0);
-    private static final Value ONE = new Value.IntegerLiteral(Type.INT, 1);
-    private static final Value TWO = new Value.IntegerLiteral(Type.INT, 2);
+    private static final Value ZERO = new Value.NumberLiteral(Type.INT, 0);
+    private static final Value ONE = new Value.NumberLiteral(Type.INT, 1);
+    private static final Value TWO = new Value.NumberLiteral(Type.INT, 2);
 
     @Test
     public void functionBlock() {
@@ -107,36 +107,36 @@ public final class IntegrationTest {
                 """
                         main :: () int -> 1;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 1000),
+        assertProgram(new Value.NumberLiteral(Type.INT, 1000),
                 """
                         main :: () int -> 1_000;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.I32, 1),
+        assertProgram(new Value.NumberLiteral(Type.I32, 1),
                 """
                         main :: () i32 -> 1i32;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.U8, 1),
+        assertProgram(new Value.NumberLiteral(Type.U8, 1),
                 """
                         main :: () u8 -> 1u8;
                         """);
 
-        assertProgram(new Value.FloatLiteral(Type.FLOAT, 5.5),
+        assertProgram(new Value.NumberLiteral(Type.FLOAT, 5.5),
                 """
                         main :: () float -> 5.5;
                         """);
-        assertProgram(new Value.FloatLiteral(Type.FLOAT, 5000.5),
+        assertProgram(new Value.NumberLiteral(Type.FLOAT, 5000.5),
                 """
                         main :: () float -> 5_000.5;
                         """);
-        assertProgram(new Value.FloatLiteral(Type.FLOAT, 5000.55),
+        assertProgram(new Value.NumberLiteral(Type.FLOAT, 5000.55),
                 """
                         main :: () float -> 5_000.5_5;
                         """);
-        assertProgram(new Value.FloatLiteral(Type.F64, 5.5),
+        assertProgram(new Value.NumberLiteral(Type.F64, 5.5),
                 """
                         main :: () f64 -> 5.5f64;
                         """);
-        assertProgram(new Value.FloatLiteral(Type.F32, 5.5),
+        assertProgram(new Value.NumberLiteral(Type.F32, 5.5),
                 """
                         main :: () f32 -> 5.5f32;
                         """);
@@ -145,15 +145,15 @@ public final class IntegrationTest {
                 """
                         main :: () int -> 0x1;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+        assertProgram(new Value.NumberLiteral(Type.INT, 255),
                 """
                         main :: () int -> 0xFF;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+        assertProgram(new Value.NumberLiteral(Type.INT, 255),
                 """
                         main :: () int -> 0xF_F;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+        assertProgram(new Value.NumberLiteral(Type.INT, 255),
                 """
                         main :: () int -> 0xfF;
                         """);
@@ -162,15 +162,15 @@ public final class IntegrationTest {
                 """
                         main :: () int -> 0b1;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+        assertProgram(new Value.NumberLiteral(Type.INT, 255),
                 """
                         main :: () int -> 0b11111111;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 255),
+        assertProgram(new Value.NumberLiteral(Type.INT, 255),
                 """
                         main :: () int -> 0b1111_1111;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 254),
+        assertProgram(new Value.NumberLiteral(Type.INT, 254),
                 """
                         main :: () int -> 0b11111110;
                         """);
@@ -235,7 +235,7 @@ public final class IntegrationTest {
                           return function(1);
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           constant :: 5;
@@ -294,7 +294,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 11),
+        assertProgram(new Value.NumberLiteral(Type.INT, 11),
                 """
                         main :: () int {
                           add :: (a: int, b: int) int -> a + b;
@@ -337,13 +337,21 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.IntegerLiteral(Type.INT, 14),
+        assertProgram(new Value.NumberLiteral(Type.INT, 14),
                 """
                         main :: () int -> 2 + 3 * 4;
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 20),
+        assertProgram(new Value.NumberLiteral(Type.INT, 20),
                 """
                         main :: () int -> (2 + 3) * 4;
+                        """);
+    }
+
+    @Test
+    public void mathFloat() {
+        assertProgram(new Value.NumberLiteral(Type.FLOAT, "0.3"),
+                """
+                        main :: () float -> 0.2 + 0.1;
                         """);
     }
 
@@ -474,11 +482,11 @@ public final class IntegrationTest {
     @Test
     public void arrayLazy() {
         assertProgram(new Value.Array(new Type.Array(Type.INT, 5), List.of(
-                        new Value.IntegerLiteral(Type.INT, 1),
-                        new Value.IntegerLiteral(Type.INT, 2),
-                        new Value.IntegerLiteral(Type.INT, 3),
-                        new Value.IntegerLiteral(Type.INT, 4),
-                        new Value.IntegerLiteral(Type.INT, 5))
+                        new Value.NumberLiteral(Type.INT, 1),
+                        new Value.NumberLiteral(Type.INT, 2),
+                        new Value.NumberLiteral(Type.INT, 3),
+                        new Value.NumberLiteral(Type.INT, 4),
+                        new Value.NumberLiteral(Type.INT, 5))
                 ),
                 """
                         main :: () [5]int {
@@ -491,9 +499,9 @@ public final class IntegrationTest {
     @Test
     public void arrayFilter() {
         assertProgram(new Value.Array(new Type.Array(Type.INT, -1), List.of(
-                        new Value.IntegerLiteral(Type.INT, 3),
-                        new Value.IntegerLiteral(Type.INT, 4),
-                        new Value.IntegerLiteral(Type.INT, 5))
+                        new Value.NumberLiteral(Type.INT, 3),
+                        new Value.NumberLiteral(Type.INT, 4),
+                        new Value.NumberLiteral(Type.INT, 5))
                 ),
                 """
                         main :: () []int {
@@ -503,8 +511,8 @@ public final class IntegrationTest {
                         }
                         """);
         assertProgram(new Value.Array(new Type.Array(Type.of("Point"), -1), List.of(
-                        new Value.Struct("Point", Map.of("x", new Value.IntegerLiteral(Type.INT, 3), "y", new Value.IntegerLiteral(Type.INT, 4))),
-                        new Value.Struct("Point", Map.of("x", new Value.IntegerLiteral(Type.INT, 5), "y", new Value.IntegerLiteral(Type.INT, 6)))
+                        new Value.Struct("Point", Map.of("x", new Value.NumberLiteral(Type.INT, 3), "y", new Value.NumberLiteral(Type.INT, 4))),
+                        new Value.Struct("Point", Map.of("x", new Value.NumberLiteral(Type.INT, 5), "y", new Value.NumberLiteral(Type.INT, 6)))
                 )),
                 """
                         Point :: struct {x: int, y: int}
@@ -549,21 +557,21 @@ public final class IntegrationTest {
     @Test
     @Disabled
     public void arrayTransmute() {
-        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+        assertProgram(new Value.NumberLiteral(Type.I16, 256),
                 """
                         main :: () int {
                           array := [2]i8 {0b00000000i8 ,0b00000001i8};
                           return array[0]i16;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+        assertProgram(new Value.NumberLiteral(Type.I16, 256),
                 """
                         main :: () int {
                           array := [3]i8 {0i8, 0b00000000i8 ,0b00000001i8};
                           return array[1]i16;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+        assertProgram(new Value.NumberLiteral(Type.I16, 256),
                 """
                         main :: () int {
                           array := [2]i8 {0i8, 0i8};
@@ -571,7 +579,7 @@ public final class IntegrationTest {
                           return array[0]i16;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.I16, 256),
+        assertProgram(new Value.NumberLiteral(Type.I16, 256),
                 """
                         main :: () int {
                           array := [3]i8 {0i8, 0i8, 0i8};
@@ -987,7 +995,7 @@ public final class IntegrationTest {
 
     @Test
     public void loop() {
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 0;
@@ -995,7 +1003,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 0;
@@ -1003,7 +1011,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 45),
+        assertProgram(new Value.NumberLiteral(Type.INT, 45),
                 """
                         main :: () int {
                           value := 0;
@@ -1033,7 +1041,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 0;
@@ -1045,7 +1053,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
@@ -1057,7 +1065,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
+        assertProgram(new Value.NumberLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -1067,7 +1075,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 12),
+        assertProgram(new Value.NumberLiteral(Type.INT, 12),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -1078,7 +1086,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
+        assertProgram(new Value.NumberLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -1089,7 +1097,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
+        assertProgram(new Value.NumberLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -1099,7 +1107,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 21),
+        assertProgram(new Value.NumberLiteral(Type.INT, 21),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -1110,7 +1118,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.IntegerLiteral(Type.INT, 9),
+        assertProgram(new Value.NumberLiteral(Type.INT, 9),
                 """
                         main :: () int {
                           Point :: struct {x: int, y: int}
@@ -1124,7 +1132,7 @@ public final class IntegrationTest {
 
     @Test
     public void selectStmt() {
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 5;
@@ -1134,7 +1142,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
+        assertProgram(new Value.NumberLiteral(Type.INT, 6),
                 """
                         main :: () int {
                           value := 5;
@@ -1147,7 +1155,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 6),
+        assertProgram(new Value.NumberLiteral(Type.INT, 6),
                 """
                         main :: () int {
                           value := 5;
@@ -1173,7 +1181,7 @@ public final class IntegrationTest {
                           return 1;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value := 5;
@@ -1184,7 +1192,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 5;
@@ -1195,7 +1203,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 5;
@@ -1210,7 +1218,7 @@ public final class IntegrationTest {
 
     @Test
     public void selectExpr() {
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :: select {
@@ -1219,7 +1227,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :int: select {
@@ -1300,7 +1308,7 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
@@ -1312,7 +1320,7 @@ public final class IntegrationTest {
                           return value;
                         }
                         """);
-        assertProgram(new Value.IntegerLiteral(Type.INT, 10),
+        assertProgram(new Value.NumberLiteral(Type.INT, 10),
                 """
                         main :: () int {
                           value :~ 0;
@@ -1413,7 +1421,7 @@ public final class IntegrationTest {
                         }
                         """);
         assertProgram(new Value.Struct("Point", Map.of(
-                        "x", new Value.IntegerLiteral(Type.INT, 3), "y", new Value.IntegerLiteral(Type.INT, 4))),
+                        "x", new Value.NumberLiteral(Type.INT, 3), "y", new Value.NumberLiteral(Type.INT, 4))),
                 """
                         Point :: struct {x: int, y: int}
                         main :: () Point {
@@ -1426,7 +1434,7 @@ public final class IntegrationTest {
 
     @Test
     public void multiReturn() {
-        assertProgram(new Value.IntegerLiteral(Type.INT, 3),
+        assertProgram(new Value.NumberLiteral(Type.INT, 3),
                 """
                         Point :: struct {x: int, y: int}
                         main :: () int {

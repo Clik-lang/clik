@@ -166,7 +166,7 @@ public final class Parser {
             consume(RANGE, "Expected '..' after start of range.");
             final Expression end = nextExpression(0);
             final Expression step = match(RANGE) ? nextExpression(0) :
-                    new Expression.Constant(new Value.IntegerLiteral(Type.INT, 1));
+                    new Expression.Constant(new Value.NumberLiteral(Type.INT, 1));
             return new Expression.Range(start, end, step);
         }
         // Pratt's algorithm
@@ -215,11 +215,11 @@ public final class Parser {
         } else if (match(INTEGER_LITERAL)) {
             final var literal = previous().literal();
             final Object value = literal.value();
-            return new Expression.Constant(new Value.IntegerLiteral(literal.type(), (Long) value));
+            return new Expression.Constant(new Value.NumberLiteral(literal.type(), (Long) value));
         } else if (match(FLOAT_LITERAL)) {
             final var literal = previous().literal();
             final Object value = literal.value();
-            return new Expression.Constant(new Value.FloatLiteral(literal.type(), (Double) value));
+            return new Expression.Constant(new Value.NumberLiteral(literal.type(), (Double) value));
         } else if (match(TRUE)) {
             return new Expression.Constant(new Value.BooleanLiteral(true));
         } else if (match(FALSE)) {
@@ -462,7 +462,7 @@ public final class Parser {
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
-                    value = new Expression.Constant(new Value.IntegerLiteral(Type.INT, index++));
+                    value = new Expression.Constant(new Value.NumberLiteral(Type.INT, index++));
                 }
                 entries.put(identifier.input(), value);
             } while (match(COMMA) && !check(RIGHT_BRACE));
