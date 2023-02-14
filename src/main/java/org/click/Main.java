@@ -34,7 +34,8 @@ public class Main {
 
         var interpreter = new VM(Path.of("samples"), statements,
                 Map.of(),
-                Map.of("key", ref));
+                Map.of("key", ref),
+                Map.of("print", System.out::println));
         var result = interpreter.interpret("main", List.of());
         System.out.println("Result: " + result);
         interpreter.stop();

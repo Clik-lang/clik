@@ -99,6 +99,9 @@ public sealed interface Value {
     record Input(Value value) implements Value {
     }
 
+    record Output(Type type) implements Value {
+    }
+
     record Array(Type.Array arrayType, List<Value> elements) implements Value {
         public Array {
             elements = java.util.List.copyOf(elements);

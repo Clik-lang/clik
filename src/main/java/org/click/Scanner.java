@@ -21,6 +21,7 @@ public final class Scanner {
             entry("true", Token.Type.TRUE),
             entry("false", Token.Type.FALSE),
             entry("in", Token.Type.IN),
+            entry("out", Token.Type.OUT),
             entry("for", Token.Type.FOR),
             entry("break", Token.Type.BREAK),
             entry("continue", Token.Type.CONTINUE),

@@ -60,6 +60,9 @@ public interface Ast {
             }
         }
 
+        record Output(Statement.Assign.Target target, Expression expression) implements Statement {
+        }
+
         record Run(Expression expression) implements Statement {
         }
 

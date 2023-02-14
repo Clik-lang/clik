@@ -118,7 +118,7 @@ public final class Executor {
 
     public Executor fork(boolean async, boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
-        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals(), this.context.inputs());
+        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals(), this.context.inputs(), this.context.outputs());
         final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
         copy.enterBlock();
         this.walker.currentScope().tracked().forEach(copy::register);
@@ -255,6 +255,19 @@ public final class Executor {
                     var sharedMutation = sharedMutations.get(name);
                     if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
                 }
+                yield null;
+            }
+            case Statement.Output output -> {
+                final Statement.Assign.Target target = output.target();
+                final String name = target.name();
+                final Value targetValue = evaluate(new Expression.Access(new Expression.Variable(name), target.accessPoints()), null);
+                final Type explicitType = ValueType.extractAssignmentType(targetValue);
+                final Value value = interpreter.evaluate(output.expression(), explicitType);
+                assert value != null;
+                var outputConsumer = context.outputs().get(name);
+                if (outputConsumer == null)
+                    throw new RuntimeException("Output not found: " + name);
+                outputConsumer.accept(value);
                 yield null;
             }
             case Statement.Run run -> interpreter.evaluate(run.expression(), null);

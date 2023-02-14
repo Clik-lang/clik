@@ -61,6 +61,9 @@ public final class Parser {
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
                 final Expression.Call call = new Expression.Call(name, new Parameter.Passed.Positional(arguments));
                 statement = new Statement.Run(call);
+            } else if (match(OUTPUT)) {
+                final Expression expression = nextExpression();
+                statement = new Statement.Output(targets.get(0), expression);
             } else {
                 // Implicit return
                 index = startIndex;
@@ -204,6 +207,9 @@ public final class Parser {
             final Type type = nextType();
             final Value defaultValue = ValueType.defaultValue(type);
             return new Expression.Constant(new Value.Input(defaultValue));
+        } else if (match(OUT)) {
+            final Type type = nextType();
+            return new Expression.Constant(new Value.Output(type));
         } else if (match(DISTINCT)) {
             final Type type = nextType();
             consume(WHERE, "Expected 'where' after distinct type.");
