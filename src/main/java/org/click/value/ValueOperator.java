@@ -16,8 +16,8 @@ public final class ValueOperator {
         } else if (left instanceof Value.StringLiteral || right instanceof Value.StringLiteral) {
             if (operator != Token.Type.PLUS)
                 throw new RuntimeException("Unknown string operator: " + operator);
-            final String leftString = ValueSerializer.serialize(null, left);
-            final String rightString = ValueSerializer.serialize(null, right);
+            final String leftString = ValueSerializer.serialize(left);
+            final String rightString = ValueSerializer.serialize(right);
             return new Value.StringLiteral(leftString + rightString);
         } else {
             throw new RuntimeException("Unknown types: " + left + " and " + right);

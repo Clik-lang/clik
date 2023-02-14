@@ -34,7 +34,7 @@ public final class Intrinsics {
     public static Value print(Executor executor, List<Value> evaluated) {
         StringBuilder builder = new StringBuilder();
         for (Value value : evaluated) {
-            final String serialized = ValueSerializer.serialize(executor.walker(), value);
+            final String serialized = ValueSerializer.serialize(value);
             builder.append(serialized);
         }
         System.out.println(builder);

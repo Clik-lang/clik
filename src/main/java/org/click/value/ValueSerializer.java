@@ -1,41 +1,31 @@
 package org.click.value;
 
-import org.click.ScopeWalker;
-
 import java.util.List;
-
-import static org.click.Ast.Parameter;
+import java.util.Map;
 
 public final class ValueSerializer {
-    public static String serialize(ScopeWalker<Value> walker, Value expression) {
+    public static String serialize(Value expression) {
         return switch (expression) {
             case Value.NumberLiteral numberLiteral -> String.valueOf(numberLiteral.value());
             case Value.BooleanLiteral booleanLiteral -> String.valueOf(booleanLiteral.value());
             case Value.StringLiteral stringLiteral -> stringLiteral.value();
             case Value.Struct struct -> {
-                if (!(walker.find(struct.name()) instanceof Value.StructDecl structDeclaration)) {
-                    throw new RuntimeException("Struct not found: " + struct.name());
-                }
-                var parameters = structDeclaration.parameters();
+                final Map<String, Value> parameters = struct.parameters();
                 final StringBuilder builder = new StringBuilder();
                 builder.append(struct.name()).append("{");
-                for (int i = 0; i < parameters.size(); i++) {
-                    final Parameter param = parameters.get(i);
-                    final Value field = struct.parameters().get(param.name());
-                    builder.append(serialize(walker, field));
-                    if (i < parameters.size() - 1) {
-                        builder.append(", ");
-                    }
+                for (var entry : parameters.entrySet()) {
+                    final String name = entry.getKey();
+                    final Value value = entry.getValue();
+                    builder.append(name).append(": ").append(serialize(value)).append(", ");
                 }
                 builder.append("}");
-                yield builder.toString();
+
+                final String content = builder.toString();
+                yield content.replace(", }", "}");
             }
             case Value.Union union -> {
-                if (!(walker.find(union.name()) instanceof Value.UnionDecl)) {
-                    throw new RuntimeException("Union not found: " + union.name());
-                }
                 final Value field = union.value();
-                yield union.name() + "." + serialize(walker, field);
+                yield union.name() + "." + serialize(field);
             }
             case Value.Array array -> {
                 final List<Value> values = array.elements();
@@ -43,7 +33,7 @@ public final class ValueSerializer {
                 builder.append("[");
                 for (int i = 0; i < values.size(); i++) {
                     final Value value = values.get(i);
-                    builder.append(serialize(walker, value));
+                    builder.append(serialize(value));
                     if (i < values.size() - 1) {
                         builder.append(", ");
                     }
