@@ -2,7 +2,6 @@ package org.click;
 
 import org.click.interpreter.VM;
 import org.click.value.Value;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -524,7 +523,7 @@ public final class IntegrationTest {
                 )),
                 """
                         Point :: struct {x: int, y: int}
-                        main :: () []int {
+                        main :: () []Point {
                           array := [3]Point {{1,2}, {3,4}, {5,6}};
                           filtered :: array where @.x > 2;
                           return filtered;
@@ -558,41 +557,6 @@ public final class IntegrationTest {
                           array2 := array;
                           array[0] = 0;
                           return array[0];
-                        }
-                        """);
-    }
-
-    @Test
-    @Disabled
-    public void arrayTransmute() {
-        assertProgram(new Value.NumberLiteral(Type.I16, 256),
-                """
-                        main :: () int {
-                          array := [2]i8 {0b00000000i8 ,0b00000001i8};
-                          return array[0]i16;
-                        }
-                        """);
-        assertProgram(new Value.NumberLiteral(Type.I16, 256),
-                """
-                        main :: () int {
-                          array := [3]i8 {0i8, 0b00000000i8 ,0b00000001i8};
-                          return array[1]i16;
-                        }
-                        """);
-        assertProgram(new Value.NumberLiteral(Type.I16, 256),
-                """
-                        main :: () int {
-                          array := [2]i8 {0i8, 0i8};
-                          array[0]i16 = 256i16;
-                          return array[0]i16;
-                        }
-                        """);
-        assertProgram(new Value.NumberLiteral(Type.I16, 256),
-                """
-                        main :: () int {
-                          array := [3]i8 {0i8, 0i8, 0i8};
-                          array[1]i16 = 256i16;
-                          return array[1]i16;
                         }
                         """);
     }
