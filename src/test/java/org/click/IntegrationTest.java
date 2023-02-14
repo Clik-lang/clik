@@ -198,6 +198,14 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void stringConcatenate() {
+        assertProgram(new Value.StringLiteral("Hello 5"),
+                """
+                        main :: () string -> "Hello " + 5;
+                        """);
+    }
+
+    @Test
     public void runeLiterals() {
         assertProgram(new Value.RuneLiteral("a"),
                 """

@@ -2,6 +2,6 @@ key :: in int;
 print :: out string;
 main :: () int {
   test := $key;
-  print << "Test";
+  print << "Typed: " + test;
   return test;
 }
