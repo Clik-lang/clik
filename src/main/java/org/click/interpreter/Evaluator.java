@@ -122,9 +122,23 @@ public final class Evaluator {
                 if (value == null) {
                     throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked().keySet());
                 }
-                final Executor.SharedMutation sharedMutation = executor.sharedMutations.get(name);
-                if (sharedMutation == null) throw new RuntimeException("Variable not shared: " + name);
-                yield sharedMutation.await(value);
+                if (value instanceof Value.Input input) {
+                    var currentInput = input.value();
+                    var ref = executor.context().inputs().get(name);
+                    if (ref == null)
+                        throw new RuntimeException("Input not found: " + name);
+                    while (true) {
+                        var updatedValue = ref.get();
+                        if (!currentInput.equals(updatedValue)) {
+                            this.walker.update(name, new Value.Input(updatedValue));
+                            yield updatedValue;
+                        }
+                    }
+                } else {
+                    final Executor.SharedMutation sharedMutation = executor.sharedMutations.get(name);
+                    if (sharedMutation == null) throw new RuntimeException("Variable not shared: " + name);
+                    yield sharedMutation.await(value);
+                }
             }
             case Expression.Call call -> {
                 final String name = call.name();

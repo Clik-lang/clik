@@ -1,6 +1,7 @@
 package org.click;
 
 import org.click.value.Value;
+import org.click.value.ValueType;
 
 import java.util.*;
 
@@ -199,6 +200,10 @@ public final class Parser {
             return nextEnum();
         } else if (check(UNION)) {
             return new Expression.Constant(nextUnion());
+        } else if (match(IN)) {
+            final Type type = nextType();
+            final Value defaultValue = ValueType.defaultValue(type);
+            return new Expression.Constant(new Value.Input(defaultValue));
         } else if (match(DISTINCT)) {
             final Type type = nextType();
             consume(WHERE, "Expected 'where' after distinct type.");

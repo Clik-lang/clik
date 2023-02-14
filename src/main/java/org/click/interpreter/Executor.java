@@ -118,7 +118,7 @@ public final class Executor {
 
     public Executor fork(boolean async, boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
-        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals());
+        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals(), this.context.inputs());
         final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
         copy.enterBlock();
         this.walker.currentScope().tracked().forEach(copy::register);
