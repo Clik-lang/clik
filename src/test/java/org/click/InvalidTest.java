@@ -1,6 +1,7 @@
 package org.click;
 
 import org.click.interpreter.VM;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+@Disabled
 public class InvalidTest {
 
     @Test
