@@ -37,20 +37,6 @@ public interface Type {
         }
     }
 
-    record Map(Type key, Type value) implements Type {
-        @Override
-        public String name() {
-            return "map[" + key.name() + "]" + value.name();
-        }
-    }
-
-    record Table(Type type) implements Type {
-        @Override
-        public String name() {
-            return "table[]" + type.name();
-        }
-    }
-
     record Function(List<Parameter> parameters, Type returnType) implements Type {
         @Override
         public String name() {

@@ -184,11 +184,13 @@ public final class Evaluator {
                 final Parameter.Passed passed = initialization.parameters();
                 yield switch (type) {
                     case Type.Identifier identifier -> {
+                        // Struct initialization
                         final String name = identifier.name();
                         final Value.StructDecl struct = (Value.StructDecl) walker.find(name);
                         final List<Parameter> parameters = struct.parameters();
                         Map<String, Value> evaluated = new HashMap<>();
                         if (passed instanceof Parameter.Passed.Named named) {
+                            // Point {.x: 1, .y: 2}
                             for (Map.Entry<String, Expression> entry : named.entries().entrySet()) {
                                 final String key = entry.getKey();
                                 final Expression value = entry.getValue();
@@ -196,6 +198,7 @@ public final class Evaluator {
                                 evaluated.put(key, evaluatedValue);
                             }
                         } else if (passed instanceof Parameter.Passed.Positional positional) {
+                            // Point {1, 2}
                             final List<Expression> expressions = positional.expressions();
                             for (int i = 0; i < expressions.size(); i++) {
                                 final Expression expression = expressions.get(i);
@@ -207,9 +210,11 @@ public final class Evaluator {
                         yield new Value.Struct(name, evaluated);
                     }
                     case Type.Array arrayType -> {
+                        // Array initialization
                         final long length = arrayType.length();
                         final List<Value> values = switch (passed) {
                             case Parameter.Passed.Positional positional -> {
+                                // [5]int {1, 2, 3, 4, 5}
                                 final List<Expression> expressions = positional.expressions();
                                 final Type elementType = arrayType.type();
                                 final List<Value> evaluated;
@@ -225,6 +230,7 @@ public final class Evaluator {
                                 yield evaluated;
                             }
                             case Parameter.Passed.Supplied supplied -> {
+                                // [5]int @ + 1
                                 final List<Value> evaluated = new ArrayList<>();
                                 for (int i = 0; i < length; i++) {
                                     this.contextual = new Value.NumberLiteral(Type.INT, i);
