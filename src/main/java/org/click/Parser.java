@@ -1,7 +1,6 @@
 package org.click;
 
 import org.click.value.Value;
-import org.click.value.ValueType;
 
 import java.util.*;
 
@@ -205,8 +204,7 @@ public final class Parser {
             return new Expression.Constant(nextUnion());
         } else if (match(IN)) {
             final Type type = nextType();
-            final Value defaultValue = ValueType.defaultValue(type);
-            return new Expression.Constant(new Value.Input(defaultValue));
+            return new Expression.Constant(new Value.Input(type));
         } else if (match(OUT)) {
             final Type type = nextType();
             return new Expression.Constant(new Value.Output(type));

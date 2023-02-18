@@ -228,6 +228,16 @@ public final class Executor {
                 final Value evaluated = interpreter.evaluate(initializer, declare.explicitType());
                 assert evaluated != null;
                 registerMulti(names, declare.declarationType(), evaluated);
+
+                // Init IO
+                if (evaluated instanceof Value.Input) {
+                    var inputInitializer = context().inputs().get(names.get(0));
+                    inputInitializer.init();
+                } else if (evaluated instanceof Value.Output) {
+                    var outputInitializer = context().outputs().get(names.get(0));
+                    outputInitializer.init();
+                }
+
                 yield null;
             }
             case Statement.Assign assign -> {
@@ -265,7 +275,7 @@ public final class Executor {
                 var outputConsumer = context.outputs().get(name);
                 if (outputConsumer == null)
                     throw new RuntimeException("Output not found: " + name);
-                outputConsumer.accept(value);
+                outputConsumer.send(value);
                 yield null;
             }
             case Statement.Run run -> interpreter.evaluate(run.expression(), null);

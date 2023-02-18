@@ -1,13 +1,12 @@
 package org.click.interpreter;
 
 import org.click.ScopeWalker;
+import org.click.io.IO;
 import org.click.value.Value;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.click.Ast.Statement;
@@ -18,8 +17,8 @@ public final class VM {
 
     public record Context(Path directory, ScopeWalker<Value> walker,
                           Map<String, Function<List<Value>, Value>> externals,
-                          Map<String, AtomicReference<Value>> inputs,
-                          Map<String, Consumer<Value>> outputs) {
+                          Map<String, IO.In> inputs,
+                          Map<String, IO.Out> outputs) {
         public Context {
             externals = Map.copyOf(externals);
             inputs = Map.copyOf(inputs);
@@ -28,8 +27,8 @@ public final class VM {
 
     public VM(Path directory, List<Statement> statements,
               Map<String, Function<List<Value>, Value>> externals,
-              Map<String, AtomicReference<Value>> inputs,
-              Map<String, Consumer<Value>> outputs) {
+              Map<String, IO.In> inputs,
+              Map<String, IO.Out> outputs) {
         this.context = new Context(directory, new ScopeWalker<>(), externals, inputs, outputs);
         this.executor = new Executor(context);
         this.context.walker.enterBlock();

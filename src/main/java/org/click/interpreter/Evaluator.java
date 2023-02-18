@@ -118,18 +118,11 @@ public final class Evaluator {
                 if (value == null) {
                     throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked().keySet());
                 }
-                if (value instanceof Value.Input input) {
-                    var currentInput = input.value();
+                if (value instanceof Value.Input) {
                     var ref = executor.context().inputs().get(name);
                     if (ref == null)
                         throw new RuntimeException("Input not found: " + name);
-                    while (true) {
-                        var updatedValue = ref.get();
-                        if (!currentInput.equals(updatedValue)) {
-                            this.walker.update(name, new Value.Input(updatedValue));
-                            yield updatedValue;
-                        }
-                    }
+                    yield ref.await();
                 } else {
                     final Executor.SharedMutation sharedMutation = executor.sharedMutations.get(name);
                     if (sharedMutation == null) throw new RuntimeException("Variable not shared: " + name);

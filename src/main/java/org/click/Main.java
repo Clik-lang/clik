@@ -1,13 +1,12 @@
 package org.click;
 
 import org.click.interpreter.VM;
-import org.click.value.Value;
+import org.click.io.BuiltinIO;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -21,20 +20,10 @@ public class Main {
         System.out.println("Statements:");
         for (var statement : statements) System.out.println(statement);
 
-        AtomicReference<Value> ref = new AtomicReference<>(new Value.NumberLiteral(Type.INT, 0));
-
-        Thread.startVirtualThread(() -> {
-            // Read integer from console
-            var scanner = new java.util.Scanner(System.in);
-            while (true) {
-                ref.set(new Value.NumberLiteral(Type.INT, scanner.nextInt()));
-            }
-        });
-
         var interpreter = new VM(Path.of("samples"), statements,
                 Map.of(),
-                Map.of("key", ref),
-                Map.of("print", System.out::println));
+                Map.of("key", new BuiltinIO.IntReader()),
+                Map.of("print", new BuiltinIO.Printer()));
         //var result = interpreter.interpret("main", List.of());
         //System.out.println("Result: " + result);
         interpreter.stop();

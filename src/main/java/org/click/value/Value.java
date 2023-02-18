@@ -96,7 +96,7 @@ public sealed interface Value {
     record Union(String name, Value value) implements Value {
     }
 
-    record Input(Value value) implements Value {
+    record Input(Type type) implements Value {
     }
 
     record Output(Type type) implements Value {
