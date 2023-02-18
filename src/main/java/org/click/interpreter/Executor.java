@@ -267,7 +267,7 @@ public final class Executor {
                 final Value value = interpreter.evaluate(output.expression(), explicitType);
                 assert value != null;
                 if (!(context.ios().get(name) instanceof IO.Out out))
-                    throw new RuntimeException("Output not found: " + name);
+                    throw new RuntimeException("Output not found: " + target);
                 out.send(value);
                 yield null;
             }

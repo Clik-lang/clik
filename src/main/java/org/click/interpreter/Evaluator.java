@@ -254,7 +254,9 @@ public final class Evaluator {
                 }
             }
         };
-        return cast(rawValue, explicitType);
+        final Value casted = cast(rawValue, explicitType);
+        Objects.requireNonNull(casted, "Failed to evaluate: " + argument);
+        return casted;
     }
 
     Value cast(Value value, Type target) {
