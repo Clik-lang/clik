@@ -6,7 +6,6 @@ import org.click.value.Value;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -36,8 +35,8 @@ public class Main {
                 Map.of(),
                 Map.of("key", ref),
                 Map.of("print", System.out::println));
-        var result = interpreter.interpret("main", List.of());
-        System.out.println("Result: " + result);
+        //var result = interpreter.interpret("main", List.of());
+        //System.out.println("Result: " + result);
         interpreter.stop();
     }
 }
