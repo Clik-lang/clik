@@ -1455,7 +1455,7 @@ public final class IntegrationTest {
     private static void assertProgram(Value expected, Map<String, Function<List<Value>, Value>> externals, String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
-        var interpreter = new VM(null, statements, externals, Map.of(), Map.of());
+        var interpreter = new VM(null, statements, externals, Map.of());
         var actual = interpreter.interpret("main", List.of());
         interpreter.stop();
         assertEquals(expected, actual);

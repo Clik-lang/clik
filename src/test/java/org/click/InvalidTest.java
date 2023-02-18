@@ -110,7 +110,7 @@ public class InvalidTest {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
         try {
-            var interpreter = new VM(null, statements, Map.of(), Map.of(), Map.of());
+            var interpreter = new VM(null, statements, Map.of(), Map.of());
             interpreter.interpret("main", List.of());
             fail("Expected compilation to fail.");
         } catch (RuntimeException ignored) {

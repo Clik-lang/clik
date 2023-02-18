@@ -22,8 +22,8 @@ public class Main {
 
         var interpreter = new VM(Path.of("samples"), statements,
                 Map.of(),
-                Map.of("key", new BuiltinIO.IntReader()),
-                Map.of("print", new BuiltinIO.Printer()));
+                Map.of("key", new BuiltinIO.IntReader(),
+                        "print", new BuiltinIO.Printer()));
         //var result = interpreter.interpret("main", List.of());
         //System.out.println("Result: " + result);
         interpreter.stop();

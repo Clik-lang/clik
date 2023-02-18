@@ -3,6 +3,7 @@ package org.click.interpreter;
 import org.click.ScopeWalker;
 import org.click.Token;
 import org.click.Type;
+import org.click.io.IO;
 import org.click.value.Value;
 import org.click.value.ValueOperator;
 import org.click.value.ValueType;
@@ -118,11 +119,10 @@ public final class Evaluator {
                 if (value == null) {
                     throw new RuntimeException("Variable not found: " + name + " -> " + walker.currentScope().tracked().keySet());
                 }
-                if (value instanceof Value.Input) {
-                    var ref = executor.context().inputs().get(name);
-                    if (ref == null)
+                if (executor.context().ios().get(name) instanceof IO io) {
+                    if (!(io instanceof IO.In in))
                         throw new RuntimeException("Input not found: " + name);
-                    yield ref.await();
+                    yield in.await();
                 } else {
                     final Executor.SharedMutation sharedMutation = executor.sharedMutations.get(name);
                     if (sharedMutation == null) throw new RuntimeException("Variable not shared: " + name);

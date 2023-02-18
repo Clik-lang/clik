@@ -2,6 +2,7 @@ package org.click.interpreter;
 
 import org.click.Scanner;
 import org.click.*;
+import org.click.io.IO;
 import org.click.value.Value;
 import org.click.value.ValueCompute;
 import org.click.value.ValueType;
@@ -117,7 +118,7 @@ public final class Executor {
 
     public Executor fork(boolean async, boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
-        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals(), this.context.inputs(), this.context.outputs());
+        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals(), this.context.ios());
         final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
         copy.enterBlock();
         this.walker.currentScope().tracked().forEach(copy::register);
@@ -228,16 +229,9 @@ public final class Executor {
                 final Value evaluated = interpreter.evaluate(initializer, declare.explicitType());
                 assert evaluated != null;
                 registerMulti(names, declare.declarationType(), evaluated);
-
                 // Init IO
-                if (evaluated instanceof Value.Input) {
-                    var inputInitializer = context().inputs().get(names.get(0));
-                    inputInitializer.init();
-                } else if (evaluated instanceof Value.Output) {
-                    var outputInitializer = context().outputs().get(names.get(0));
-                    outputInitializer.init();
-                }
-
+                final IO io = context().ios().get(names.get(0));
+                if (io != null) io.init();
                 yield null;
             }
             case Statement.Assign assign -> {
@@ -272,10 +266,9 @@ public final class Executor {
                 final Type explicitType = ValueType.extractAssignmentType(targetValue);
                 final Value value = interpreter.evaluate(output.expression(), explicitType);
                 assert value != null;
-                var outputConsumer = context.outputs().get(name);
-                if (outputConsumer == null)
+                if (!(context.ios().get(name) instanceof IO.Out out))
                     throw new RuntimeException("Output not found: " + name);
-                outputConsumer.send(value);
+                out.send(value);
                 yield null;
             }
             case Statement.Run run -> interpreter.evaluate(run.expression(), null);

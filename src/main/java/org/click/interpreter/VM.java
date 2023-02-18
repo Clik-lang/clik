@@ -17,19 +17,17 @@ public final class VM {
 
     public record Context(Path directory, ScopeWalker<Value> walker,
                           Map<String, Function<List<Value>, Value>> externals,
-                          Map<String, IO.In> inputs,
-                          Map<String, IO.Out> outputs) {
+                          Map<String, IO> ios) {
         public Context {
             externals = Map.copyOf(externals);
-            inputs = Map.copyOf(inputs);
+            ios = Map.copyOf(ios);
         }
     }
 
     public VM(Path directory, List<Statement> statements,
               Map<String, Function<List<Value>, Value>> externals,
-              Map<String, IO.In> inputs,
-              Map<String, IO.Out> outputs) {
-        this.context = new Context(directory, new ScopeWalker<>(), externals, inputs, outputs);
+              Map<String, IO> ios) {
+        this.context = new Context(directory, new ScopeWalker<>(), externals, ios);
         this.executor = new Executor(context);
         this.context.walker.enterBlock();
         this.executor.interpret(statements);
