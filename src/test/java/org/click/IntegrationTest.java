@@ -58,30 +58,30 @@ public final class IntegrationTest {
     public void param() {
         assertProgram(ONE,
                 """
+                        get :: () int -> 1;
                         main :: () int {
                             return get();
                         }
-                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
+                        get :: () int -> 1;
                         main :: () int {
                             value :: get();
                             return value;
                         }
-                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
+                        get :: () int -> 1;
                         main :: () int {
                           return get();
                         }
-                        get :: () int -> 1;
                         """);
         assertProgram(ONE,
                 """
-                        main :: () int -> get();
                         get :: () int -> 1;
+                        main :: () int -> get();
                         """);
     }
 
@@ -90,12 +90,23 @@ public final class IntegrationTest {
         assertProgram(ZERO,
                 """
                         shared :~ 0;
+                        compute :: () {
+                          shared = 1;
+                        }
                         main :: () int {
                           compute();
                           return shared;
                         }
+                        """);
+        assertProgram(ONE,
+                """
+                        shared :~ 0;
                         compute :: () {
                           shared = 1;
+                        }
+                        main :: () int {
+                          compute();
+                          return $shared;
                         }
                         """);
     }
@@ -309,6 +320,26 @@ public final class IntegrationTest {
                           value :: forward(5, 6, add);
                           return value;
                         }
+                        """);
+    }
+
+    @Test
+    public void globalLambda() {
+        assertProgram(TWO,
+                """
+                        number := 1;
+                        number = 2;
+                        main :: () int {
+                          return number;
+                        }
+                        """);
+        assertProgram(ONE,
+                """
+                        number := 1;
+                        main :: () int {
+                          return number;
+                        }
+                        number = 2;
                         """);
     }
 
@@ -613,38 +644,38 @@ public final class IntegrationTest {
         assertProgram(TWO,
                 """
                         Point :: struct {x: int, y: int}
+                        get_point :: () Point -> Point {1, 2};
                         main :: () int {
                             point :: get_point();
                             return point.y;
                         }
-                        get_point :: () Point -> Point {1, 2};
                         """);
         assertProgram(TWO,
                 """
-                        main :: () int {
-                            point :: get_point();
-                            return point.y;
-                        }
-                        get_point :: () Point -> Point {1, 2};
                         Point :: struct {x: int, y: int}
+                        get_point :: () Point -> Point {1, 2};
+                        main :: () int {
+                            point :: get_point();
+                            return point.y;
+                        }
                         """);
         assertProgram(TWO,
                 """
+                        Point :: struct {x: int, y: int}
+                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
                         main :: () int {
                             point :: update_point(Point{1, 2});
                             return point.x;
                         }
-                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
-                        Point :: struct {x: int, y: int}
                         """);
         assertProgram(TWO,
                 """
+                        Point :: struct {x: int, y: int}
+                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
                         main :: () int {
                             point :: update_point({1, 2});
                             return point.x;
                         }
-                        update_point :: (point: Point) Point -> {point.x + 1, point.y};
-                        Point :: struct {x: int, y: int}
                         """);
 
         assertProgram(new Value.StringLiteral("test"),
@@ -1409,11 +1440,11 @@ public final class IntegrationTest {
         assertProgram(new Value.NumberLiteral(Type.INT, 3),
                 """
                         Point :: struct {x: int, y: int}
+                        get_point :: () Point { return {1, 2} }
                         main :: () int {
                             x, y :: get_point();
                             return x + y;
                         }
-                        get_point :: () Point { return {1, 2} }
                         """);
     }
 

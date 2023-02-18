@@ -1,5 +1,6 @@
 package org.click.interpreter;
 
+import org.click.Scanner;
 import org.click.*;
 import org.click.value.Value;
 import org.click.value.ValueCompute;
@@ -8,14 +9,12 @@ import org.click.value.ValueType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 
 import static org.click.Ast.*;
 
@@ -166,11 +165,21 @@ public final class Executor {
     }
 
     public Value interpret(String name, List<Value> parameters) {
-        final Value call = walker.find(name);
-        if (!(call instanceof Value.FunctionDecl declaration)) {
-            throw new RuntimeException("Function not found: " + call + " " + name + " -> " + walker.currentScope().tracked().keySet());
-        }
-        return interpret(name, declaration, parameters);
+        final Value function = walker.find(name);
+        return switch (function) {
+            case Value.FunctionDecl functionDecl -> {
+                final Executor callExecutor = Objects.requireNonNullElse(functionDecl.lambdaExecutor(), this);
+                final Executor fork = callExecutor.fork(this.async, this.insideLoop);
+                yield fork.interpret(name, functionDecl, parameters);
+            }
+            case Value.ExternFunctionDecl ignored -> {
+                final Map<String, Function<List<Value>, Value>> functions = this.context().externals();
+                final Function<List<Value>, Value> builtin = functions.get(name);
+                if (builtin == null) throw new RuntimeException("External function impl not found: " + name);
+                yield builtin.apply(parameters);
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + function);
+        };
     }
 
     public Value evaluate(Expression expression, Type explicitType) {
@@ -194,20 +203,9 @@ public final class Executor {
         }
     }
 
-    void interpretGlobal(List<Statement> statements) {
+    void interpret(List<Statement> statements) {
         for (Statement statement : statements) {
-            if (statement instanceof Statement.Declare declare) {
-                final Value value = evaluate(declare.initializer(), declare.explicitType());
-                registerMulti(declare.names(), declare.declarationType(), value);
-            } else if (statement instanceof Statement.Directive directive) {
-                if (directive.directive() instanceof Directive.Statement.Load) {
-                    interpret(directive);
-                } else {
-                    throw new RuntimeException("Directive not supported as global: " + directive);
-                }
-            } else {
-                throw new RuntimeException("Unexpected global declaration: " + statement);
-            }
+            interpret(statement);
         }
     }
 
@@ -333,7 +331,7 @@ public final class Executor {
                         }
                         final List<Token> tokens = new Scanner(source).scanTokens();
                         final List<Statement> statements = new Parser(tokens).parse();
-                        interpretGlobal(statements);
+                        interpret(statements);
                     }
                 }
                 yield null;

@@ -33,7 +33,7 @@ public final class VM {
         this.context = new Context(directory, new ScopeWalker<>(), externals, inputs, outputs);
         this.executor = new Executor(context);
         this.context.walker.enterBlock();
-        this.executor.interpretGlobal(statements);
+        this.executor.interpret(statements);
     }
 
     public Value interpret(String function, List<Value> parameters) {
