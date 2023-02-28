@@ -1,7 +1,5 @@
 package org.click;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -157,7 +155,7 @@ public final class Scanner {
             literal = nextRawString();
         } else if (Character.isDigit(c)) {
             literal = nextNumber();
-            type = literal.value() instanceof Long ? Token.Type.INTEGER_LITERAL : Token.Type.FLOAT_LITERAL;
+            type = Token.Type.NUMBER_LITERAL;
         } else if (Character.isLetter(c)) {
             final String value = nextIdentifier();
             type = KEYWORDS.getOrDefault(value, Token.Type.IDENTIFIER);
@@ -172,7 +170,7 @@ public final class Scanner {
     private String nextIdentifier() {
         var start = index - 1;
         char peek;
-        while (Character.isLetterOrDigit((peek = peek())) || peek == '_') advance();
+        while (Character.isLetterOrDigit((peek = peek())) || peek == '_' || peek == '\'') advance();
         return input.substring(start, index);
     }
 
@@ -187,7 +185,7 @@ public final class Scanner {
                 if (peek() == '_' && isHexDigit(peekNext())) advance();
             }
             final String text = input.substring(start + 2, index).replace("_", "");
-            final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
+            final Type type = nextNumberSuffix();
             final long value = Long.parseLong(text, 16);
             return new Token.Literal(type, value);
         }
@@ -200,7 +198,7 @@ public final class Scanner {
                 if (peek() == '_' && (peekNext() == '0' || peekNext() == '1')) advance();
             }
             final String text = input.substring(start + 2, index).replace("_", "");
-            final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
+            final Type type = nextNumberSuffix();
             final long value = Long.parseLong(text, 2);
             return new Token.Literal(type, value);
         }
@@ -213,7 +211,7 @@ public final class Scanner {
             // Integer
             final String text = input.substring(start, index).replace("_", "");
             final long value = Long.parseLong(text);
-            final Type type = nextNumberSuffix(Type.INT, 'i', 'u');
+            final Type type = nextNumberSuffix();
             return new Token.Literal(type, value);
         }
         // Float
@@ -224,29 +222,21 @@ public final class Scanner {
         } while (Character.isDigit(peek()) || peek() == '_');
         final String text = input.substring(start, index).replace("_", "");
         final double value = Double.parseDouble(text);
-        final Type type = nextNumberSuffix(Type.FLOAT, 'f');
+        final Type type = nextNumberSuffix();
         return new Token.Literal(type, value);
     }
 
-    private @Nullable Type nextNumberSuffix(Type defaultType, char... allowedSuffixes) {
-        if (Character.isLetter(peek())) {
-            final char suffix = advance();
-            boolean found = false;
-            for (char allowedSuffix : allowedSuffixes) {
-                if (suffix == allowedSuffix) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) throw new RuntimeException("Unexpected number suffix: " + suffix);
-            StringBuilder builder = new StringBuilder("" + suffix);
-            while (Character.isLetterOrDigit(peek())) {
-                builder.append(advance());
-            }
-            final String name = builder.toString();
-            return Type.of(name);
-        }
-        return defaultType;
+    private Type nextNumberSuffix() {
+        if (peek() != '\'') return Type.REAL;
+        advance();
+        final char suffix = advance();
+        return switch (suffix) {
+            case 'r', 'R' -> Type.REAL;
+            case 'q', 'Q' -> Type.RATIONAL;
+            case 'i', 'I' -> Type.INT;
+            case 'n', 'N' -> Type.NATURAL;
+            default -> throw new RuntimeException("Unexpected number suffix: " + suffix);
+        };
     }
 
     private Token.Literal nextString() {

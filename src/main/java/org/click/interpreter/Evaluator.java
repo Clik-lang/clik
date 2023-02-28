@@ -208,7 +208,7 @@ public final class Evaluator {
                                 // [5]int @ + 1
                                 final List<Value> evaluated = new ArrayList<>();
                                 for (int i = 0; i < length; i++) {
-                                    this.contextual = new Value.NumberLiteral(Type.INT, i);
+                                    this.contextual = new Value.NumberLiteral(Type.NATURAL, i);
                                     final Value value = evaluate(supplied.expression(), null);
                                     evaluated.add(value);
                                     this.contextual = null;
@@ -255,7 +255,7 @@ public final class Evaluator {
             }
         };
         final Value casted = cast(rawValue, explicitType);
-        Objects.requireNonNull(casted, "Failed to evaluate: " + argument);
+        //Objects.requireNonNull(casted, "Failed to evaluate: " + rawValue + " : " + argument);
         return casted;
     }
 

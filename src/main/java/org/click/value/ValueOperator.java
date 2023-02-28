@@ -8,9 +8,16 @@ import java.math.BigDecimal;
 public final class ValueOperator {
     public static Value operate(Token.Type operator, Value left, Value right) {
         if (left instanceof Value.NumberLiteral leftLiteral && right instanceof Value.NumberLiteral rightLiteral) {
-            assert leftLiteral.type().equals(rightLiteral.type()) : "leftLiteral.type() = " + leftLiteral.type() + ", rightLiteral.type() = " + rightLiteral.type();
-
-            return operateInteger(operator, leftLiteral.type(), leftLiteral.value(), rightLiteral.value());
+            final Type.NumberSet leftSet = ((Type.Number) leftLiteral.type()).set();
+            final Type.NumberSet rightSet = ((Type.Number) rightLiteral.type()).set();
+            final Type.NumberSet operationSet = Type.NumberSet.values()[Math.max(leftSet.ordinal(), rightSet.ordinal())];
+            final Type type = switch (operationSet) {
+                case REAL -> Type.REAL;
+                case RATIONAL -> Type.RATIONAL;
+                case INTEGER -> Type.INT;
+                case NATURAL -> Type.NATURAL;
+            };
+            return operateInteger(operator, type, leftLiteral.value(), rightLiteral.value());
         } else if (left instanceof Value.BooleanLiteral leftLiteral && right instanceof Value.BooleanLiteral rightLiteral) {
             return operateBoolean(operator, leftLiteral.value(), rightLiteral.value());
         } else if (left instanceof Value.StringLiteral || right instanceof Value.StringLiteral) {

@@ -74,6 +74,10 @@ public sealed interface Value {
         public NumberLiteral(Type type, String value) {
             this(type, new BigDecimal(value));
         }
+
+        public NumberLiteral(String value) {
+            this(Type.REAL, new BigDecimal(value));
+        }
     }
 
     record BooleanLiteral(boolean value) implements Value {

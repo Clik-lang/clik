@@ -57,7 +57,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (int i = 0; i < values.size(); i++) {
                     final Value value = values.get(i);
-                    walker.update(indexName, new Value.NumberLiteral(Type.INT, i));
+                    walker.update(indexName, new Value.NumberLiteral(Type.NATURAL, i));
                     walker.update(variableName, value);
                     if (!iterate(body)) break;
                 }

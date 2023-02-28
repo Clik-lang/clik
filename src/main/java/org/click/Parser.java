@@ -164,7 +164,7 @@ public final class Parser {
     Expression nextExpression() {
         if (check(SEMICOLON)) return null;
         // Range
-        if (check(INTEGER_LITERAL) && checkNext(RANGE)) {
+        if (check(NUMBER_LITERAL) && checkNext(RANGE)) {
             final Expression start = nextExpression(0);
             consume(RANGE, "Expected '..' after start of range.");
             final Expression end = nextExpression(0);
@@ -221,14 +221,10 @@ public final class Parser {
             final Token literal = previous();
             final Object value = literal.literal().value();
             return new Expression.Constant(new Value.RuneLiteral((String) value));
-        } else if (match(INTEGER_LITERAL)) {
+        } else if (match(NUMBER_LITERAL)) {
             final var literal = previous().literal();
             final Object value = literal.value();
-            return new Expression.Constant(new Value.NumberLiteral(literal.type(), (Long) value));
-        } else if (match(FLOAT_LITERAL)) {
-            final var literal = previous().literal();
-            final Object value = literal.value();
-            return new Expression.Constant(new Value.NumberLiteral(literal.type(), (Double) value));
+            return new Expression.Constant(new Value.NumberLiteral(literal.type(), (Number) value));
         } else if (match(TRUE)) {
             return new Expression.Constant(new Value.BooleanLiteral(true));
         } else if (match(FALSE)) {
@@ -377,9 +373,9 @@ public final class Parser {
         if (match(LEFT_BRACKET)) {
             // Array
             long length = -1;
-            if (check(INTEGER_LITERAL)) {
+            if (check(NUMBER_LITERAL)) {
                 // TODO: make mandatory, currently not possible because of function param
-                final Token lengthLiteral = consume(INTEGER_LITERAL, "Expected integer literal for array length.");
+                final Token lengthLiteral = consume(NUMBER_LITERAL, "Expected number for array length.");
                 length = ((Long) lengthLiteral.literal().value()).longValue();
             }
             consume(RIGHT_BRACKET, "Expected ']'.");
@@ -471,7 +467,7 @@ public final class Parser {
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
-                    value = new Expression.Constant(new Value.NumberLiteral(Type.INT, index++));
+                    value = new Expression.Constant(new Value.NumberLiteral(Type.NATURAL, index++));
                 }
                 entries.put(identifier.input(), value);
             } while (match(COMMA) && !check(RIGHT_BRACE));
