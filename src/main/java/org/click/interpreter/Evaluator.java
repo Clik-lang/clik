@@ -82,35 +82,39 @@ public final class Evaluator {
                             yield value;
                         }
                         case Value.Array array -> {
-                            if (accessPoint instanceof AccessPoint.Index indexAccess) {
-                                final Value index = evaluate(indexAccess.expression(), null);
-                                final int integer = (int) ValueType.requireInteger(index);
-                                final List<Value> content = array.elements();
-                                if (integer < 0 || integer >= content.size())
-                                    throw new RuntimeException("Index out of bounds: " + integer + " in " + content + " -> " + indexAccess.expression());
-                                yield content.get(integer);
-                            } else if (accessPoint instanceof AccessPoint.Constraint constraintAccess) {
-                                List<Value> filtered = new ArrayList<>();
-                                for (Value element : array.elements()) {
-                                    this.contextual = element;
-                                    final Value condition = evaluate(constraintAccess.expression(), null);
-                                    if (!(condition instanceof Value.BooleanLiteral booleanLiteral)) {
-                                        throw new RuntimeException("Expected constant, got: " + condition);
-                                    }
-                                    if (booleanLiteral.value()) filtered.add(element);
-                                }
-                                this.contextual = null;
-                                // Lose length information
-                                final Type.Array arrayType = new Type.Array(array.arrayType().type(), -1);
-                                yield new Value.Array(arrayType, filtered);
-                            } else {
-                                throw new RuntimeException("Invalid array access: " + access);
-                            }
+                            if (!(accessPoint instanceof AccessPoint.Index indexAccess))
+                                throw new RuntimeException("Invalid enum access: " + access);
+                            final Value index = evaluate(indexAccess.expression(), null);
+                            final int integer = (int) ValueType.requireInteger(index);
+                            final List<Value> content = array.elements();
+                            if (integer < 0 || integer >= content.size())
+                                throw new RuntimeException("Index out of bounds: " + integer + " in " + content + " -> " + indexAccess.expression());
+                            yield content.get(integer);
                         }
                         default -> throw new RuntimeException("Expected struct, got: " + expression);
                     };
                 }
                 yield result;
+            }
+            case Expression.Constraint constraint -> {
+                final Value result = evaluate(new Expression.Access(constraint.object(), constraint.accessPoints()), explicitType);
+                if (result instanceof Value.Array array) {
+                    List<Value> filtered = new ArrayList<>();
+                    for (Value element : array.elements()) {
+                        this.contextual = element;
+                        final Value condition = evaluate(constraint.expression(), null);
+                        if (!(condition instanceof Value.BooleanLiteral booleanLiteral)) {
+                            throw new RuntimeException("Expected constant, got: " + condition);
+                        }
+                        if (booleanLiteral.value()) filtered.add(element);
+                    }
+                    this.contextual = null;
+                    // Lose length information
+                    final Type.Array arrayType = new Type.Array(array.arrayType().type(), -1);
+                    yield new Value.Array(arrayType, filtered);
+                } else {
+                    throw new RuntimeException("Expected array, got: " + result);
+                }
             }
             case Expression.VariableAwait variableAwait -> {
                 final String name = variableAwait.name();

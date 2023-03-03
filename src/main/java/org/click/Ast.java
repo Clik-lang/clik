@@ -28,6 +28,10 @@ public interface Ast {
         record Access(Expression object, List<AccessPoint> accessPoints) implements Expression {
         }
 
+        record Constraint(Expression object, List<AccessPoint> accessPoints,
+                          Expression expression) implements Expression {
+        }
+
         record VariableAwait(String name) implements Expression {
         }
 
@@ -113,9 +117,6 @@ public interface Ast {
         }
 
         record Index(Expression expression, @Nullable Type transmuteType) implements AccessPoint {
-        }
-
-        record Constraint(Expression expression) implements AccessPoint {
         }
     }
 }

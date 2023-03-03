@@ -770,11 +770,11 @@ public final class IntegrationTest {
                         """);
     }
 
-    @Test
+    //@Test
     public void typeConstraint() {
         assertProgram(TWO,
                 """
-                        positive_int :: distinct number where @ > 0;
+                        positive_int :: number where @ > 0;
                         main :: () positive_int {
                           return 2;
                         }

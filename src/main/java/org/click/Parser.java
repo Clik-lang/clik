@@ -139,7 +139,7 @@ public final class Parser {
 
     List<AccessPoint> nextAccessPoint() {
         List<AccessPoint> accesses = new ArrayList<>();
-        while (check(DOT) || check(LEFT_BRACKET) || check(WHERE)) {
+        while (check(DOT) || check(LEFT_BRACKET)) {
             if (match(DOT)) {
                 // Field access
                 accesses.add(new AccessPoint.Field(advance().input()));
@@ -149,10 +149,6 @@ public final class Parser {
                 consume(RIGHT_BRACKET, "Expected ']' after array index.");
                 final Type transmutedType = check(IDENTIFIER) ? nextType() : null;
                 accesses.add(new AccessPoint.Index(expression, transmutedType));
-            } else if (match(WHERE)) {
-                // Constraint access
-                final Expression expression = nextExpression();
-                accesses.add(new AccessPoint.Constraint(expression));
             }
         }
         return accesses;
@@ -199,11 +195,6 @@ public final class Parser {
             return nextEnum();
         } else if (check(UNION)) {
             return new Expression.Constant(nextUnion());
-        } else if (match(DISTINCT)) {
-            final Type type = nextType();
-            consume(WHERE, "Expected 'where' after distinct type.");
-            final Expression constraint = nextExpression();
-            return new Expression.Constant(new Value.DistinctDecl(type, constraint));
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.literal().value();
@@ -270,18 +261,17 @@ public final class Parser {
                     this.index = index;
                     return new Expression.Variable(identifier.input());
                 }
-            } else if (check(LEFT_BRACKET)) {
-                // Array
-                final Expression.Variable expression = new Expression.Variable(identifier.input());
-                final List<AccessPoint> accessPoint = nextAccessPoint();
-                return new Expression.Access(expression, accessPoint);
-            } else if (check(WHERE)) {
-                // Constraint
-                final Expression.Variable expression = new Expression.Variable(identifier.input());
-                final List<AccessPoint> accessPoint = nextAccessPoint();
-                return new Expression.Access(expression, accessPoint);
             } else {
-                return new Expression.Variable(identifier.input());
+                // Access
+                final Expression.Variable variable = new Expression.Variable(identifier.input());
+                final List<AccessPoint> accessPoint = nextAccessPoint();
+                if (match(WHERE)) {
+                    final Expression constraint = nextExpression();
+                    return new Expression.Constraint(variable, accessPoint, constraint);
+                } else {
+                    return accessPoint.isEmpty() ? variable :
+                            new Expression.Access(variable, accessPoint);
+                }
             }
         } else if (check(SELECT)) {
             return nextSelect();
