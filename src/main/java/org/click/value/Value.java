@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
 import static org.click.Ast.Parameter;
 import static org.click.Ast.Statement;
@@ -99,18 +98,6 @@ public sealed interface Value {
     }
 
     record Union(String name, Value value) implements Value {
-    }
-
-    record Input(Type type) implements Value {
-        public Input {
-            Objects.requireNonNull(type);
-        }
-    }
-
-    record Output(Type type) implements Value {
-        public Output {
-            Objects.requireNonNull(type);
-        }
     }
 
     record Array(Type.Array arrayType, List<Value> elements) implements Value {

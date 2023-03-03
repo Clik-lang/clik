@@ -29,8 +29,6 @@ public final class ValueType {
             case Value.Struct struct -> Type.of(struct.name());
             case Value.Enum en -> Type.of(en.name());
             case Value.Union union -> Type.of(union.name());
-            case Value.Input input -> input.type();
-            case Value.Output output -> output.type();
             case Value.Array array -> array.arrayType();
             case Value.FunctionDecl functionDecl ->
                     new Type.Function(functionDecl.parameters(), functionDecl.returnType());

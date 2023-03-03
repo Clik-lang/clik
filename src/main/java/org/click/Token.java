@@ -16,7 +16,7 @@ public record Token(Type type, int line, String input,
         LEFT_PAREN, RIGHT_PAREN,
         LEFT_BRACE, RIGHT_BRACE,
         LEFT_BRACKET, RIGHT_BRACKET,
-        OUTPUT, AT,
+        AT,
         COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR, MODULO,
         DOLLAR, HASH,
 
@@ -32,7 +32,6 @@ public record Token(Type type, int line, String input,
 
         // Keywords
         RETURN, IF, ELSE, TRUE, FALSE,
-        IN, OUT,
         FOR, BREAK, CONTINUE, SELECT, JOIN, SPAWN,
         STRUCT, ENUM, UNION, WHERE, DISTINCT,
 

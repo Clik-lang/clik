@@ -60,9 +60,6 @@ public final class Parser {
                 consume(RIGHT_PAREN, "Expected ')' after arguments.");
                 final Expression.Call call = new Expression.Call(name, new Parameter.Passed.Positional(arguments));
                 statement = new Statement.Run(call);
-            } else if (match(OUTPUT)) {
-                final Expression expression = nextExpression();
-                statement = new Statement.Output(targets.get(0), expression);
             } else {
                 // Implicit return
                 index = startIndex;
@@ -202,12 +199,6 @@ public final class Parser {
             return nextEnum();
         } else if (check(UNION)) {
             return new Expression.Constant(nextUnion());
-        } else if (match(IN)) {
-            final Type type = nextType();
-            return new Expression.Constant(new Value.Input(type));
-        } else if (match(OUT)) {
-            final Type type = nextType();
-            return new Expression.Constant(new Value.Output(type));
         } else if (match(DISTINCT)) {
             final Type type = nextType();
             consume(WHERE, "Expected 'where' after distinct type.");

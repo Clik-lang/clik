@@ -2,7 +2,7 @@ package org.click.interpreter;
 
 import org.click.Scanner;
 import org.click.*;
-import org.click.io.IO;
+import org.click.external.ExternalFunction;
 import org.click.value.Value;
 import org.click.value.ValueCompute;
 import org.click.value.ValueType;
@@ -15,7 +15,6 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 
 import static org.click.Ast.*;
 
@@ -118,7 +117,7 @@ public final class Executor {
 
     public Executor fork(boolean async, boolean insideLoop) {
         final ScopeWalker<Value> copy = new ScopeWalker<>();
-        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals(), this.context.ios());
+        final VM.Context context = new VM.Context(this.context.directory(), copy, this.context.externals());
         final Executor executor = new Executor(context, async, insideLoop, joinScope, sharedMutations);
         copy.enterBlock();
         this.walker.currentScope().tracked().forEach(copy::register);
@@ -174,10 +173,10 @@ public final class Executor {
                 yield fork.interpret(name, functionDecl, parameters);
             }
             case Value.ExternFunctionDecl ignored -> {
-                final Map<String, Function<List<Value>, Value>> functions = this.context().externals();
-                final Function<List<Value>, Value> builtin = functions.get(name);
+                final Map<String, ExternalFunction> functions = this.context().externals();
+                final ExternalFunction builtin = functions.get(name);
                 if (builtin == null) throw new RuntimeException("External function impl not found: " + name);
-                yield builtin.apply(parameters);
+                yield builtin.run(parameters.toArray(Value[]::new));
             }
             default -> throw new IllegalStateException("Unexpected value: " + function);
         };
@@ -229,9 +228,6 @@ public final class Executor {
                 final Value evaluated = interpreter.evaluate(initializer, declare.explicitType());
                 assert evaluated != null;
                 registerMulti(names, declare.declarationType(), evaluated);
-                // Init IO
-                final IO io = context().ios().get(names.get(0));
-                if (io != null) io.init();
                 yield null;
             }
             case Statement.Assign assign -> {
@@ -257,18 +253,6 @@ public final class Executor {
                     var sharedMutation = sharedMutations.get(name);
                     if (sharedMutation != null) sharedMutation.append(this, tracked, updatedVariable);
                 }
-                yield null;
-            }
-            case Statement.Output output -> {
-                final Statement.Assign.Target target = output.target();
-                final String name = target.name();
-                final Value targetValue = evaluate(new Expression.Access(new Expression.Variable(name), target.accessPoints()), null);
-                final Type explicitType = ValueType.extractAssignmentType(targetValue);
-                final Value value = interpreter.evaluate(output.expression(), explicitType);
-                assert value != null;
-                if (!(context.ios().get(name) instanceof IO.Out out))
-                    throw new RuntimeException("Output not found: " + target);
-                out.send(value);
                 yield null;
             }
             case Statement.Run run -> interpreter.evaluate(run.expression(), null);

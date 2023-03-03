@@ -1,4 +1,5 @@
-key :: in number;
-print :: out string;
+Key :: ()number;
+Print :: (text: string);
 
-print << "Typed: " + $key;
+Print("Type a number: ");
+Print("Typed: " + Key());

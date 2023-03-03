@@ -1,12 +1,12 @@
 package org.click;
 
+import org.click.external.ExternalFunction;
 import org.click.interpreter.VM;
 import org.click.value.Value;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -1448,10 +1448,10 @@ public final class IntegrationTest {
         assertProgram(expected, Map.of(), input);
     }
 
-    private static void assertProgram(Value expected, Map<String, Function<List<Value>, Value>> externals, String input) {
+    private static void assertProgram(Value expected, Map<String, ExternalFunction> externals, String input) {
         var tokens = new Scanner(input).scanTokens();
         var statements = new Parser(tokens).parse();
-        var interpreter = new VM(null, statements, externals, Map.of());
+        var interpreter = new VM(null, statements, externals);
         var actual = interpreter.interpret("main", List.of());
         interpreter.stop();
         if (actual instanceof Value.NumberLiteral numberLiteral1 && expected instanceof Value.NumberLiteral numberLiteral2) {
