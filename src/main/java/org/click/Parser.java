@@ -174,7 +174,7 @@ public final class Parser {
         while (precedence < getPrecedence(peek().type())) {
             final Token operator = advance();
             final Expression right = nextExpression(getPrecedence(operator.type()));
-            expression = new Expression.Binary(expression, operator.type(), right);
+            expression = new Expression.Operation(expression, operator.type(), right);
         }
         return expression;
     }
