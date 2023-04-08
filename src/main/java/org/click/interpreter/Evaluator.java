@@ -233,10 +233,10 @@ public final class Evaluator {
                 }
                 yield new Value.Array(new Type.Array(Type.INT, values.size()), values);
             }
-            case Expression.Binary binary -> {
-                final Value left = evaluate(binary.left(), null);
-                final Value right = evaluate(binary.right(), null);
-                yield ValueOperator.operate(binary.operator(), left, right);
+            case Expression.Operation operation -> {
+                final Value left = evaluate(operation.left(), null);
+                final Value right = evaluate(operation.right(), null);
+                yield ValueOperator.operate(operation.operator(), left, right);
             }
             case Expression.Unary unary -> {
                 final Value value = evaluate(unary.expression(), explicitType);

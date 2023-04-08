@@ -47,7 +47,7 @@ public interface Ast {
         record Range(Expression start, Expression end, Expression step) implements Expression {
         }
 
-        record Binary(Expression left, Token.Type operator, Expression right) implements Expression {
+        record Operation(Expression left, Token.Type operator, Expression right) implements Expression {
         }
 
         record Unary(Token.Type operator, Expression expression) implements Expression {
