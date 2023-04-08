@@ -222,12 +222,6 @@ public final class Parser {
             } else {
                 return contextual;
             }
-        } else if (check(IDENTIFIER) && checkNext(DOT)) {
-            // Field
-            final Token identifier = advance();
-            final Expression expression = new Expression.Variable(identifier.input());
-            final List<AccessPoint> accessPoint = nextAccessPoint();
-            return new Expression.Access(expression, accessPoint);
         } else if (match(IDENTIFIER)) {
             // Variable
             final Token identifier = previous();
@@ -261,6 +255,12 @@ public final class Parser {
                     this.index = index;
                     return new Expression.Variable(identifier.input());
                 }
+            } else if (check(DOT) && (checkNext(STRING_LITERAL) || checkNext(NUMBER_LITERAL))) {
+                // Binary literal
+                consume(DOT, "Expected '.' after binary literal.");
+                final String name = identifier.input();
+                final String content = advance().input();
+                return new Expression.Binary(name, content);
             } else {
                 // Access
                 final Expression.Variable variable = new Expression.Variable(identifier.input());

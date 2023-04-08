@@ -21,6 +21,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.jetbrains/annotations
     implementation 'org.jetbrains:annotations:23.1.0'
+    // https://mvnrepository.com/artifact/org.roaringbitmap/RoaringBitmap
+    implementation 'org.roaringbitmap:RoaringBitmap:0.9.39'
 }
 
 test {

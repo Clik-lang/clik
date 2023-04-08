@@ -38,6 +38,9 @@ public interface Ast {
         record Call(String name, Parameter.Passed arguments) implements Expression {
         }
 
+        record Binary(String name, String content) implements Expression {
+        }
+
         record Select(List<Statement.Block> blocks) implements Expression {
         }
 

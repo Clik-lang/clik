@@ -782,6 +782,29 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void binary() {
+        assertProgram(ONE,
+                """
+                        main :: () number {
+                          text :: UTF8."Some text";
+                          return 1;
+                        }
+                        """);
+        assertProgram(new Value.Binary("00000000 00000000 00000001 11110100"),
+                """
+                        main :: () I32 {
+                          return I32.500;
+                        }
+                        """);
+        assertProgram(new Value.Binary("00100010 01001000 01100101 01101100 01101100 01101111 00100010"),
+                """
+                        main :: () UTF8 {
+                          return UTF8."Hello";
+                        }
+                        """);
+    }
+
+    @Test
     public void enumDecl() {
         assertProgram(ZERO,
                 """

@@ -4,6 +4,8 @@ import org.click.Ast;
 import org.click.Type;
 import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -86,6 +88,25 @@ public sealed interface Value {
     }
 
     record RuneLiteral(String character) implements Value {
+    }
+
+    record Binary(ImmutableRoaringBitmap bitmap) implements Value {
+        public Binary(String value) {
+            this(convertString(value));
+        }
+
+        private static ImmutableRoaringBitmap convertString(String value) {
+            MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
+            int i = 0;
+            for (char c : value.toCharArray()) {
+                if (c == ' ') continue;
+                if (c == '1') {
+                    bitmap.add(i);
+                }
+                i++;
+            }
+            return bitmap.toImmutableRoaringBitmap();
+        }
     }
 
     record Struct(String name, java.util.Map<String, Value> parameters) implements Value {
