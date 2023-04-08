@@ -5,6 +5,7 @@ import org.click.interpreter.VM;
 import org.click.utils.BinUtils;
 import org.click.value.Value;
 import org.junit.jupiter.api.Test;
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -174,26 +175,34 @@ public final class IntegrationTest {
 
     @Test
     public void stringLiterals() {
-        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("Hello".getBytes(StandardCharsets.UTF_8))),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
                 """
                         main :: () UTF8 -> "Hello";
                         """);
-        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("Hello".getBytes(StandardCharsets.UTF_8))),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
                 """
                         main :: () UTF8 -> UTF8."Hello";
                         """);
-        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("\"Hello\"".getBytes(StandardCharsets.UTF_8))),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("\"Hello\"")),
                 """
                         main :: () UTF8 -> "\\"Hello\\"";
                         """);
 
-        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("Hello".getBytes(StandardCharsets.UTF_8))),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
                 """
                         main :: () UTF8 -> `Hello`;
                         """);
-        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("\"Hello\"".getBytes(StandardCharsets.UTF_8))),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("\"Hello\"")),
                 """
                         main :: () UTF8 -> `"Hello"`;
+                        """);
+    }
+
+    //@Test
+    public void stringConcatenate() {
+        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello 5")),
+                """
+                        main :: () UTF8 -> "Hello " + 5;
                         """);
     }
 
@@ -1452,5 +1461,10 @@ public final class IntegrationTest {
         } else {
             assertEquals(expected, actual);
         }
+    }
+
+    private static ImmutableRoaringBitmap convertUtf8(String string) {
+        final byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        return BinUtils.convertBytes(bytes);
     }
 }

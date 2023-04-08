@@ -106,8 +106,4 @@ public sealed interface Value {
             elements = java.util.List.copyOf(elements);
         }
     }
-
-    // TODO is this really necessary?
-    record JavaObject(Object object) implements Value {
-    }
 }

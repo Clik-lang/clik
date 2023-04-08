@@ -250,8 +250,8 @@ public final class Evaluator {
                 yield new Value.Array(new Type.Array(Type.NUMBER, values.size()), values);
             }
             case Expression.Operation operation -> {
-                final Value left = evaluate(operation.left(), null);
-                final Value right = evaluate(operation.right(), null);
+                final Value left = evaluate(operation.left(), explicitType);
+                final Value right = evaluate(operation.right(), explicitType);
                 yield ValueOperator.operate(operation.operator(), left, right);
             }
             case Expression.Unary unary -> {
