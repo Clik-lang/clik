@@ -53,7 +53,7 @@ public final class ValueCompute {
         switch (initial) {
             case Value.NumberLiteral initialConstant when delta instanceof Value.NumberLiteral nextConstant -> {
                 final BigDecimal value = initialConstant.value().add(nextConstant.value());
-                return new Value.NumberLiteral(initialConstant.type(), value);
+                return new Value.NumberLiteral(value);
             }
             case Value.BooleanLiteral initialConstant when delta instanceof Value.BooleanLiteral nextConstant -> {
                 final boolean value = initialConstant.value() || nextConstant.value();
@@ -67,7 +67,7 @@ public final class ValueCompute {
         switch (initial) {
             case Value.NumberLiteral initialConstant when next instanceof Value.NumberLiteral nextConstant -> {
                 final BigDecimal delta = nextConstant.value().subtract(initialConstant.value());
-                return new Value.NumberLiteral(initialConstant.type(), delta);
+                return new Value.NumberLiteral(delta);
             }
             case Value.BooleanLiteral initialConstant when next instanceof Value.BooleanLiteral nextConstant -> {
                 final boolean value = initialConstant.value() || nextConstant.value();

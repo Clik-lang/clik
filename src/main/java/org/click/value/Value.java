@@ -67,17 +67,13 @@ public sealed interface Value {
     record Interrupt() implements Value {
     }
 
-    record NumberLiteral(Type type, BigDecimal value) implements Value {
-        public NumberLiteral(Type type, Number value) {
-            this(type, new BigDecimal(value.toString()));
-        }
-
-        public NumberLiteral(Type type, String value) {
-            this(type, new BigDecimal(value));
+    record NumberLiteral(BigDecimal value) implements Value {
+        public NumberLiteral(Number value) {
+            this(new BigDecimal(value.toString()));
         }
 
         public NumberLiteral(String value) {
-            this(Type.REAL, new BigDecimal(value));
+            this(new BigDecimal(value));
         }
     }
 

@@ -4,13 +4,8 @@ import org.click.Type;
 
 public final class ValueType {
     public static Value defaultValue(Type type) {
-        if (type == Type.NATURAL || type == Type.INT ||
-                type == Type.RATIONAL || type == Type.REAL) {
-            return new Value.NumberLiteral(type, 0);
-        }
-        if (type == Type.BOOL) {
-            return new Value.BooleanLiteral(false);
-        }
+        if (type == Type.NUMBER) return new Value.NumberLiteral(0);
+        if (type == Type.BOOL) return new Value.BooleanLiteral(false);
         throw new RuntimeException("Unknown type: " + type);
     }
 
@@ -22,7 +17,7 @@ public final class ValueType {
 
     public static Type extractAssignmentType(Value expression) {
         return switch (expression) {
-            case Value.NumberLiteral numberLiteral -> numberLiteral.type();
+            case Value.NumberLiteral ignored -> Type.NUMBER;
             case Value.BooleanLiteral ignored -> Type.BOOL;
             case Value.StringLiteral ignored -> Type.STRING;
             case Value.RuneLiteral ignored -> Type.RUNE;

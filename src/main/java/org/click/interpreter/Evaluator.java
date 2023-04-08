@@ -226,7 +226,7 @@ public final class Evaluator {
                                 // [5]int @ + 1
                                 final List<Value> evaluated = new ArrayList<>();
                                 for (int i = 0; i < length; i++) {
-                                    this.contextual = new Value.NumberLiteral(Type.NATURAL, i);
+                                    this.contextual = new Value.NumberLiteral(i);
                                     final Value value = evaluate(supplied.expression(), null);
                                     evaluated.add(value);
                                     this.contextual = null;
@@ -250,9 +250,9 @@ public final class Evaluator {
                 final long stepValue = ValueType.requireInteger(step);
                 final List<Value> values = new ArrayList<>();
                 for (long i = startValue; i < endValue; i += stepValue) {
-                    values.add(new Value.NumberLiteral(Type.INT, i));
+                    values.add(new Value.NumberLiteral(i));
                 }
-                yield new Value.Array(new Type.Array(Type.INT, values.size()), values);
+                yield new Value.Array(new Type.Array(Type.NUMBER, values.size()), values);
             }
             case Expression.Operation operation -> {
                 final Value left = evaluate(operation.left(), null);

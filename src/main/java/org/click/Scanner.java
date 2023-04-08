@@ -62,7 +62,7 @@ public final class Scanner {
         final int startIndex = index;
 
         Token.Type type;
-        Token.Literal literal = null;
+        Object literalValue = null;
 
         char c = advance();
         if (c == '(') type = Token.Type.LEFT_PAREN;
@@ -140,15 +140,15 @@ public final class Scanner {
             }
         } else if (c == '\"') {
             type = Token.Type.STRING_LITERAL;
-            literal = nextString();
+            literalValue = nextString();
         } else if (c == '\'') {
             type = Token.Type.RUNE_LITERAL;
-            literal = nextRune();
+            literalValue = nextRune();
         } else if (c == '`') {
             type = Token.Type.STRING_LITERAL;
-            literal = nextRawString();
+            literalValue = nextRawString();
         } else if (Character.isDigit(c)) {
-            literal = nextNumber();
+            literalValue = nextNumber();
             type = Token.Type.NUMBER_LITERAL;
         } else if (Character.isLetter(c)) {
             final String value = nextIdentifier();
@@ -158,7 +158,7 @@ public final class Scanner {
         }
 
         final String text = input.substring(startIndex, index);
-        return new Token(type, line, text, literal);
+        return new Token(type, line, text, literalValue);
     }
 
     private String nextIdentifier() {
@@ -168,7 +168,7 @@ public final class Scanner {
         return input.substring(start, index);
     }
 
-    private Token.Literal nextNumber() {
+    private Number nextNumber() {
         final int start = index - 1;
 
         if (peek() == 'x') {
@@ -179,9 +179,7 @@ public final class Scanner {
                 if (peek() == '_' && isHexDigit(peekNext())) advance();
             }
             final String text = input.substring(start + 2, index).replace("_", "");
-            final Type type = nextNumberSuffix();
-            final long value = Long.parseLong(text, 16);
-            return new Token.Literal(type, value);
+            return Long.parseLong(text, 16);
         }
 
         if (peek() == 'b') {
@@ -192,9 +190,7 @@ public final class Scanner {
                 if (peek() == '_' && (peekNext() == '0' || peekNext() == '1')) advance();
             }
             final String text = input.substring(start + 2, index).replace("_", "");
-            final Type type = nextNumberSuffix();
-            final long value = Long.parseLong(text, 2);
-            return new Token.Literal(type, value);
+            return Long.parseLong(text, 2);
         }
 
         do {
@@ -204,9 +200,7 @@ public final class Scanner {
         if (peek() != '.' || !Character.isDigit(peekNext())) {
             // Integer
             final String text = input.substring(start, index).replace("_", "");
-            final long value = Long.parseLong(text);
-            final Type type = nextNumberSuffix();
-            return new Token.Literal(type, value);
+            return Long.parseLong(text);
         }
         // Float
         advance();
@@ -215,25 +209,10 @@ public final class Scanner {
             if (Character.isDigit(peek())) advance();
         } while (Character.isDigit(peek()) || peek() == '_');
         final String text = input.substring(start, index).replace("_", "");
-        final double value = Double.parseDouble(text);
-        final Type type = nextNumberSuffix();
-        return new Token.Literal(type, value);
+        return Double.parseDouble(text);
     }
 
-    private Type nextNumberSuffix() {
-        if (peek() != '\'') return Type.REAL;
-        advance();
-        final char suffix = advance();
-        return switch (suffix) {
-            case 'r', 'R' -> Type.REAL;
-            case 'q', 'Q' -> Type.RATIONAL;
-            case 'i', 'I' -> Type.INT;
-            case 'n', 'N' -> Type.NATURAL;
-            default -> throw new RuntimeException("Unexpected number suffix: " + suffix);
-        };
-    }
-
-    private Token.Literal nextString() {
+    private String nextString() {
         final StringBuilder builder = new StringBuilder();
         while (peek() != '\"') {
             if (peek() == '\\') advance();
@@ -241,10 +220,10 @@ public final class Scanner {
             builder.append(c);
         }
         advance();
-        return new Token.Literal(Type.STRING, builder.toString());
+        return builder.toString();
     }
 
-    private Token.Literal nextRune() {
+    private String nextRune() {
         final StringBuilder builder = new StringBuilder();
         while (peek() != '\'') {
             if (peek() == '\\') advance();
@@ -252,17 +231,17 @@ public final class Scanner {
             builder.append(c);
         }
         advance();
-        return new Token.Literal(Type.RUNE, builder.toString());
+        return builder.toString();
     }
 
-    private Token.Literal nextRawString() {
+    private String nextRawString() {
         final StringBuilder builder = new StringBuilder();
         while (peek() != '`') {
             final char c = advance();
             builder.append(c);
         }
         advance();
-        return new Token.Literal(Type.STRING, builder.toString());
+        return builder.toString();
     }
 
     char advance() {

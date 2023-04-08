@@ -1,23 +1,13 @@
 package org.click.value;
 
 import org.click.Token;
-import org.click.Type;
 
 import java.math.BigDecimal;
 
 public final class ValueOperator {
     public static Value operate(Token.Type operator, Value left, Value right) {
         if (left instanceof Value.NumberLiteral leftLiteral && right instanceof Value.NumberLiteral rightLiteral) {
-            final Type.NumberSet leftSet = ((Type.Number) leftLiteral.type()).set();
-            final Type.NumberSet rightSet = ((Type.Number) rightLiteral.type()).set();
-            final Type.NumberSet operationSet = Type.NumberSet.values()[Math.max(leftSet.ordinal(), rightSet.ordinal())];
-            final Type type = switch (operationSet) {
-                case REAL -> Type.REAL;
-                case RATIONAL -> Type.RATIONAL;
-                case INTEGER -> Type.INT;
-                case NATURAL -> Type.NATURAL;
-            };
-            return operateInteger(operator, type, leftLiteral.value(), rightLiteral.value());
+            return operateInteger(operator, leftLiteral.value(), rightLiteral.value());
         } else if (left instanceof Value.BooleanLiteral leftLiteral && right instanceof Value.BooleanLiteral rightLiteral) {
             return operateBoolean(operator, leftLiteral.value(), rightLiteral.value());
         } else if (left instanceof Value.StringLiteral || right instanceof Value.StringLiteral) {
@@ -41,7 +31,7 @@ public final class ValueOperator {
         return new Value.BooleanLiteral(result);
     }
 
-    private static Value operateInteger(Token.Type operator, Type type, BigDecimal left, BigDecimal right) {
+    private static Value operateInteger(Token.Type operator, BigDecimal left, BigDecimal right) {
         boolean isComparison = false;
         final BigDecimal result = switch (operator) {
             case PLUS -> left.add(right);
@@ -70,6 +60,6 @@ public final class ValueOperator {
             }
             default -> throw new RuntimeException("Unknown operator: " + operator);
         };
-        return isComparison ? new Value.BooleanLiteral(result.intValue() == 1) : new Value.NumberLiteral(type, result);
+        return isComparison ? new Value.BooleanLiteral(result.intValue() == 1) : new Value.NumberLiteral(result);
     }
 }

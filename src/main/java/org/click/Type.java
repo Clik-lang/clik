@@ -9,11 +9,7 @@ public interface Type {
     Type VOID = new Primitive("void");
     Type BOOL = new Primitive("bool");
     Type RUNE = new Primitive("rune");
-
-    Type NATURAL = new Number(NumberSet.NATURAL);
-    Type INT = new Number(NumberSet.INTEGER);
-    Type RATIONAL = new Number(NumberSet.RATIONAL);
-    Type REAL = new Number(NumberSet.REAL);
+    Type NUMBER = new Primitive("number");
     Type STRING = new BuiltIn("string");
 
     String name();
@@ -47,20 +43,6 @@ public interface Type {
     record BuiltIn(String name) implements Type {
     }
 
-    record Number(NumberSet set) implements Type {
-        @Override
-        public String name() {
-            final String prefix = "number";
-            final String suffix = switch (set) {
-                case NATURAL -> "n";
-                case INTEGER -> "i";
-                case RATIONAL -> "q";
-                case REAL -> "R";
-            };
-            return prefix + "'" + suffix;
-        }
-    }
-
     enum NumberSet {
         NATURAL, INTEGER, RATIONAL, REAL
     }
@@ -69,10 +51,7 @@ public interface Type {
         return switch (name) {
             case "void" -> VOID;
             case "bool" -> BOOL;
-            case "number'n", "number'N" -> NATURAL;
-            case "number'i", "number'I" -> INT;
-            case "number'q", "number'Q" -> RATIONAL;
-            case "number", "number'R" -> REAL;
+            case "number" -> NUMBER;
             case "rune" -> RUNE;
             case "string" -> STRING;
             default -> new Identifier(name);

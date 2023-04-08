@@ -162,7 +162,7 @@ public final class Parser {
             consume(RANGE, "Expected '..' after start of range.");
             final Expression end = nextExpression(0);
             final Expression step = match(RANGE) ? nextExpression(0) :
-                    new Expression.Constant(new Value.NumberLiteral(Type.INT, 1));
+                    new Expression.Constant(new Value.NumberLiteral(1));
             return new Expression.Range(start, end, step);
         }
         // Pratt's algorithm
@@ -197,16 +197,15 @@ public final class Parser {
             return new Expression.Constant(nextUnion());
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
-            final Object value = literal.literal().value();
+            final Object value = literal.value();
             return new Expression.Constant(new Value.StringLiteral((String) value));
         } else if (match(RUNE_LITERAL)) {
             final Token literal = previous();
-            final Object value = literal.literal().value();
+            final Object value = literal.value();
             return new Expression.Constant(new Value.RuneLiteral((String) value));
         } else if (match(NUMBER_LITERAL)) {
-            final var literal = previous().literal();
-            final Object value = literal.value();
-            return new Expression.Constant(new Value.NumberLiteral(literal.type(), (Number) value));
+            final Object value = previous().value();
+            return new Expression.Constant(new Value.NumberLiteral((Number) value));
         } else if (match(TRUE)) {
             return new Expression.Constant(new Value.BooleanLiteral(true));
         } else if (match(FALSE)) {
@@ -357,7 +356,7 @@ public final class Parser {
             if (check(NUMBER_LITERAL)) {
                 // TODO: make mandatory, currently not possible because of function param
                 final Token lengthLiteral = consume(NUMBER_LITERAL, "Expected number for array length.");
-                length = ((Long) lengthLiteral.literal().value()).longValue();
+                length = ((Long) lengthLiteral.value()).longValue();
             }
             consume(RIGHT_BRACKET, "Expected ']'.");
             final Type arrayType = nextType();
@@ -448,7 +447,7 @@ public final class Parser {
                     consume(COLON, "Expect '::' after field name.");
                     value = nextExpression();
                 } else {
-                    value = new Expression.Constant(new Value.NumberLiteral(Type.NATURAL, index++));
+                    value = new Expression.Constant(new Value.NumberLiteral(index++));
                 }
                 entries.put(identifier.input(), value);
             } while (match(COMMA) && !check(RIGHT_BRACE));
@@ -563,7 +562,7 @@ public final class Parser {
         final String name = directive.input();
         if (name.equals("load")) {
             final Token literal = consume(STRING_LITERAL, "Expect string literal.");
-            final String path = (String) literal.literal().value();
+            final String path = (String) literal.value();
             return new Directive.Statement.Load(path);
         } else {
             throw error("Unknown directive.");

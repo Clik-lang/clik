@@ -57,22 +57,17 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
                 walker.register(variableName, null);
                 for (int i = 0; i < values.size(); i++) {
                     final Value value = values.get(i);
-                    walker.update(indexName, new Value.NumberLiteral(Type.NATURAL, i));
+                    walker.update(indexName, new Value.NumberLiteral(i));
                     walker.update(variableName, value);
                     if (!iterate(body)) break;
                 }
             } else {
                 // Ref loop
-                final Value tracked = walker.find(arrayType.type().name());
                 assert declarations.stream().allMatch(Statement.Loop.Declaration::ref) : "Invalid loop declaration: " + declarations;
                 List<String> refs = declarations.stream().map(Statement.Loop.Declaration::name).toList();
                 for (Statement.Loop.Declaration declaration : declarations) {
                     final String name = declaration.name();
-                    final Type referenceType = switch (tracked) {
-                        case Value.StructDecl structDecl -> structDecl.get(name);
-                        default -> throw new RuntimeException("Unknown type: " + tracked);
-                    };
-                    walker.register(name, new Value.NumberLiteral(referenceType, 0));
+                    walker.register(name, new Value.NumberLiteral(0));
                 }
                 for (Value value : values) {
                     for (String refName : refs) {

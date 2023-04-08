@@ -3,12 +3,9 @@ package org.click;
 import org.jetbrains.annotations.Nullable;
 
 public record Token(Type type, int line, String input,
-                    @Nullable Literal literal) {
+                    @Nullable Object value) {
     public Token(Type type, int line, String input) {
         this(type, line, input, null);
-    }
-
-    public record Literal(org.click.Type type, Object value) {
     }
 
     public enum Type {

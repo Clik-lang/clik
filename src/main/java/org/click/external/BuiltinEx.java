@@ -1,6 +1,5 @@
 package org.click.external;
 
-import org.click.Type;
 import org.click.value.Value;
 import org.click.value.ValueSerializer;
 
@@ -24,7 +23,7 @@ public final class BuiltinEx {
         @Override
         public Value run(Value... args) {
             final int value = scanner.nextInt();
-            return new Value.NumberLiteral(Type.INT, value);
+            return new Value.NumberLiteral(value);
         }
     }
 }

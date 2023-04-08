@@ -121,22 +121,10 @@ public final class IntegrationTest {
                 """
                         main :: () number -> 1_000;
                         """);
-        assertProgram(new Value.NumberLiteral(Type.NATURAL, "1"),
-                """
-                        main :: () number -> 1'n;
-                        """);
-        assertProgram(new Value.NumberLiteral(Type.NATURAL, "1"),
-                """
-                        main :: () number'N -> 1'n;
-                        """);
 
         assertProgram(new Value.NumberLiteral("5.5"),
                 """
                         main :: () number -> 5.5;
-                        """);
-        assertProgram(new Value.NumberLiteral(Type.RATIONAL, "5.5"),
-                """
-                        main :: () number'Q -> 5.5'Q;
                         """);
         assertProgram(new Value.NumberLiteral("5000.5"),
                 """
@@ -515,7 +503,7 @@ public final class IntegrationTest {
 
     @Test
     public void arrayLazy() {
-        assertProgram(new Value.Array(new Type.Array(Type.REAL, 5), List.of(
+        assertProgram(new Value.Array(new Type.Array(Type.NUMBER, 5), List.of(
                         new Value.NumberLiteral("1"),
                         new Value.NumberLiteral("2"),
                         new Value.NumberLiteral("3"),
@@ -532,7 +520,7 @@ public final class IntegrationTest {
 
     @Test
     public void arrayFilter() {
-        assertProgram(new Value.Array(new Type.Array(Type.REAL, -1), List.of(
+        assertProgram(new Value.Array(new Type.Array(Type.NUMBER, -1), List.of(
                         new Value.NumberLiteral("3"),
                         new Value.NumberLiteral("4"),
                         new Value.NumberLiteral("5"))
