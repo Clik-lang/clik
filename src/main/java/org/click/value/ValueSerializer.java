@@ -8,7 +8,6 @@ public final class ValueSerializer {
         return switch (expression) {
             case Value.NumberLiteral numberLiteral -> String.valueOf(numberLiteral.value());
             case Value.BooleanLiteral booleanLiteral -> String.valueOf(booleanLiteral.value());
-            case Value.StringLiteral stringLiteral -> stringLiteral.value();
             case Value.Struct struct -> {
                 final Map<String, Value> parameters = struct.parameters();
                 final StringBuilder builder = new StringBuilder();

@@ -16,6 +16,9 @@ public interface Ast {
         record Constant(Value value) implements Expression {
         }
 
+        record StringLiteral(String value) implements Expression {
+        }
+
         record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
         }
 

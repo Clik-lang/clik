@@ -3,8 +3,6 @@ package org.click.utils;
 import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
-import java.util.function.IntConsumer;
-
 public final class BinUtils {
     public static String convertByteArray(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
@@ -18,18 +16,20 @@ public final class BinUtils {
         return sb.toString();
     }
 
-    public static void forEachBit(byte[] bytes, IntConsumer consumer) {
+    public static ImmutableRoaringBitmap convertBytes(byte[] bytes) {
+        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
         int bitIndex = 0;
         for (byte b : bytes) {
             int unsignedByte = b & 0xff;
             for (int i = 0; i < 8; i++) {
                 if ((unsignedByte & (1 << i)) != 0) {
                     final int position = bitIndex + (7 - i);
-                    consumer.accept(position);
+                    bitmap.add(position);
                 }
             }
             bitIndex += 8;
         }
+        return bitmap.toImmutableRoaringBitmap();
     }
 
     public static ImmutableRoaringBitmap convertString(String value) {

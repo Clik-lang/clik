@@ -80,9 +80,6 @@ public sealed interface Value {
     record BooleanLiteral(boolean value) implements Value {
     }
 
-    record StringLiteral(String value) implements Value {
-    }
-
     record RuneLiteral(String character) implements Value {
     }
 

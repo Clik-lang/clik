@@ -1,7 +1,6 @@
 package org.click;
 
 import org.click.utils.BinUtils;
-import org.roaringbitmap.RoaringBitmap;
 import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
 import java.nio.charset.StandardCharsets;
@@ -17,9 +16,7 @@ public final class BinStandards {
 
     private static ImmutableRoaringBitmap serializeUTF8(String content) {
         final byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-        RoaringBitmap bitmap = new RoaringBitmap();
-        BinUtils.forEachBit(bytes, bitmap::add);
-        return bitmap.toMutableRoaringBitmap().toImmutableRoaringBitmap();
+        return BinUtils.convertBytes(bytes);
     }
 
     public static ImmutableRoaringBitmap serializeI32(String content) {

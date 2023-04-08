@@ -10,7 +10,6 @@ public interface Type {
     Type BOOL = new Primitive("bool");
     Type RUNE = new Primitive("rune");
     Type NUMBER = new Primitive("number");
-    Type STRING = new BuiltIn("string");
 
     String name();
 
@@ -37,23 +36,12 @@ public interface Type {
     record Primitive(String name) implements Type {
     }
 
-    /**
-     * Convenient type supported by the language.
-     */
-    record BuiltIn(String name) implements Type {
-    }
-
-    enum NumberSet {
-        NATURAL, INTEGER, RATIONAL, REAL
-    }
-
     static Type of(String name) {
         return switch (name) {
             case "void" -> VOID;
             case "bool" -> BOOL;
             case "number" -> NUMBER;
             case "rune" -> RUNE;
-            case "string" -> STRING;
             default -> new Identifier(name);
         };
     }

@@ -47,6 +47,13 @@ public final class Evaluator {
                 }
                 yield value;
             }
+            case Expression.StringLiteral stringLiteral -> {
+                if (explicitType == null)
+                    throw new RuntimeException("String literal must have explicit type: " + stringLiteral);
+                final String value = stringLiteral.value();
+                final ImmutableRoaringBitmap bitmap = BinStandards.serialize(explicitType.name(), value);
+                yield new Value.Binary(explicitType.name(), bitmap);
+            }
             case Expression.Enum enumDeclaration -> {
                 final Type type = enumDeclaration.type();
                 Map<String, Value> evaluated = new HashMap<>();
@@ -156,6 +163,7 @@ public final class Evaluator {
                 final String name = binary.name();
                 final String content = binary.content();
                 final ImmutableRoaringBitmap bitmap = BinStandards.serialize(name, content);
+                if (bitmap == null) throw new RuntimeException("Invalid binary: " + name + " -> " + content);
                 yield new Value.Binary(name, bitmap);
             }
             case Expression.Select select -> this.evaluatorSelect.evaluate(select, explicitType);

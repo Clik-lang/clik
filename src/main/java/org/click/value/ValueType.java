@@ -19,7 +19,6 @@ public final class ValueType {
         return switch (expression) {
             case Value.NumberLiteral ignored -> Type.NUMBER;
             case Value.BooleanLiteral ignored -> Type.BOOL;
-            case Value.StringLiteral ignored -> Type.STRING;
             case Value.RuneLiteral ignored -> Type.RUNE;
             case Value.Struct struct -> Type.of(struct.name());
             case Value.Enum en -> Type.of(en.name());

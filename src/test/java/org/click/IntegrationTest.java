@@ -2,9 +2,11 @@ package org.click;
 
 import org.click.external.ExternalFunction;
 import org.click.interpreter.VM;
+import org.click.utils.BinUtils;
 import org.click.value.Value;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -172,30 +174,26 @@ public final class IntegrationTest {
 
     @Test
     public void stringLiterals() {
-        assertProgram(new Value.StringLiteral("Hello"),
+        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("Hello".getBytes(StandardCharsets.UTF_8))),
                 """
-                        main :: () string -> "Hello";
+                        main :: () UTF8 -> "Hello";
                         """);
-        assertProgram(new Value.StringLiteral("\"Hello\""),
+        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("Hello".getBytes(StandardCharsets.UTF_8))),
                 """
-                        main :: () string -> "\\"Hello\\"";
+                        main :: () UTF8 -> UTF8."Hello";
+                        """);
+        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("\"Hello\"".getBytes(StandardCharsets.UTF_8))),
+                """
+                        main :: () UTF8 -> "\\"Hello\\"";
                         """);
 
-        assertProgram(new Value.StringLiteral("Hello"),
+        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("Hello".getBytes(StandardCharsets.UTF_8))),
                 """
-                        main :: () string -> `Hello`;
+                        main :: () UTF8 -> `Hello`;
                         """);
-        assertProgram(new Value.StringLiteral("\"Hello\""),
+        assertProgram(new Value.Binary("UTF8", BinUtils.convertBytes("\"Hello\"".getBytes(StandardCharsets.UTF_8))),
                 """
-                        main :: () string -> `"Hello"`;
-                        """);
-    }
-
-    @Test
-    public void stringConcatenate() {
-        assertProgram(new Value.StringLiteral("Hello 5"),
-                """
-                        main :: () string -> "Hello " + 5;
+                        main :: () UTF8 -> `"Hello"`;
                         """);
     }
 
@@ -463,13 +461,6 @@ public final class IntegrationTest {
                           return array[0];
                         }
                         """);
-        assertProgram(new Value.StringLiteral("Hello"),
-                """
-                        main :: () string {
-                          array :: [2]string {"Hello", "World"};
-                          return array[0];
-                        }
-                        """);
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
                         Point :: struct {x: number, y: number}
@@ -662,19 +653,9 @@ public final class IntegrationTest {
                         }
                         """);
 
-        assertProgram(new Value.StringLiteral("test"),
-                """
-                        Player :: struct {name: string, point: Point}
-                        Point :: struct {x: number, y: number}
-                        main :: () string {
-                            player :: Player {"test", {1, 2}};
-                            return player.name;
-                        }
-                        """);
-
         assertProgram(new Value.Struct("Point", Map.of("x", ONE, "y", TWO)),
                 """
-                        Player :: struct {name: string, point: Point}
+                        Player :: struct {name: UTF8, point: Point}
                         Point :: struct {x: number, y: number}
                         main :: () Point {
                             player := Player {"test", {3, 4}};
@@ -685,7 +666,7 @@ public final class IntegrationTest {
 
         assertProgram(TWO,
                 """
-                        Player :: struct {name: string, point: Point}
+                        Player :: struct {name: UTF8, point: Point}
                         Point :: struct {x: number, y: number}
                         main :: () number {
                             player :: Player {"test", {1, 2}};
@@ -727,7 +708,7 @@ public final class IntegrationTest {
                         """);
         assertProgram(TWO,
                 """
-                        Player :: struct {name: string, point: Point}
+                        Player :: struct {name: UTF8, point: Point}
                         Point :: struct {x: number, y: number}
                         main :: () number {
                             player :: Player {"test", {1, 2}};
@@ -784,7 +765,7 @@ public final class IntegrationTest {
                           return I32.500;
                         }
                         """);
-        assertProgram(new Value.Binary("UTF8", "00100010 01001000 01100101 01101100 01101100 01101111 00100010"),
+        assertProgram(new Value.Binary("UTF8", "01001000 01100101 01101100 01101100 01101111"),
                 """
                         main :: () UTF8 {
                           return UTF8."Hello";

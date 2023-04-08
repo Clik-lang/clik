@@ -198,7 +198,7 @@ public final class Parser {
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
-            return new Expression.Constant(new Value.StringLiteral((String) value));
+            return new Expression.StringLiteral((String) value);
         } else if (match(RUNE_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
@@ -258,7 +258,7 @@ public final class Parser {
                 // Binary literal
                 consume(DOT, "Expected '.' after binary literal.");
                 final String name = identifier.input();
-                final String content = advance().input();
+                final String content = advance().value().toString();
                 return new Expression.Binary(name, content);
             } else {
                 // Access
