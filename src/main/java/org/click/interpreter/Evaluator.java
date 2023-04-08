@@ -160,13 +160,13 @@ public final class Evaluator {
                     final byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
                     RoaringBitmap bitmap = new RoaringBitmap();
                     BinUtils.forEachBit(bytes, bitmap::add);
-                    yield new Value.Binary(bitmap.toMutableRoaringBitmap().toImmutableRoaringBitmap());
+                    yield new Value.Binary(name, bitmap.toMutableRoaringBitmap().toImmutableRoaringBitmap());
                 } else if (name.equals("I32")) {
                     final int integer = Integer.parseInt(content);
                     String bin = Integer.toBinaryString(integer);
                     // Pad with zeros
                     bin = "0".repeat(32 - bin.length()) + bin;
-                    yield new Value.Binary(bin);
+                    yield new Value.Binary(name, bin);
                 } else {
                     throw new RuntimeException("Unknown binary type: " + name);
                 }

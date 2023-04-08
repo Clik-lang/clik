@@ -790,13 +790,13 @@ public final class IntegrationTest {
                           return 1;
                         }
                         """);
-        assertProgram(new Value.Binary("00000000 00000000 00000001 11110100"),
+        assertProgram(new Value.Binary("I32", "00000000 00000000 00000001 11110100"),
                 """
                         main :: () I32 {
                           return I32.500;
                         }
                         """);
-        assertProgram(new Value.Binary("00100010 01001000 01100101 01101100 01101100 01101111 00100010"),
+        assertProgram(new Value.Binary("UTF8", "00100010 01001000 01100101 01101100 01101100 01101111 00100010"),
                 """
                         main :: () UTF8 {
                           return UTF8."Hello";

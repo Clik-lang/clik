@@ -90,9 +90,9 @@ public sealed interface Value {
     record RuneLiteral(String character) implements Value {
     }
 
-    record Binary(ImmutableRoaringBitmap bitmap) implements Value {
-        public Binary(String value) {
-            this(convertString(value));
+    record Binary(String name, ImmutableRoaringBitmap bitmap) implements Value {
+        public Binary(String name, String value) {
+            this(name, convertString(value));
         }
 
         private static ImmutableRoaringBitmap convertString(String value) {
@@ -100,9 +100,9 @@ public sealed interface Value {
             int i = 0;
             for (char c : value.toCharArray()) {
                 if (c == ' ') continue;
-                if (c == '1') {
-                    bitmap.add(i);
-                }
+                if (c != '0' && c != '1')
+                    throw new IllegalArgumentException("Invalid binary string: " + value);
+                if (c == '1') bitmap.add(i);
                 i++;
             }
             return bitmap.toImmutableRoaringBitmap();
