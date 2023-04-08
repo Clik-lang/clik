@@ -3,9 +3,9 @@ package org.click.value;
 import org.click.Ast;
 import org.click.Type;
 import org.click.interpreter.Executor;
+import org.click.utils.BinUtils;
 import org.jetbrains.annotations.Nullable;
 import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -88,20 +88,7 @@ public sealed interface Value {
 
     record Binary(String name, ImmutableRoaringBitmap bitmap) implements Value {
         public Binary(String name, String value) {
-            this(name, convertString(value));
-        }
-
-        private static ImmutableRoaringBitmap convertString(String value) {
-            MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
-            int i = 0;
-            for (char c : value.toCharArray()) {
-                if (c == ' ') continue;
-                if (c != '0' && c != '1')
-                    throw new IllegalArgumentException("Invalid binary string: " + value);
-                if (c == '1') bitmap.add(i);
-                i++;
-            }
-            return bitmap.toImmutableRoaringBitmap();
+            this(name, BinUtils.convertString(value));
         }
     }
 

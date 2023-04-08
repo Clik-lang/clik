@@ -1,15 +1,14 @@
 package org.click.interpreter;
 
+import org.click.BinStandards;
 import org.click.ScopeWalker;
 import org.click.Token;
 import org.click.Type;
-import org.click.utils.BinUtils;
 import org.click.value.Value;
 import org.click.value.ValueOperator;
 import org.click.value.ValueType;
-import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.LongStream;
 
@@ -156,20 +155,8 @@ public final class Evaluator {
             case Expression.Binary binary -> {
                 final String name = binary.name();
                 final String content = binary.content();
-                if (name.equals("UTF8")) {
-                    final byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-                    RoaringBitmap bitmap = new RoaringBitmap();
-                    BinUtils.forEachBit(bytes, bitmap::add);
-                    yield new Value.Binary(name, bitmap.toMutableRoaringBitmap().toImmutableRoaringBitmap());
-                } else if (name.equals("I32")) {
-                    final int integer = Integer.parseInt(content);
-                    String bin = Integer.toBinaryString(integer);
-                    // Pad with zeros
-                    bin = "0".repeat(32 - bin.length()) + bin;
-                    yield new Value.Binary(name, bin);
-                } else {
-                    throw new RuntimeException("Unknown binary type: " + name);
-                }
+                final ImmutableRoaringBitmap bitmap = BinStandards.serialize(name, content);
+                yield new Value.Binary(name, bitmap);
             }
             case Expression.Select select -> this.evaluatorSelect.evaluate(select, explicitType);
             case Expression.Initialization initialization -> {

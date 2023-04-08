@@ -1,5 +1,8 @@
 package org.click.utils;
 
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+import org.roaringbitmap.buffer.MutableRoaringBitmap;
+
 import java.util.function.IntConsumer;
 
 public final class BinUtils {
@@ -27,5 +30,18 @@ public final class BinUtils {
             }
             bitIndex += 8;
         }
+    }
+
+    public static ImmutableRoaringBitmap convertString(String value) {
+        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
+        int i = 0;
+        for (char c : value.toCharArray()) {
+            if (c == ' ') continue;
+            if (c != '0' && c != '1')
+                throw new IllegalArgumentException("Invalid binary string: " + value);
+            if (c == '1') bitmap.add(i);
+            i++;
+        }
+        return bitmap.toImmutableRoaringBitmap();
     }
 }
