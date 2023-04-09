@@ -1,12 +1,12 @@
 package org.click;
 
 import org.click.utils.BinUtils;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
+import java.lang.foreign.MemorySegment;
 import java.nio.charset.StandardCharsets;
 
 public final class BinStandards {
-    public static ImmutableRoaringBitmap serialize(String name, String content) {
+    public static MemorySegment serialize(String name, String content) {
         return switch (name) {
             case "UTF8" -> BinStandards.serializeUTF8(content);
             case "I32" -> BinStandards.serializeI32(content);
@@ -14,12 +14,12 @@ public final class BinStandards {
         };
     }
 
-    private static ImmutableRoaringBitmap serializeUTF8(String content) {
+    private static MemorySegment serializeUTF8(String content) {
         final byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
         return BinUtils.convertBytes(bytes);
     }
 
-    public static ImmutableRoaringBitmap serializeI32(String content) {
+    private static MemorySegment serializeI32(String content) {
         final int integer = Integer.parseInt(content);
         String bin = Integer.toBinaryString(integer);
         // Pad with zeros

@@ -7,8 +7,8 @@ import org.click.Type;
 import org.click.value.Value;
 import org.click.value.ValueOperator;
 import org.click.value.ValueType;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
+import java.lang.foreign.MemorySegment;
 import java.util.*;
 import java.util.stream.LongStream;
 
@@ -51,7 +51,7 @@ public final class Evaluator {
                 if (explicitType == null)
                     throw new RuntimeException("String literal must have explicit type: " + stringLiteral);
                 final String value = stringLiteral.value();
-                final ImmutableRoaringBitmap bitmap = BinStandards.serialize(explicitType.name(), value);
+                final MemorySegment bitmap = BinStandards.serialize(explicitType.name(), value);
                 yield new Value.Binary(explicitType.name(), bitmap);
             }
             case Expression.Enum enumDeclaration -> {
@@ -162,8 +162,7 @@ public final class Evaluator {
             case Expression.Binary binary -> {
                 final String name = binary.name();
                 final String content = binary.content();
-                final ImmutableRoaringBitmap bitmap = BinStandards.serialize(name, content);
-                if (bitmap == null) throw new RuntimeException("Invalid binary: " + name + " -> " + content);
+                final MemorySegment bitmap = BinStandards.serialize(name, content);
                 yield new Value.Binary(name, bitmap);
             }
             case Expression.Select select -> this.evaluatorSelect.evaluate(select, explicitType);

@@ -3,12 +3,12 @@ package org.click.value;
 import org.click.Ast;
 import org.click.Type;
 import org.click.interpreter.Executor;
-import org.click.utils.BinUtils;
 import org.jetbrains.annotations.Nullable;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
+import java.lang.foreign.MemorySegment;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 import static org.click.Ast.Parameter;
 import static org.click.Ast.Statement;
@@ -83,9 +83,21 @@ public sealed interface Value {
     record RuneLiteral(String character) implements Value {
     }
 
-    record Binary(String name, ImmutableRoaringBitmap bitmap) implements Value {
-        public Binary(String name, String value) {
-            this(name, BinUtils.convertString(value));
+    record Binary(String name, MemorySegment segment) implements Value {
+        public Binary {
+            segment = segment.asReadOnly();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Binary binary)) return false;
+            return Objects.equals(name, binary.name) && segment.mismatch(binary.segment) == -1;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, segment);
         }
     }
 

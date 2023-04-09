@@ -1,7 +1,7 @@
 package org.click.utils;
 
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
+import java.lang.foreign.MemorySegment;
+import java.util.BitSet;
 
 public final class BinUtils {
     public static String convertByteArray(byte[] bytes) {
@@ -16,32 +16,21 @@ public final class BinUtils {
         return sb.toString();
     }
 
-    public static ImmutableRoaringBitmap convertBytes(byte[] bytes) {
-        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
-        int bitIndex = 0;
-        for (byte b : bytes) {
-            int unsignedByte = b & 0xff;
-            for (int i = 0; i < 8; i++) {
-                if ((unsignedByte & (1 << i)) != 0) {
-                    final int position = bitIndex + (7 - i);
-                    bitmap.add(position);
-                }
-            }
-            bitIndex += 8;
-        }
-        return bitmap.toImmutableRoaringBitmap();
+    public static MemorySegment convertBytes(byte[] bytes) {
+        return MemorySegment.ofArray(bytes.clone());
     }
 
-    public static ImmutableRoaringBitmap convertString(String value) {
-        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
+    public static MemorySegment convertString(String value) {
+        BitSet bitSet = new BitSet();
         int i = 0;
         for (char c : value.toCharArray()) {
             if (c == ' ') continue;
             if (c != '0' && c != '1')
                 throw new IllegalArgumentException("Invalid binary string: " + value);
-            if (c == '1') bitmap.add(i);
+            if (c == '1') bitSet.set(i);
             i++;
         }
-        return bitmap.toImmutableRoaringBitmap();
+        final byte[] bytes = bitSet.toByteArray();
+        return convertBytes(bytes);
     }
 }

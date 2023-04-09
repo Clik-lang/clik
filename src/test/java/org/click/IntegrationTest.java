@@ -2,12 +2,10 @@ package org.click;
 
 import org.click.external.ExternalFunction;
 import org.click.interpreter.VM;
-import org.click.utils.BinUtils;
 import org.click.value.Value;
 import org.junit.jupiter.api.Test;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
 
-import java.nio.charset.StandardCharsets;
+import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 
@@ -768,13 +766,13 @@ public final class IntegrationTest {
                           return 1;
                         }
                         """);
-        assertProgram(new Value.Binary("I32", "00000000 00000000 00000001 11110100"),
+        assertProgram(new Value.Binary("I32", convertI32(500)),
                 """
                         main :: () I32 {
                           return I32.500;
                         }
                         """);
-        assertProgram(new Value.Binary("UTF8", "01001000 01100101 01101100 01101100 01101111"),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
                 """
                         main :: () UTF8 {
                           return UTF8."Hello";
@@ -1463,8 +1461,11 @@ public final class IntegrationTest {
         }
     }
 
-    private static ImmutableRoaringBitmap convertUtf8(String string) {
-        final byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
-        return BinUtils.convertBytes(bytes);
+    private static MemorySegment convertI32(int number) {
+        return BinStandards.serialize("I32", String.valueOf(number));
+    }
+
+    private static MemorySegment convertUtf8(String string) {
+        return BinStandards.serialize("UTF8", string);
     }
 }
