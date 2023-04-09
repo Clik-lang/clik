@@ -1,6 +1,7 @@
 package org.click.value;
 
 import org.click.Ast;
+import org.click.BinStandard;
 import org.click.Type;
 import org.click.interpreter.Executor;
 import org.jetbrains.annotations.Nullable;
@@ -80,7 +81,7 @@ public sealed interface Value {
     record BooleanLiteral(boolean value) implements Value {
     }
 
-    record Binary(String name, MemorySegment segment) implements Value {
+    record Binary(BinStandard standard, MemorySegment segment) implements Value {
         public Binary {
             segment = segment.asReadOnly();
         }
@@ -89,12 +90,12 @@ public sealed interface Value {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (!(o instanceof Binary binary)) return false;
-            return Objects.equals(name, binary.name) && segment.mismatch(binary.segment) == -1;
+            return Objects.equals(standard, binary.standard) && segment.mismatch(binary.segment) == -1;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(name, segment);
+            return Objects.hash(standard, segment);
         }
     }
 

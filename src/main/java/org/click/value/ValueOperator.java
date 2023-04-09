@@ -1,9 +1,9 @@
 package org.click.value;
 
+import org.click.BinStandard;
 import org.click.Token;
 
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentScope;
 import java.math.BigDecimal;
 
 public final class ValueOperator {
@@ -13,23 +13,11 @@ public final class ValueOperator {
         } else if (left instanceof Value.BooleanLiteral leftLiteral && right instanceof Value.BooleanLiteral rightLiteral) {
             return operateBoolean(operator, leftLiteral.value(), rightLiteral.value());
         } else if (left instanceof Value.Binary leftBin && right instanceof Value.Binary rightBin) {
-            if (!leftBin.name().equals(rightBin.name()))
-                throw new RuntimeException("Cannot operate on different binaries: " + leftBin.name() + " and " + rightBin.name());
-            return switch (leftBin.name()) {
-                case "UTF8" -> {
-                    if (operator != Token.Type.PLUS)
-                        throw new RuntimeException("Unknown string operator: " + operator);
-                    final MemorySegment leftSegment = leftBin.segment();
-                    final long leftSize = leftSegment.byteSize();
-                    final MemorySegment rightSegment = rightBin.segment();
-                    final long rightSize = rightSegment.byteSize();
-                    final MemorySegment segment = MemorySegment.allocateNative(leftSize + rightSize, SegmentScope.global());
-                    MemorySegment.copy(leftSegment, 0, segment, 0, leftSize);
-                    MemorySegment.copy(rightSegment, 0, segment, leftSize, rightSize);
-                    yield new Value.Binary("UTF8", segment);
-                }
-                default -> throw new RuntimeException("Unknown binary: " + leftBin.name());
-            };
+            if (leftBin.standard() != rightBin.standard())
+                throw new RuntimeException("Cannot operate on different binaries: " + leftBin.standard() + " and " + rightBin.standard());
+            final BinStandard standard = leftBin.standard();
+            final MemorySegment segment = standard.operate(leftBin.segment(), rightBin.segment(), operator);
+            return new Value.Binary(standard, segment);
         } else {
             throw new RuntimeException("Unknown types: " + left + " and " + right);
         }

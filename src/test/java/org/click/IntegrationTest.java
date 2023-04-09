@@ -173,24 +173,24 @@ public final class IntegrationTest {
 
     @Test
     public void stringLiterals() {
-        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
                 """
                         main :: () UTF8 -> "Hello";
                         """);
-        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
                 """
                         main :: () UTF8 -> UTF8."Hello";
                         """);
-        assertProgram(new Value.Binary("UTF8", convertUtf8("\"Hello\"")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("\"Hello\"")),
                 """
                         main :: () UTF8 -> "\\"Hello\\"";
                         """);
 
-        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
                 """
                         main :: () UTF8 -> `Hello`;
                         """);
-        assertProgram(new Value.Binary("UTF8", convertUtf8("\"Hello\"")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("\"Hello\"")),
                 """
                         main :: () UTF8 -> `"Hello"`;
                         """);
@@ -198,7 +198,7 @@ public final class IntegrationTest {
 
     @Test
     public void stringConcatenate() {
-        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello World")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello World")),
                 """
                         main :: () UTF8 -> "Hello " + "World";
                         """);
@@ -206,11 +206,11 @@ public final class IntegrationTest {
 
     @Test
     public void runeLiterals() {
-        assertProgram(new Value.Binary("UTF8", convertUtf8("a")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("a")),
                 """
                         main :: () UTF8 -> 'a';
                         """);
-        assertProgram(new Value.Binary("UTF8", convertUtf8("β")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("β")),
                 """
                         main :: () UTF8 -> 'β';
                         """);
@@ -766,13 +766,13 @@ public final class IntegrationTest {
                           return 1;
                         }
                         """);
-        assertProgram(new Value.Binary("I32", convertI32(500)),
+        assertProgram(new Value.Binary(BinStandard.I32, convertI32(500)),
                 """
                         main :: () I32 {
                           return I32.500;
                         }
                         """);
-        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello")),
+        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
                 """
                         main :: () UTF8 {
                           return UTF8."Hello";
@@ -1462,10 +1462,10 @@ public final class IntegrationTest {
     }
 
     private static MemorySegment convertI32(int number) {
-        return BinStandards.serialize("I32", String.valueOf(number));
+        return BinStandard.I32.serialize(String.valueOf(number));
     }
 
     private static MemorySegment convertUtf8(String string) {
-        return BinStandards.serialize("UTF8", string);
+        return BinStandard.UTF8.serialize(string);
     }
 }

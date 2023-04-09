@@ -1,6 +1,6 @@
 package org.click.interpreter;
 
-import org.click.BinStandards;
+import org.click.BinStandard;
 import org.click.ScopeWalker;
 import org.click.Token;
 import org.click.Type;
@@ -51,15 +51,17 @@ public final class Evaluator {
                 if (explicitType == null)
                     throw new RuntimeException("String literal must have explicit type: " + stringLiteral);
                 final String value = stringLiteral.value();
-                final MemorySegment bitmap = BinStandards.serialize(explicitType.name(), value);
-                yield new Value.Binary(explicitType.name(), bitmap);
+                final BinStandard standard = BinStandard.get(explicitType.name());
+                final MemorySegment bitmap = standard.serialize(value);
+                yield new Value.Binary(standard, bitmap);
             }
             case Expression.RuneLiteral runeLiteral -> {
                 if (explicitType == null)
                     throw new RuntimeException("Rune literal must have explicit type: " + runeLiteral);
                 final String value = runeLiteral.value();
-                final MemorySegment bitmap = BinStandards.serialize(explicitType.name(), value);
-                yield new Value.Binary(explicitType.name(), bitmap);
+                final BinStandard standard = BinStandard.get(explicitType.name());
+                final MemorySegment bitmap = standard.serialize(value);
+                yield new Value.Binary(standard, bitmap);
             }
             case Expression.Enum enumDeclaration -> {
                 final Type type = enumDeclaration.type();
@@ -169,8 +171,9 @@ public final class Evaluator {
             case Expression.Binary binary -> {
                 final String name = binary.name();
                 final String content = binary.content();
-                final MemorySegment bitmap = BinStandards.serialize(name, content);
-                yield new Value.Binary(name, bitmap);
+                final BinStandard standard = BinStandard.get(name);
+                final MemorySegment bitmap = standard.serialize(content);
+                yield new Value.Binary(standard, bitmap);
             }
             case Expression.Select select -> this.evaluatorSelect.evaluate(select, explicitType);
             case Expression.Initialization initialization -> {
