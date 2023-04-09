@@ -196,11 +196,11 @@ public final class IntegrationTest {
                         """);
     }
 
-    //@Test
+    @Test
     public void stringConcatenate() {
-        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello 5")),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("Hello World")),
                 """
-                        main :: () UTF8 -> "Hello " + 5;
+                        main :: () UTF8 -> "Hello " + "World";
                         """);
     }
 
