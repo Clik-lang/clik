@@ -1,7 +1,5 @@
 package org.click;
 
-import org.click.utils.BinUtils;
-
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentScope;
 import java.nio.charset.StandardCharsets;
@@ -15,7 +13,7 @@ public interface BinStandard {
         @Override
         public MemorySegment serialize(String content) {
             final byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-            return BinUtils.convertBytes(bytes);
+            return MemorySegment.ofArray(bytes);
         }
 
         @Override
@@ -33,11 +31,8 @@ public interface BinStandard {
     BinStandard I32 = new BinStandard() {
         @Override
         public MemorySegment serialize(String content) {
-            final int integer = Integer.parseInt(content);
-            String bin = Integer.toBinaryString(integer);
-            // Pad with zeros
-            bin = "0".repeat(32 - bin.length()) + bin;
-            return BinUtils.convertString(bin);
+            final int num = Integer.parseInt(content);
+            return MemorySegment.ofArray(new int[]{num});
         }
 
         @Override
@@ -48,11 +43,8 @@ public interface BinStandard {
     BinStandard I64 = new BinStandard() {
         @Override
         public MemorySegment serialize(String content) {
-            final int integer = Integer.parseInt(content);
-            String bin = Integer.toBinaryString(integer);
-            // Pad with zeros
-            bin = "0".repeat(64 - bin.length()) + bin;
-            return BinUtils.convertString(bin);
+            final long num = Long.parseLong(content);
+            return MemorySegment.ofArray(new long[]{num});
         }
 
         @Override
