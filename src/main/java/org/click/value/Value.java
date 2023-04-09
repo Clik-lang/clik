@@ -80,9 +80,6 @@ public sealed interface Value {
     record BooleanLiteral(boolean value) implements Value {
     }
 
-    record RuneLiteral(String character) implements Value {
-    }
-
     record Binary(String name, MemorySegment segment) implements Value {
         public Binary {
             segment = segment.asReadOnly();

@@ -202,7 +202,7 @@ public final class Parser {
         } else if (match(RUNE_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
-            return new Expression.Constant(new Value.RuneLiteral((String) value));
+            return new Expression.RuneLiteral((String) value);
         } else if (match(NUMBER_LITERAL)) {
             final Object value = previous().value();
             return new Expression.Constant(new Value.NumberLiteral((Number) value));

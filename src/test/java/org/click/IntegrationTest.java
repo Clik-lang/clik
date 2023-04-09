@@ -206,13 +206,13 @@ public final class IntegrationTest {
 
     @Test
     public void runeLiterals() {
-        assertProgram(new Value.RuneLiteral("a"),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("a")),
                 """
-                        main :: () rune -> 'a';
+                        main :: () UTF8 -> 'a';
                         """);
-        assertProgram(new Value.RuneLiteral("β"),
+        assertProgram(new Value.Binary("UTF8", convertUtf8("β")),
                 """
-                        main :: () rune -> 'β';
+                        main :: () UTF8 -> 'β';
                         """);
     }
 

@@ -54,6 +54,13 @@ public final class Evaluator {
                 final MemorySegment bitmap = BinStandards.serialize(explicitType.name(), value);
                 yield new Value.Binary(explicitType.name(), bitmap);
             }
+            case Expression.RuneLiteral runeLiteral -> {
+                if (explicitType == null)
+                    throw new RuntimeException("Rune literal must have explicit type: " + runeLiteral);
+                final String value = runeLiteral.value();
+                final MemorySegment bitmap = BinStandards.serialize(explicitType.name(), value);
+                yield new Value.Binary(explicitType.name(), bitmap);
+            }
             case Expression.Enum enumDeclaration -> {
                 final Type type = enumDeclaration.type();
                 Map<String, Value> evaluated = new HashMap<>();

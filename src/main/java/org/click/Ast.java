@@ -19,6 +19,9 @@ public interface Ast {
         record StringLiteral(String value) implements Expression {
         }
 
+        record RuneLiteral(String value) implements Expression {
+        }
+
         record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
         }
 
