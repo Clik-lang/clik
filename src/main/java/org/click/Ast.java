@@ -1,5 +1,6 @@
 package org.click;
 
+import org.click.value.LiteralValue;
 import org.click.value.Value;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,10 +17,10 @@ public interface Ast {
         record Constant(Value value) implements Expression {
         }
 
-        record StringLiteral(String value) implements Expression {
+        record Literal(LiteralValue value) implements Expression {
         }
 
-        record RuneLiteral(String value) implements Expression {
+        record Binary(String name, LiteralValue value) implements Expression {
         }
 
         record Enum(@Nullable Type type, Map<String, Expression> entries) implements Expression {
@@ -42,9 +43,6 @@ public interface Ast {
         }
 
         record Call(String name, Parameter.Passed arguments) implements Expression {
-        }
-
-        record Binary(String name, String content) implements Expression {
         }
 
         record Select(List<Statement.Block> blocks) implements Expression {

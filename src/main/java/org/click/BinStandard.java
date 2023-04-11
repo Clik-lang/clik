@@ -1,18 +1,22 @@
 package org.click;
 
+import org.click.value.LiteralValue;
+
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentScope;
 import java.nio.charset.StandardCharsets;
 
 public interface BinStandard {
-    MemorySegment serialize(String content);
+    MemorySegment serialize(LiteralValue literal);
 
     MemorySegment operate(MemorySegment left, MemorySegment right, Token.Type operator);
 
     BinStandard UTF8 = new BinStandard() {
         @Override
-        public MemorySegment serialize(String content) {
-            final byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+        public MemorySegment serialize(LiteralValue literal) {
+            if (!(literal instanceof LiteralValue.Text text))
+                throw new IllegalArgumentException("Expected string literal, got: " + literal);
+            final byte[] bytes = text.value().getBytes(StandardCharsets.UTF_8);
             return MemorySegment.ofArray(bytes);
         }
 
@@ -30,8 +34,10 @@ public interface BinStandard {
     };
     BinStandard I32 = new BinStandard() {
         @Override
-        public MemorySegment serialize(String content) {
-            final int num = Integer.parseInt(content);
+        public MemorySegment serialize(LiteralValue literal) {
+            if (!(literal instanceof LiteralValue.Number number))
+                throw new IllegalArgumentException("Expected number literal, got: " + literal);
+            final int num = number.value().intValue();
             return MemorySegment.ofArray(new int[]{num});
         }
 
@@ -42,8 +48,10 @@ public interface BinStandard {
     };
     BinStandard I64 = new BinStandard() {
         @Override
-        public MemorySegment serialize(String content) {
-            final long num = Long.parseLong(content);
+        public MemorySegment serialize(LiteralValue literal) {
+            if (!(literal instanceof LiteralValue.Number number))
+                throw new IllegalArgumentException("Expected number literal, got: " + literal);
+            final long num = number.value().longValue();
             return MemorySegment.ofArray(new long[]{num});
         }
 

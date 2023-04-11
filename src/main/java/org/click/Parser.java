@@ -1,5 +1,6 @@
 package org.click;
 
+import org.click.value.LiteralValue;
 import org.click.value.Value;
 
 import java.util.*;
@@ -198,11 +199,11 @@ public final class Parser {
         } else if (match(STRING_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
-            return new Expression.StringLiteral((String) value);
+            return new Expression.Literal(new LiteralValue.Text((String) value));
         } else if (match(RUNE_LITERAL)) {
             final Token literal = previous();
             final Object value = literal.value();
-            return new Expression.RuneLiteral((String) value);
+            return new Expression.Literal(new LiteralValue.Text((String) value));
         } else if (match(NUMBER_LITERAL)) {
             final Object value = previous().value();
             return new Expression.Constant(new Value.NumberLiteral((Number) value));
@@ -258,8 +259,15 @@ public final class Parser {
                 // Binary literal
                 consume(DOT, "Expected '.' after binary literal.");
                 final String name = identifier.input();
-                final String content = advance().value().toString();
-                return new Expression.Binary(name, content);
+                final Token literalToken = advance();
+                final Object value = literalToken.value();
+                assert value != null;
+                final LiteralValue literalValue = switch (value) {
+                    case String string -> new LiteralValue.Text(string);
+                    case Number number -> new LiteralValue.Number(number);
+                    default -> throw new IllegalStateException("Unexpected value: " + value);
+                };
+                return new Expression.Binary(name, literalValue);
             } else {
                 // Access
                 final Expression.Variable variable = new Expression.Variable(identifier.input());

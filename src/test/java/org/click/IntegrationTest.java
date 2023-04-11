@@ -2,6 +2,7 @@ package org.click;
 
 import org.click.external.ExternalFunction;
 import org.click.interpreter.VM;
+import org.click.value.LiteralValue;
 import org.click.value.Value;
 import org.junit.jupiter.api.Test;
 
@@ -1462,10 +1463,10 @@ public final class IntegrationTest {
     }
 
     private static MemorySegment convertI32(int number) {
-        return BinStandard.I32.serialize(String.valueOf(number));
+        return BinStandard.I32.serialize(new LiteralValue.Number(number));
     }
 
     private static MemorySegment convertUtf8(String string) {
-        return BinStandard.UTF8.serialize(string);
+        return BinStandard.UTF8.serialize(new LiteralValue.Text(string));
     }
 }
