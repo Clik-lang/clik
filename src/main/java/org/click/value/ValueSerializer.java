@@ -1,5 +1,8 @@
 package org.click.value;
 
+import org.click.BinStandard;
+
+import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +42,11 @@ public final class ValueSerializer {
                 }
                 builder.append("]");
                 yield builder.toString();
+            }
+            case Value.Binary binary -> {
+                final BinStandard standard = binary.standard();
+                final MemorySegment segment = binary.segment();
+                yield standard.asString(segment);
             }
             default -> throw new RuntimeException("Unknown expression: " + expression);
         };
