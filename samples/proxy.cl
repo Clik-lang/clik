@@ -1,35 +1,16 @@
-#load "api.cl";
+print :: (text: UTF8);
+sleep :: (millis: I32);
+open_server :: (text: I32) I32;
+accept_client :: (fd: I32) I32;
+connect_server :: (host: UTF8, port: I32) I32;
+send :: (socket: I32, data: []i8, length: I32) bool;
+recv :: (socket: I32, data: []i8) RecvResult;
+close :: (socket: I32);
 
-State :: enum {
-  HANDSHAKE, STATUS,
-  LOGIN, PLAY
-}
 Client :: struct {
   id: int,
   client_socket: Socket,
   backend_socket: Socket,
-  state: State,
-}
-
-main :: () {
-  port :: 25577;
-  server_socket :: open_server(port);
-  print("Server started on port ");
-  id := 0;
-  for {
-    client_socket :: accept_client(server_socket);
-    id = id + 1;
-    print("Client connected ");
-    spawn {
-      print("Handling client ");
-      backend_socket :: connect_server("localhost", 25565);
-      client :: Client {id, client_socket, backend_socket, State.HANDSHAKE};
-      handle_client(client);
-      print("Client disconnected ");
-      close(client_socket);
-      close(backend_socket);
-    }
-  }
 }
 
 handle_client :: (client: Client) {
@@ -48,9 +29,6 @@ handle_client :: (client: Client) {
         {sleep(30000); {0, false};}
       }
       if !success break;
-
-      // TODO transform data
-
       // Write socket
       select {
         -> send(sender, data, length);
@@ -64,4 +42,23 @@ handle_client :: (client: Client) {
   // Run the two streams (client -> backend and backend -> client) in parallel
   spawn forward(client.client_socket, client.backend_socket);
   spawn forward(client.backend_socket, client.client_socket);
+}
+
+port :: I32.25577;
+server_socket :: open_server(port);
+print("Server started on port ");
+id := 0;
+for {
+  client_socket :: accept_client(server_socket);
+  id = id + 1;
+  print("Client connected");
+  spawn {
+    print("Handling client");
+    backend_socket :: connect_server("localhost", 25565);
+    client :: Client {id, client_socket, backend_socket};
+    handle_client(client);
+    print("Client disconnected");
+    close(client_socket);
+    close(backend_socket);
+  }
 }

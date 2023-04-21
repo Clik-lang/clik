@@ -1,6 +1,7 @@
 package org.click;
 
 import org.click.external.BuiltinEx;
+import org.click.external.ExternalFunction;
 import org.click.interpreter.VM;
 
 import java.io.IOException;
@@ -11,14 +12,14 @@ import java.util.Map;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        final String input = Files.readAllLines(Path.of("samples", "hello.cl"))
+        final String input = Files.readAllLines(Path.of("samples", "web_server.cl"))
                 .stream().reduce("", (a, b) -> a + b + '\n');
         var tokens = new Scanner(input).scanTokens();
-        System.out.println("Tokens:");
+        //System.out.println("Tokens:");
         for (var token : tokens) System.out.println(token);
 
         var statements = new Parser(tokens).parse();
-        System.out.println("Statements:");
+        //System.out.println("Statements:");
         for (var statement : statements) System.out.println(statement);
 
         interpret(statements);
@@ -26,23 +27,45 @@ public class Main {
     }
 
     private static void interpret(List<Ast.Statement> statements) {
-        var interpreter = new VM(Path.of("samples"), statements,
-                Map.of("Key", new BuiltinEx.IntReader(),
-                        "Print", new BuiltinEx.Printer()));
-        //var result = interpreter.interpret("main", List.of());
+        var externals = webExternals();
+        var interpreter = new VM(Path.of("samples"), statements, externals);
+        var result = interpreter.interpret("main", List.of());
         //System.out.println("Result: " + result);
         interpreter.stop();
     }
 
-    //private static void compile(List<Ast.Statement> statements) {
-    //    var compiler = new CCompiler(statements);
-    //    final String output = compiler.compile();
-    //    // Write to file
-    //    try {
-    //        Files.createDirectories(Path.of("compiled"));
-    //        Files.writeString(Path.of("compiled", "compiled.c"), output);
-    //    } catch (IOException e) {
-    //        e.printStackTrace();
-    //    }
-    //}
+    private static Map<String, ExternalFunction> proxyExternals() {
+        var openServer = new BuiltinEx.OpenServer();
+        var acceptClient = new BuiltinEx.AcceptClient(openServer.servers());
+        var connectServer = new BuiltinEx.ConnectServer();
+
+        return Map.of(
+                "print", new BuiltinEx.Printer(),
+                "open_server", openServer,
+                "accept_client", acceptClient,
+                "connect_server", connectServer
+        );
+    }
+
+    private static Map<String, ExternalFunction> webExternals() {
+        var openServer = new BuiltinEx.OpenServer();
+        var acceptClient = new BuiltinEx.AcceptClient(openServer.servers());
+        var send = new BuiltinEx.Send(acceptClient.sockets());
+        var close = new BuiltinEx.Close(acceptClient.sockets());
+
+        return Map.of(
+                "print", new BuiltinEx.Printer(),
+                "open_server", openServer,
+                "accept_client", acceptClient,
+                "send", send,
+                "close", close
+        );
+    }
+
+    private static Map<String, ExternalFunction> helloExternals() {
+        return Map.of(
+                "Key", new BuiltinEx.IntReader(),
+                "Print", new BuiltinEx.Printer()
+        );
+    }
 }
