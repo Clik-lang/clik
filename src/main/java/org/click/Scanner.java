@@ -140,10 +140,10 @@ public final class Scanner {
             }
         } else if (c == '\"') {
             type = Token.Type.STRING_LITERAL;
-            literalValue = nextString();
+            literalValue = nextString('\"');
         } else if (c == '\'') {
             type = Token.Type.RUNE_LITERAL;
-            literalValue = nextRune();
+            literalValue = nextString('\'');
         } else if (c == '`') {
             type = Token.Type.STRING_LITERAL;
             literalValue = nextRawString();
@@ -212,23 +212,29 @@ public final class Scanner {
         return Double.parseDouble(text);
     }
 
-    private String nextString() {
+    private String nextString(char delimiter) {
         final StringBuilder builder = new StringBuilder();
-        while (peek() != '\"') {
-            if (peek() == '\\') advance();
+        while (peek() != delimiter) {
             final char c = advance();
-            builder.append(c);
-        }
-        advance();
-        return builder.toString();
-    }
-
-    private String nextRune() {
-        final StringBuilder builder = new StringBuilder();
-        while (peek() != '\'') {
-            if (peek() == '\\') advance();
-            final char c = advance();
-            builder.append(c);
+            if (c == '\\') {
+                // Check for escape sequences like \n, \t, etc.
+                final char beforeEscape = advance();
+                final char escaped = switch (beforeEscape) {
+                    case 'n' -> '\n';
+                    case 't' -> '\t';
+                    case 'r' -> '\r';
+                    case 'b' -> '\b';
+                    case 'f' -> '\f';
+                    case '0' -> '\0';
+                    case '\'' -> '\'';
+                    case '\"' -> '\"';
+                    case '\\' -> '\\';
+                    default -> throw new RuntimeException("Invalid escape character: " + c);
+                };
+                builder.append(escaped);
+            } else {
+                builder.append(c);
+            }
         }
         advance();
         return builder.toString();
