@@ -86,6 +86,19 @@ public sealed interface Value {
             segment = segment.asReadOnly();
         }
 
+        public static Binary UTF8(String string) {
+            return serialize(BinStandard.UTF8, new LiteralValue.Text(string));
+        }
+
+        public static Binary I32(int num) {
+            return serialize(BinStandard.I32, new LiteralValue.Number(num));
+        }
+
+        private static Binary serialize(BinStandard standard, LiteralValue literalValue) {
+            final MemorySegment segment = standard.serialize(literalValue);
+            return new Binary(standard, segment);
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;

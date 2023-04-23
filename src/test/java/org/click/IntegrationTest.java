@@ -2,11 +2,9 @@ package org.click;
 
 import org.click.external.ExternalFunction;
 import org.click.interpreter.VM;
-import org.click.value.LiteralValue;
 import org.click.value.Value;
 import org.junit.jupiter.api.Test;
 
-import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Map;
 
@@ -174,24 +172,24 @@ public final class IntegrationTest {
 
     @Test
     public void stringLiterals() {
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
+        assertProgram(Value.Binary.UTF8("Hello"),
                 """
                         main :: () UTF8 -> "Hello";
                         """);
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
+        assertProgram(Value.Binary.UTF8("Hello"),
                 """
                         main :: () UTF8 -> UTF8."Hello";
                         """);
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("\"Hello\"")),
+        assertProgram(Value.Binary.UTF8("\"Hello\""),
                 """
                         main :: () UTF8 -> "\\"Hello\\"";
                         """);
 
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
+        assertProgram(Value.Binary.UTF8("Hello"),
                 """
                         main :: () UTF8 -> `Hello`;
                         """);
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("\"Hello\"")),
+        assertProgram(Value.Binary.UTF8("\"Hello\""),
                 """
                         main :: () UTF8 -> `"Hello"`;
                         """);
@@ -199,7 +197,7 @@ public final class IntegrationTest {
 
     @Test
     public void stringConcatenate() {
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello World")),
+        assertProgram(Value.Binary.UTF8("Hello World"),
                 """
                         main :: () UTF8 -> "Hello " + "World";
                         """);
@@ -207,11 +205,11 @@ public final class IntegrationTest {
 
     @Test
     public void runeLiterals() {
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("a")),
+        assertProgram(Value.Binary.UTF8("a"),
                 """
                         main :: () UTF8 -> 'a';
                         """);
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("β")),
+        assertProgram(Value.Binary.UTF8("β"),
                 """
                         main :: () UTF8 -> 'β';
                         """);
@@ -767,13 +765,13 @@ public final class IntegrationTest {
                           return 1;
                         }
                         """);
-        assertProgram(new Value.Binary(BinStandard.I32, convertI32(500)),
+        assertProgram(Value.Binary.I32(500),
                 """
                         main :: () I32 {
                           return I32.500;
                         }
                         """);
-        assertProgram(new Value.Binary(BinStandard.UTF8, convertUtf8("Hello")),
+        assertProgram(Value.Binary.UTF8("Hello"),
                 """
                         main :: () UTF8 {
                           return UTF8."Hello";
@@ -1460,13 +1458,5 @@ public final class IntegrationTest {
         } else {
             assertEquals(expected, actual);
         }
-    }
-
-    private static MemorySegment convertI32(int number) {
-        return BinStandard.I32.serialize(new LiteralValue.Number(number));
-    }
-
-    private static MemorySegment convertUtf8(String string) {
-        return BinStandard.UTF8.serialize(new LiteralValue.Text(string));
     }
 }

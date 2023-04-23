@@ -1,7 +1,6 @@
 package org.click.external;
 
 import org.click.BinStandard;
-import org.click.value.LiteralValue;
 import org.click.value.Value;
 import org.click.value.ValueSerializer;
 
@@ -73,7 +72,7 @@ public final class BuiltinEx {
                 serverSocket.configureBlocking(true);
                 serverSocket.bind(new InetSocketAddress("0.0.0.0", port));
                 this.servers.put(fd, serverSocket);
-                return new Value.Binary(BinStandard.I32, BinStandard.I32.serialize(new LiteralValue.Number(fd)));
+                return Value.Binary.I32(fd);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -97,7 +96,7 @@ public final class BuiltinEx {
                 SocketChannel channel = SocketChannel.open(new InetSocketAddress(host, port));
                 channel.configureBlocking(true);
                 this.sockets.put(fd, channel);
-                return new Value.Binary(BinStandard.I32, BinStandard.I32.serialize(new LiteralValue.Number(fd)));
+                return Value.Binary.I32(fd);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -126,7 +125,7 @@ public final class BuiltinEx {
             try {
                 final SocketChannel clientSocket = serverSocket.accept();
                 this.sockets.put(fd, clientSocket);
-                return new Value.Binary(BinStandard.I32, BinStandard.I32.serialize(new LiteralValue.Number(fd)));
+                return Value.Binary.I32(fd);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
