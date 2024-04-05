@@ -9,13 +9,13 @@ close :: (socket: I32);
 
 Client :: struct {
   id: int,
-  client_socket: Socket,
-  backend_socket: Socket,
+  client_socket: I32,
+  backend_socket: I32,
 }
 
 handle_client :: (client: Client) {
   stop :~ false;
-  forward :: (receiver: Socket, sender: Socket) {
+  forward :: (receiver: I32, sender: I32) {
     data := [2_000_000]i8;
     for {
       Result :: struct {length: int, success: bool};

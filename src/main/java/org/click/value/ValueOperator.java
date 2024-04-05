@@ -8,19 +8,20 @@ import java.math.BigDecimal;
 
 public final class ValueOperator {
     public static Value operate(Token.Type operator, Value left, Value right) {
-        if (left instanceof Value.NumberLiteral leftLiteral && right instanceof Value.NumberLiteral rightLiteral) {
-            return operateInteger(operator, leftLiteral.value(), rightLiteral.value());
-        } else if (left instanceof Value.BooleanLiteral leftLiteral && right instanceof Value.BooleanLiteral rightLiteral) {
-            return operateBoolean(operator, leftLiteral.value(), rightLiteral.value());
-        } else if (left instanceof Value.Binary leftBin && right instanceof Value.Binary rightBin) {
-            if (leftBin.standard() != rightBin.standard())
-                throw new RuntimeException("Cannot operate on different binaries: " + leftBin.standard() + " and " + rightBin.standard());
-            final BinStandard standard = leftBin.standard();
-            final MemorySegment segment = standard.operate(leftBin.segment(), rightBin.segment(), operator);
-            return new Value.Binary(standard, segment);
-        } else {
-            throw new RuntimeException("Unknown types: " + left + " and " + right);
-        }
+        return switch (left) {
+            case Value.NumberLiteral leftLiteral when right instanceof Value.NumberLiteral rightLiteral ->
+                    operateInteger(operator, leftLiteral.value(), rightLiteral.value());
+            case Value.BooleanLiteral leftLiteral when right instanceof Value.BooleanLiteral rightLiteral ->
+                    operateBoolean(operator, leftLiteral.value(), rightLiteral.value());
+            case Value.Binary leftBin when right instanceof Value.Binary rightBin -> {
+                if (leftBin.standard() != rightBin.standard())
+                    throw new RuntimeException("Cannot operate on different binaries: " + leftBin.standard() + " and " + rightBin.standard());
+                final BinStandard standard = leftBin.standard();
+                final MemorySegment segment = standard.operate(leftBin.segment(), rightBin.segment(), operator);
+                yield new Value.Binary(standard, segment);
+            }
+            default -> throw new RuntimeException("Unknown types: " + left + " and " + right);
+        };
     }
 
     private static Value operateBoolean(Token.Type operator, boolean left, boolean right) {

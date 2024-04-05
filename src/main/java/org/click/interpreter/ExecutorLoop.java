@@ -15,6 +15,7 @@ public record ExecutorLoop(Executor executor, ScopeWalker<Value> walker) {
         this.walker.enterBlock();
         if (loop.iterable() == null) {
             // Infinite loop
+            //noinspection StatementWithEmptyBody
             while (iterate(loop.body())) ;
         } else {
             final Value iterable = executor.evaluate(loop.iterable(), null);

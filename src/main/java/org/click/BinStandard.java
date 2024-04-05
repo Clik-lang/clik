@@ -2,8 +2,8 @@ package org.click;
 
 import org.click.value.LiteralValue;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentScope;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
 
@@ -35,7 +35,7 @@ public interface BinStandard {
                 throw new IllegalArgumentException("Unsupported string operator: " + operator);
             final long leftSize = left.byteSize();
             final long rightSize = right.byteSize();
-            final MemorySegment segment = MemorySegment.allocateNative(leftSize + rightSize, SegmentScope.global());
+            final MemorySegment segment = Arena.ofAuto().allocate(leftSize + rightSize);
             MemorySegment.copy(left, 0, segment, 0, leftSize);
             MemorySegment.copy(right, 0, segment, leftSize, rightSize);
             return segment;
