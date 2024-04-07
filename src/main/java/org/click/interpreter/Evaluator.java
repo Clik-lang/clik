@@ -1,7 +1,6 @@
 package org.click.interpreter;
 
 import org.click.BinStandard;
-import org.click.ScopeWalker;
 import org.click.Token;
 import org.click.Type;
 import org.click.value.LiteralValue;
@@ -267,6 +266,15 @@ public final class Evaluator {
                 } else {
                     throw new RuntimeException("Unsupported unary operator: " + unary.operator());
                 }
+            }
+            case Expression.Ternary ternary -> {
+                final Value condition = evaluate(ternary.condition(), null);
+                final Value thenBranch = evaluate(ternary.thenBranch(), null);
+                final Value elseBranch = evaluate(ternary.elseBranch(), null);
+                if (!(condition instanceof Value.BooleanLiteral booleanLiteral)) {
+                    throw new RuntimeException("Expected boolean, got: " + condition);
+                }
+                yield booleanLiteral.value() ? thenBranch : elseBranch;
             }
         };
         final Value casted = cast(rawValue, explicitType);

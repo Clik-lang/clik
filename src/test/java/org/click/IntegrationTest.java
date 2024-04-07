@@ -1128,6 +1128,20 @@ public final class IntegrationTest {
     }
 
     @Test
+    public void ternary() {
+        assertProgram(new Value.NumberLiteral("9"),
+                """
+                        max :: (a: number, b: number) number -> a > b ? a : b;
+                        main :: () number ->  max(5, 9);
+                        """);
+        assertProgram(new Value.NumberLiteral("9"),
+                """
+                        max :: (a: number, b: number) number -> (a > b) ? a : b;
+                        main :: () number ->  max(5, 9);
+                        """);
+    }
+
+    @Test
     public void selectStmt() {
         assertProgram(new Value.NumberLiteral("10"),
                 """

@@ -1,6 +1,5 @@
 package org.click.interpreter;
 
-import org.click.ScopeWalker;
 import org.click.Type;
 import org.click.value.Value;
 import org.click.value.ValueCompute;

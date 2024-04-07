@@ -115,7 +115,8 @@ public final class Scanner {
             } else {
                 type = Token.Type.EXCLAMATION;
             }
-        } else if (c == '=') {
+        } else if (c == '?') type = Token.Type.QUESTION;
+        else if (c == '=') {
             if (peek() == '=') {
                 advance();
                 type = Token.Type.EQUAL_EQUAL;

@@ -1,0 +1,2 @@
+min :: (a: number, b: number) number -> a < b ? a : b;
+max :: (a: number, b: number) number -> a > b ? a : b;

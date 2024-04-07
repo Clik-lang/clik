@@ -1,6 +1,5 @@
 package org.click.interpreter;
 
-import org.click.ScopeWalker;
 import org.click.external.ExternalFunction;
 import org.click.value.Value;
 

@@ -1,4 +1,4 @@
-package org.click;
+package org.click.interpreter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

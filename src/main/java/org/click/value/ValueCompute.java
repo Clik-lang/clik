@@ -1,6 +1,6 @@
 package org.click.value;
 
-import org.click.ScopeWalker;
+import org.click.interpreter.ScopeWalker;
 import org.click.interpreter.Executor;
 
 import java.math.BigDecimal;

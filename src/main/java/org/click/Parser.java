@@ -99,9 +99,15 @@ public final class Parser {
         } else if (check(ARROW)) {
             statement = new Statement.Block(nextBlock());
         } else if (check(HASH)) {
-            // Directive
-            final Directive.Statement directive = nextDirectiveStatement();
-            statement = new Statement.Directive(directive);
+            // Statement directive
+            final String identifier = consume(IDENTIFIER, "Expected directive name.").input();
+            statement = switch (identifier) {
+                case "load" -> {
+                    final String path = (String) consume(STRING_LITERAL, "Expected string literal.").value();
+                    yield new Statement.LoadLibrary(path);
+                }
+                default -> throw error("Unknown directive: " + identifier);
+            };
         } else {
             // Implicit return
             final Expression expression = nextExpression();
@@ -167,7 +173,16 @@ public final class Parser {
             return new Expression.Range(start, end, step);
         }
         // Pratt's algorithm
-        return nextExpression(0);
+        Expression result = nextExpression(0);
+        if (check(QUESTION)) {
+            // Ternary
+            consume(QUESTION, "Expected '?' after condition.");
+            final Expression thenBranch = nextExpression();
+            consume(COLON, "Expected ':' after then branch.");
+            final Expression elseBranch = nextExpression();
+            result = new Expression.Ternary(result, thenBranch, elseBranch);
+        }
+        return result;
     }
 
     Expression nextExpression(int precedence) {
@@ -348,8 +363,8 @@ public final class Parser {
         return switch (type) {
             case OR, AND -> 10;
             case EQUAL_EQUAL, NOT_EQUAL,
-                    LESS, LESS_EQUAL,
-                    GREATER, GREATER_EQUAL -> 20;
+                 LESS, LESS_EQUAL,
+                 GREATER, GREATER_EQUAL -> 20;
             case PLUS, MINUS -> 30;
             case STAR, SLASH -> 40;
             default -> -1;
@@ -562,19 +577,6 @@ public final class Parser {
             return List.of(statement);
         }
         throw error("Expect '{' or '->'.");
-    }
-
-    Directive.Statement nextDirectiveStatement() {
-        consume(HASH, "Expect '#'.");
-        final Token directive = consume(IDENTIFIER, "Expect directive name.");
-        final String name = directive.input();
-        if (name.equals("load")) {
-            final Token literal = consume(STRING_LITERAL, "Expect string literal.");
-            final String path = (String) literal.value();
-            return new Directive.Statement.Load(path);
-        } else {
-            throw error("Unknown directive.");
-        }
     }
 
     Token consume(Token.Type type, String message) {

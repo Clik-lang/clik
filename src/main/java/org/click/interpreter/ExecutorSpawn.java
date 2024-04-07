@@ -1,6 +1,5 @@
 package org.click.interpreter;
 
-import org.click.ScopeWalker;
 import org.click.value.Value;
 
 import java.util.concurrent.Phaser;

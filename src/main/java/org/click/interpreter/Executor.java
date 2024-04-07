@@ -305,22 +305,18 @@ public final class Executor {
                 }
                 yield null;
             }
-            case Statement.Directive directive -> {
-                switch (directive.directive()) {
-                    case Directive.Statement.Load load -> {
-                        final String filePath = load.path();
-                        final String source;
-                        try {
-                            final Path path = this.context.directory().resolve(filePath);
-                            source = Files.readString(path);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                        final List<Token> tokens = new Scanner(source).scanTokens();
-                        final List<Statement> statements = new Parser(tokens).parse();
-                        interpret(statements);
-                    }
+            case Statement.LoadLibrary loadLibrary -> {
+                final String filePath = loadLibrary.path();
+                final String source;
+                try {
+                    final Path path = this.context.directory().resolve(filePath);
+                    source = Files.readString(path);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
+                final List<Token> tokens = new Scanner(source).scanTokens();
+                final List<Statement> statements = new Parser(tokens).parse();
+                interpret(statements);
                 yield null;
             }
         };

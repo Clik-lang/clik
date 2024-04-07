@@ -18,7 +18,7 @@ public record Token(Type type, int line, String input,
         DOLLAR, HASH,
 
         // Boolean operators
-        EXCLAMATION, AND, OR, EQUAL_EQUAL, NOT_EQUAL,
+        EXCLAMATION, QUESTION, AND, OR, EQUAL_EQUAL, NOT_EQUAL,
         LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
 
         // Declarations

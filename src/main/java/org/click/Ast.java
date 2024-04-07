@@ -59,6 +59,9 @@ public interface Ast {
 
         record Unary(Token.Type operator, Expression expression) implements Expression {
         }
+
+        record Ternary(Expression condition, Expression thenBranch, Expression elseBranch) implements Expression {
+        }
     }
 
     sealed interface Statement {
@@ -99,10 +102,10 @@ public interface Ast {
         record Block(List<Statement> statements) implements Statement {
         }
 
-        record Directive(org.click.Directive.Statement directive) implements Statement {
+        record Return(@Nullable Expression expression) implements Statement {
         }
 
-        record Return(@Nullable Expression expression) implements Statement {
+        record LoadLibrary(String path) implements Statement {
         }
     }
 
